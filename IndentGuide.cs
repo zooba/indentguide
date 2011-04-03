@@ -6,31 +6,41 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Editor;
+using System;
+using Microsoft.VisualStudio.Text.Classification;
 
 namespace IndentGuide
 {
     public class IndentGuide
     {
-        [Import(typeof(IVsFontsAndColorsInformationService))]
-        internal IVsFontsAndColorsInformationService FontsAndColors = null;
-
         IAdornmentLayer Layer;
         IWpfTextView View;
-        Pen GuidePen;
+        Brush GuideBrush;
 
         private static readonly Color LineColor = Colors.LightGray;
 
-        public IndentGuide(IWpfTextView view)
+        public IndentGuide(IWpfTextView view, IEditorFormatMapService formatMapService)
         {
             View = view;
             View.LayoutChanged += OnLayoutChanged;
 
             Layer = view.GetAdornmentLayer("IndentGuide");
 
-            Brush penBrush = new SolidColorBrush(Colors.LightGray);
-            penBrush.Freeze();
-            GuidePen = new Pen(penBrush, 1.0);
-            GuidePen.Freeze();
+            var formatMap = formatMapService.GetEditorFormatMap(view);
+            formatMap.FormatMappingChanged += new EventHandler<FormatItemsEventArgs>(OnFormatMappingChanged);
+
+            var visibleWhitespace = formatMap.GetProperties("Visible Whitespace");
+            GuideBrush = (Brush)visibleWhitespace[EditorFormatDefinition.ForegroundBrushId];
+        }
+
+        void OnFormatMappingChanged(object sender, FormatItemsEventArgs e)
+        {
+            if (e.ChangedItems.Contains("Visible Whitespace"))
+            {
+                var formatMap = (IEditorFormatMap)sender;
+                var visibleWhitespace = formatMap.GetProperties("Visible Whitespace");
+                GuideBrush = (SolidColorBrush)visibleWhitespace[EditorFormatDefinition.ForegroundBrushId];
+            }
         }
 
         /// <summary>
@@ -53,24 +63,19 @@ namespace IndentGuide
                     {
                         var span = new SnapshotSpan(snapshot, i, 1);
                         var marker = View.TextViewLines.GetMarkerGeometry(span);
-                        var geometry = new LineGeometry(
-                            new Point(0.0, 0.0),
-                            new Point(0.0, marker.Bounds.Height));
-                        if (geometry.CanFreeze) geometry.Freeze();
-                        var drawing = new GeometryDrawing(null, GuidePen, geometry);
-                        drawing.Freeze();
-                        var drawingImage = new DrawingImage(drawing);
-                        drawingImage.Freeze();
-                        var image = new Image { Source = drawingImage };
+                        var guide = new System.Windows.Shapes.Line()
+                        {
+                            X1 = marker.Bounds.Left,
+                            Y1 = marker.Bounds.Top,
+                            X2 = marker.Bounds.Left,
+                            Y2 = marker.Bounds.Bottom,
+                            Stroke = GuideBrush,
+                            StrokeDashArray = new DoubleCollection { 10.0, 5.0 },
+                            StrokeThickness = 0.25,
+                            SnapsToDevicePixels = true
+                        };
 
-                        Canvas.SetLeft(image, marker.Bounds.Left);
-                        Canvas.SetTop(image, marker.Bounds.Top);
-
-                        Layer.AddAdornment(AdornmentPositioningBehavior.TextRelative,
-                            span,
-                            null,
-                            image,
-                            null);
+                        Layer.AddAdornment(span, null, guide);
                     }
 
                     if (c == '\t')
