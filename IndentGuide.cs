@@ -24,7 +24,7 @@ namespace IndentGuide
         {
             View = view;
             View.LayoutChanged += OnLayoutChanged;
-            
+
             Layer = view.GetAdornmentLayer("IndentGuide");
 
             Brush penBrush = new SolidColorBrush(Colors.LightGray);
@@ -42,16 +42,13 @@ namespace IndentGuide
 
             foreach (ITextViewLine line in e.NewOrReformattedLines)
             {
-                if (line.VisibilityState == VisibilityState.Hidden || line.VisibilityState == VisibilityState.Unattached)
-                    continue;
-                
                 var snapshot = line.Snapshot;
                 int actualPos = 0;
                 int spaceCount = tabSize;
                 for (int i = line.Start; i < line.End; ++i)
                 {
                     char c = snapshot[i];
-                    
+
                     if (actualPos > 0 && (actualPos % tabSize) == 0 && char.IsWhiteSpace(c))
                     {
                         var span = new SnapshotSpan(snapshot, i, 1);
@@ -65,7 +62,7 @@ namespace IndentGuide
                         var drawingImage = new DrawingImage(drawing);
                         drawingImage.Freeze();
                         var image = new Image { Source = drawingImage };
-                        
+
                         Canvas.SetLeft(image, marker.Bounds.Left);
                         Canvas.SetTop(image, marker.Bounds.Top);
 
