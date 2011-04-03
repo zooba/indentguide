@@ -1,0 +1,8 @@
+glob:bin\*
+glob:obj\*
+glob:Debug\*
+glob:Release\*
+glob:ipch\*
+glob:*.suo
+glob:*.user
+glob:*.sdf
