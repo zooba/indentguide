@@ -55,9 +55,10 @@ namespace IndentGuide
                 var snapshot = line.Snapshot;
                 int actualPos = 0;
                 int spaceCount = tabSize;
-                for (int i = line.Start; i < line.End; ++i)
+                int end = line.End;
+                for (int i = line.Start; i <= end; ++i)
                 {
-                    char c = snapshot[i];
+                    char c = i == end ? ' ' : snapshot[i];
 
                     if (actualPos > 0 && (actualPos % tabSize) == 0 && char.IsWhiteSpace(c))
                     {
