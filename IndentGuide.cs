@@ -60,7 +60,8 @@ namespace IndentGuide
                 {
                     char c = i == end ? ' ' : snapshot[i];
 
-                    if (actualPos > 0 && (actualPos % tabSize) == 0 && char.IsWhiteSpace(c))
+                    if (actualPos > 0 && (actualPos % tabSize) == 0 && char.IsWhiteSpace(c) &&
+                        snapshot.Length > i)
                     {
                         var span = new SnapshotSpan(snapshot, i, 1);
                         var marker = View.TextViewLines.GetMarkerGeometry(span);
