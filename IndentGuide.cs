@@ -24,17 +24,17 @@ namespace IndentGuide
             var formatMap = formatMapService.GetEditorFormatMap(view);
             formatMap.FormatMappingChanged += new EventHandler<FormatItemsEventArgs>(OnFormatMappingChanged);
 
-            var visibleWhitespace = formatMap.GetProperties("Visible Whitespace");
-            GuideBrush = (Brush)visibleWhitespace[EditorFormatDefinition.ForegroundBrushId];
+            var format = formatMap.GetProperties("Indent Guides");
+            GuideBrush = (Brush)format[EditorFormatDefinition.ForegroundBrushId];
         }
 
         void OnFormatMappingChanged(object sender, FormatItemsEventArgs e)
         {
-            if (e.ChangedItems.Contains("Visible Whitespace"))
+            if (e.ChangedItems.Contains("Indent Guides"))
             {
                 var formatMap = (IEditorFormatMap)sender;
-                var visibleWhitespace = formatMap.GetProperties("Visible Whitespace");
-                GuideBrush = (SolidColorBrush)visibleWhitespace[EditorFormatDefinition.ForegroundBrushId];
+                var format = formatMap.GetProperties("Indent Guides");
+                GuideBrush = (SolidColorBrush)format[EditorFormatDefinition.ForegroundBrushId];
             }
         }
 
