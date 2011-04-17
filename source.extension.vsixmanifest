@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
     <Identifier Id="IndentGuide.SteveDower.0a67eb97-becd-451f-aa29-851d9fe5dd2b">
-        <Name>IndentGuide</Name>
+        <Name>Indent Guides</Name>
         <Author>Steve Dower</Author>
-        <Version>6.0</Version>
+        <Version>7.0</Version>
         <Description xml:space="preserve">Adds vertical lines at each indent level.</Description>
         <Locale>1033</Locale>
         <MoreInfoUrl>http://indentguide.codeplex.com/</MoreInfoUrl>
@@ -20,8 +20,13 @@
         </SupportedProducts>
         <SupportedFrameworkRuntimeEdition MinVersion="4.0" MaxVersion="4.0" />
     </Identifier>
-    <References />
+    <References>
+        <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
+            <Name>Visual Studio MPF</Name>
+        </Reference>
+    </References>
     <Content>
         <MefComponent>|%CurrentProject%|</MefComponent>
+        <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     </Content>
 </Vsix>

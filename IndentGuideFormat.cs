@@ -18,7 +18,7 @@ namespace IndentGuide
     {
         public IndentGuideFormat()
         {
-            ForegroundColor = Colors.LightBlue;
+            ForegroundColor = Colors.Silver;
         }
     }
 }

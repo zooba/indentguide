@@ -1,10 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Windows.Media;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
-using System.Collections.Generic;
 
 namespace IndentGuide
 {
@@ -45,36 +45,21 @@ namespace IndentGuide
         {
             int tabSize = View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
 
-            foreach (ITextViewLine _line in e.NewOrReformattedLines)
+            var lastGuidesAt = new List<double>();
+
+            foreach (var line in View.TextViewLines)
             {
-                var line = _line;
                 var snapshot = line.Snapshot;
                 if (line.Length == 0)
                 {
-                    int lineNumber = line.Snapshot.GetLineNumberFromPosition(line.Start.Position);
-                    if (lineNumber > snapshot.LineCount) continue;
-
-                    for (int i = lineNumber - 1;
-                        i >= 0;
-                        i -= 1)
+                    foreach (var left in lastGuidesAt)
                     {
-                        var line2 = snapshot.GetLineFromLineNumber(i);
-                        if (line2.Length > 0)
-                        {
-                            try
-                            {
-                                line = View.TextViewLines.GetTextViewLineContainingBufferPosition(line2.Start);
-                            }
-                            catch (ArgumentOutOfRangeException)
-                            { }
-                            break;
-                        }
+                        AddGuide(line, left);
                     }
-                    if (line == null) continue;
                 }
-
-                if (line.Length > 0)
+                else
                 {
+                    lastGuidesAt.Clear();
                     int actualPos = 0;
                     int spaceCount = tabSize;
                     int end = line.End;
@@ -86,7 +71,8 @@ namespace IndentGuide
                             snapshot.Length > i)
                         {
                             double left = GetGuideLeft(snapshot, i);
-                            AddGuide(_line, left);
+                            lastGuidesAt.Add(left);
+                            AddGuide(line, left);
                         }
 
                         if (c == '\t')
@@ -106,7 +92,7 @@ namespace IndentGuide
             var marker = View.TextViewLines.GetMarkerGeometry(span);
             return marker.Bounds.Left;
         }
-        
+
         private void AddGuide(ITextViewLine line, double left)
         {
             var guide = new System.Windows.Shapes.Line()
@@ -117,6 +103,8 @@ namespace IndentGuide
                 Y2 = line.Bottom,
                 Stroke = GuideBrush,
                 StrokeThickness = 1.0,
+                StrokeDashArray = new DoubleCollection { 1.0, 1.0 },
+                StrokeDashOffset = line.Top,
                 SnapsToDevicePixels = true
             };
 

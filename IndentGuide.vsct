@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <Extern href="stdidcmd.h"/>
+    <Extern href="vsshlids.h"/>
+    <Extern href="VSDbgCmd.h"/>
+    <Extern href="VsDebugGuids.h"/>
+
+    <!--<KeyBindings>
+    <KeyBinding guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" mod1="Control" key1="R" mod2="Control" key2="G" editor="guidVSStd97"/>
+  </KeyBindings>-->
+
+    <!--The Commands section is where we the commands, menus and menu groups are defined.
+      This section uses a Guid to identify the package that provides the command defined inside it. -->
+    <Commands package="guidIndentGuidePkg">
+        <!-- Inside this section we have different sub-sections: one for the menus, another  
+    for the menu groups, one for the buttons (the actual commands), one for the combos 
+    and the last one for the bitmaps used. Each element is identified by a command id that  
+    is a unique pair of guid and numeric identifier; the guid part of the identifier is usually  
+    called "command set" and is used to group different command inside a logically related  
+    group; your package should define its own command set in order to avoid collisions  
+    with command ids defined by other packages. -->
+
+        <!--Buttons section: buttons include both buttons on toolbars as well as individual menu items -->
+        <Buttons>
+            <!--To define a menu group you have to specify its ID, the parent menu and its display priority. 
+          The command is visible and enabled by default. If you need to change the visibility, status, etc, you can use
+          the CommandFlag node.
+          You can add more than one CommandFlag node e.g.:
+              <CommandFlag>DefaultInvisible</CommandFlag>
+              <CommandFlag>DynamicVisibility</CommandFlag>
+          If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
+
+            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" priority="0x6550" type="Button">
+                <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
+                <CommandFlag>DynamicVisibility</CommandFlag>
+                <CommandFlag>DefaultInvisible</CommandFlag>
+                <Strings>
+                    <ButtonText>View Indent Guides</ButtonText>
+                    <MenuText>View Indent &amp;Guides</MenuText>
+                    <ToolTipText>Toggle the visibility of indentation guides.</ToolTipText>
+                    <CommandName>cmdidViewIndentGuides</CommandName>
+                </Strings>
+            </Button>
+
+        </Buttons>
+
+    </Commands>
+
+    <Symbols>
+        <!-- This is the package guid. -->
+        <GuidSymbol name="guidIndentGuidePkg" value="{959BEB25-6C38-440A-A37F-5D6717E9A41B}" />
+
+        <!-- This is our command set GUID and associated commands -->
+        <GuidSymbol name="guidIndentGuideCmdSet" value="{1AE9DCDB-7723-4651-ABDC-3D4BBAA0731F}">
+            <IDSymbol name="cmdidViewIndentGuides" value="0x0102" />
+
+        </GuidSymbol>
+    </Symbols>
+
+</CommandTable>
