@@ -16,9 +16,11 @@ namespace IndentGuide
     [UserVisible(true)]
     internal sealed class IndentGuideFormat : ClassificationFormatDefinition
     {
+        internal const string Name = "Indent Guides";
+
         public IndentGuideFormat()
         {
-            ForegroundColor = Colors.Silver;
+            ForegroundColor = Colors.Teal;
         }
     }
 }

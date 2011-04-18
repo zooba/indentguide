@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Media;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
 using System.ComponentModel.Composition;
+using System.Windows.Shapes;
+using System.Diagnostics;
 
 namespace IndentGuide
 {
@@ -21,53 +24,86 @@ namespace IndentGuide
             View = view;
             View.LayoutChanged += OnLayoutChanged;
 
-            Visible = options.GetOptionValue<bool>("IndentGuideVisibility");
-            options.OptionChanged += new EventHandler<EditorOptionChangedEventArgs>(OnOptionChanged);
-
             Layer = view.GetAdornmentLayer("IndentGuide");
 
-            var formatMap = formatMapService.GetEditorFormatMap(view);
+            var formatMap = formatMapService.GetEditorFormatMap(View);
+            UpdateFormat(formatMap);
             formatMap.FormatMappingChanged += new EventHandler<FormatItemsEventArgs>(OnFormatMappingChanged);
 
-            var format = formatMap.GetProperties("Indent Guides");
-            GuideBrush = (Brush)format[EditorFormatDefinition.ForegroundBrushId];
+            UpdateVisibility(options);
+            options.OptionChanged += new EventHandler<EditorOptionChangedEventArgs>(OnOptionChanged);
         }
 
+
+        /// <summary>
+        /// On option change update visibility.
+        /// </summary>
         void OnOptionChanged(object sender, EditorOptionChangedEventArgs e)
         {
-            if (e.OptionId == "IndentGuideVisibility")
+            if (e.OptionId == IndentGuideVisibilityOption.OptionKey.Name)
             {
-                var options = sender as IEditorOptions;
-                if (options == null) return;
-
-                Visible = options.GetOptionValue<bool>("IndentGuideVisibility");
-                if (Visible) UpdateAdornments();
-                else Layer.RemoveAllAdornments();
-            }
-        }
-
-        void OnFormatMappingChanged(object sender, FormatItemsEventArgs e)
-        {
-            if (e.ChangedItems.Contains("Indent Guides"))
-            {
-                var formatMap = (IEditorFormatMap)sender;
-                var format = formatMap.GetProperties("Indent Guides");
-                GuideBrush = (SolidColorBrush)format[EditorFormatDefinition.ForegroundBrushId];
+                UpdateVisibility(sender as IEditorOptions);
             }
         }
 
         /// <summary>
-        /// On layout change add the adornment to any reformatted lines
+        /// On format change update the line color.
+        /// </summary>
+        private void OnFormatMappingChanged(object sender, FormatItemsEventArgs e)
+        {
+            if (e.ChangedItems.Contains(IndentGuideFormat.Name))
+            {
+                UpdateFormat(sender as IEditorFormatMap);
+            }
+        }
+
+        /// <summary>
+        /// On layout change add the adornment to all visible lines.
         /// </summary>
         private void OnLayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
         {
             UpdateAdornments();
         }
 
+        void UpdateVisibility(IEditorOptions options)
+        {
+            Debug.Assert(options != null);
+            if (options == null) return;
+
+            Visible = options.GetOptionValue(IndentGuideVisibilityOption.OptionKey);
+            if (Visible)
+            {
+                UpdateAdornments();
+            }
+            else
+            {
+                if (Layer != null) Layer.RemoveAllAdornments();
+            }
+        }
+
+        void UpdateFormat(IEditorFormatMap formatMap)
+        {
+            Debug.Assert(formatMap != null);
+            if (formatMap == null) return;
+
+            var format = formatMap.GetProperties(IndentGuideFormat.Name);
+            GuideBrush = (SolidColorBrush)format[EditorFormatDefinition.ForegroundBrushId];
+            if (Layer != null && Layer.Elements.Count > 0)
+            {
+                foreach (var line in Layer.Elements.Select(e => e.Adornment).OfType<Line>())
+                {
+                    line.Stroke = GuideBrush;
+                }
+            }
+        }
+
         void UpdateAdornments()
         {
-            if (Layer == null || View == null) return;
-            
+            Debug.Assert(View != null);
+            Debug.Assert(Layer != null);
+            if (View == null || Layer == null) return;
+            if (View.Options == null || View.TextViewLines == null) return;
+
             if (!Visible)
             {
                 Layer.RemoveAllAdornments();
@@ -80,7 +116,6 @@ namespace IndentGuide
 
             foreach (var line in View.TextViewLines)
             {
-                var snapshot = line.Snapshot;
                 if (line.Length == 0)
                 {
                     foreach (var left in lastGuidesAt)
@@ -91,6 +126,7 @@ namespace IndentGuide
                 else
                 {
                     lastGuidesAt.Clear();
+                    var snapshot = line.Snapshot;
                     int actualPos = 0;
                     int spaceCount = tabSize;
                     int end = line.End;
@@ -101,7 +137,8 @@ namespace IndentGuide
                         if (actualPos > 0 && (actualPos % tabSize) == 0 && char.IsWhiteSpace(c) &&
                             snapshot.Length > i)
                         {
-                            double left = GetGuideLeft(snapshot, i);
+                            var span = new SnapshotSpan(snapshot, i, 1);
+                            double left = View.TextViewLines.GetMarkerGeometry(span).Bounds.Left;
                             lastGuidesAt.Add(left);
                             AddGuide(line, left);
                         }
@@ -117,16 +154,9 @@ namespace IndentGuide
             }
         }
 
-        private double GetGuideLeft(ITextSnapshot snapshot, int i)
-        {
-            var span = new SnapshotSpan(snapshot, i, 1);
-            var marker = View.TextViewLines.GetMarkerGeometry(span);
-            return marker.Bounds.Left;
-        }
-
         private void AddGuide(ITextViewLine line, double left)
         {
-            var guide = new System.Windows.Shapes.Line()
+            var guide = new Line()
             {
                 X1 = left,
                 Y1 = line.Top,

@@ -11,9 +11,11 @@ namespace IndentGuide
     [Export(typeof(EditorOptionDefinition))]
     internal sealed class IndentGuideVisibilityOption : EditorOptionDefinition<bool>
     {
+        public static readonly EditorOptionKey<bool> OptionKey = new EditorOptionKey<bool>("IndentGuideVisibility");
+        
         public override EditorOptionKey<bool> Key
         {
-            get { return new EditorOptionKey<bool>("IndentGuideVisibility"); }
+            get { return OptionKey; }
         }
 
         public override bool Default
