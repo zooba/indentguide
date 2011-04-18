@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Shell;
 using System.ComponentModel;
-using Microsoft.VisualStudio;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
+using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Utilities;
 
 namespace IndentGuide
 {
@@ -19,9 +22,14 @@ namespace IndentGuide
     public sealed class IndentGuidePackage : Package
     {
         public IndentGuidePackage() { }
-        
+
         private static readonly Guid guidIndentGuideCmdSet = Guid.Parse("1AE9DCDB-7723-4651-ABDC-3D4BBAA0731F");
         private const int cmdidViewIndentGuides = 0x0102;
+
+        [Import(typeof(IEditorOptionsFactoryService))]
+        internal IEditorOptionsFactoryService EditorOptionsFactory = null;
+        
+        private MenuCommand menuViewIndentGuides;
 
         protected override void Initialize()
         {
@@ -29,17 +37,31 @@ namespace IndentGuide
             base.Initialize();
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (null != mcs)
+            var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            if (mcs != null)
             {
                 // Create the command for the tool window
                 CommandID toolwndCommandID = new CommandID(guidIndentGuideCmdSet, cmdidViewIndentGuides);
-                MenuCommand menuViewIndentGuides = new MenuCommand(ToggleVisibility, toolwndCommandID);
+                menuViewIndentGuides = new MenuCommand(ToggleVisibility, toolwndCommandID);
                 mcs.AddCommand(menuViewIndentGuides);
+            }
+            if (EditorOptionsFactory != null)
+            {
+                var options = EditorOptionsFactory.GlobalOptions;
+
+                menuViewIndentGuides.Checked = options.GetOptionValue<bool>("IndentGuideVisibility");
             }
         }
 
         private void ToggleVisibility(object sender, EventArgs e)
-        { }
+        {
+            if (EditorOptionsFactory != null)
+            {
+                var options = EditorOptionsFactory.GlobalOptions;
+                
+                options.SetOptionValue("IndentGuideVisibility", !options.GetOptionValue<bool>("IndentGuideVisibility"));
+                menuViewIndentGuides.Checked = options.GetOptionValue<bool>("IndentGuideVisibility");
+            }
+        }
     }
 }

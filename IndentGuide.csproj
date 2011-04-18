@@ -141,6 +141,7 @@
     <Compile Include="IndentGuideFormat.cs" />
     <Compile Include="IndentGuideFactory.cs" />
     <Compile Include="IndentGuidePackage.cs" />
+    <Compile Include="IndentGuideVisibilityOption.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IndentGuide.cs" />
   </ItemGroup>

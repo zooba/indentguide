@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
+using System.ComponentModel.Composition;
 
 namespace IndentGuide
 {
@@ -13,11 +14,15 @@ namespace IndentGuide
         IAdornmentLayer Layer;
         IWpfTextView View;
         Brush GuideBrush;
+        bool Visible;
 
-        public IndentGuide(IWpfTextView view, IEditorFormatMapService formatMapService)
+        public IndentGuide(IWpfTextView view, IEditorFormatMapService formatMapService, IEditorOptions options)
         {
             View = view;
             View.LayoutChanged += OnLayoutChanged;
+
+            Visible = options.GetOptionValue<bool>("IndentGuideVisibility");
+            options.OptionChanged += new EventHandler<EditorOptionChangedEventArgs>(OnOptionChanged);
 
             Layer = view.GetAdornmentLayer("IndentGuide");
 
@@ -26,6 +31,19 @@ namespace IndentGuide
 
             var format = formatMap.GetProperties("Indent Guides");
             GuideBrush = (Brush)format[EditorFormatDefinition.ForegroundBrushId];
+        }
+
+        void OnOptionChanged(object sender, EditorOptionChangedEventArgs e)
+        {
+            if (e.OptionId == "IndentGuideVisibility")
+            {
+                var options = sender as IEditorOptions;
+                if (options == null) return;
+
+                Visible = options.GetOptionValue<bool>("IndentGuideVisibility");
+                if (Visible) UpdateAdornments();
+                else Layer.RemoveAllAdornments();
+            }
         }
 
         void OnFormatMappingChanged(object sender, FormatItemsEventArgs e)
@@ -43,6 +61,19 @@ namespace IndentGuide
         /// </summary>
         private void OnLayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
         {
+            UpdateAdornments();
+        }
+
+        void UpdateAdornments()
+        {
+            if (Layer == null || View == null) return;
+            
+            if (!Visible)
+            {
+                Layer.RemoveAllAdornments();
+                return;
+            }
+
             int tabSize = View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
 
             var lastGuidesAt = new List<double>();
