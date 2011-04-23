@@ -30,10 +30,11 @@
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
 
-            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" priority="0x6550" type="MenuButton">
+            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" priority="0x6550" type="Button">
                 <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
                 <CommandFlag>DynamicVisibility</CommandFlag>
-                <!--<CommandFlag>DefaultInvisible</CommandFlag>-->
+                <CommandFlag>DefaultInvisible</CommandFlag>
+                <CommandFlag>DefaultDisabled</CommandFlag>
                 <Strings>
                     <ButtonText>View Indent Guides</ButtonText>
                     <MenuText>View Indent &amp;Guides</MenuText>

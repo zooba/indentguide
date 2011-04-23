@@ -29,9 +29,6 @@ namespace IndentGuide
         [Import]
         internal IEditorFormatMapService FormatMapService = null;
 
-        [Import]
-        internal IEditorOptionsFactoryService EditorOptionsFactory = null;
-
         /// <summary>
         /// Instantiates a IndentGuide manager when a textView is created.
         /// </summary>
