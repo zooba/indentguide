@@ -12,14 +12,24 @@ using System.Diagnostics;
 
 namespace IndentGuide
 {
-    public class IndentGuide
+    /// <summary>
+    /// Manages indent guides for a particular text view.
+    /// </summary>
+    public class IndentGuideView
     {
         IAdornmentLayer Layer;
         IWpfTextView View;
         Brush GuideBrush;
         bool Visible;
+        LineStyle LineStyle;
 
-        public IndentGuide(IWpfTextView view, IEditorFormatMapService formatMapService, IEditorOptions options)
+        /// <summary>
+        /// Instantiates a new indent guide manager for a view.
+        /// </summary>
+        /// <param name="view">The text view to provide guides for.</param>
+        /// <param name="formatMapService">The format map provider.</param>
+        /// <param name="service">The Indent Guide service.</param>
+        public IndentGuideView(IWpfTextView view, IEditorFormatMapService formatMapService, IIndentGuide service)
         {
             View = view;
             View.LayoutChanged += OnLayoutChanged;
@@ -30,20 +40,28 @@ namespace IndentGuide
             UpdateFormat(formatMap);
             formatMap.FormatMappingChanged += new EventHandler<FormatItemsEventArgs>(OnFormatMappingChanged);
 
-            UpdateVisibility(options);
-            options.OptionChanged += new EventHandler<EditorOptionChangedEventArgs>(OnOptionChanged);
+            Visible = service.Visible;
+            LineStyle = service.LineStyle;
+            service.VisibleChanged += new EventHandler(OnVisibleChanged);
+            service.LineStyleChanged += new EventHandler(OnLineStyleChanged);
+        }
+
+        /// <summary>
+        /// Updates the line style and redraws all adornments.
+        /// </summary>
+        void OnLineStyleChanged(object sender, EventArgs e)
+        {
+            LineStyle = ((IIndentGuide)sender).LineStyle;
+            UpdateAdornments();
         }
 
 
         /// <summary>
-        /// On option change update visibility.
+        /// Updates visibility and redraws or removes all adornments.
         /// </summary>
-        void OnOptionChanged(object sender, EditorOptionChangedEventArgs e)
+        void OnVisibleChanged(object sender, EventArgs e)
         {
-            if (e.OptionId == IndentGuideVisibilityOption.OptionKey.Name)
-            {
-                UpdateVisibility(sender as IEditorOptions);
-            }
+            UpdateVisibility(sender as IIndentGuide);
         }
 
         /// <summary>
@@ -65,22 +83,23 @@ namespace IndentGuide
             UpdateAdornments();
         }
 
-        void UpdateVisibility(IEditorOptions options)
+        /// <summary>
+        /// Either clears all adornments or draws adornments, depending
+        /// on the current visibility value.
+        /// </summary>
+        void UpdateVisibility(IIndentGuide service)
         {
-            Debug.Assert(options != null);
-            if (options == null) return;
+            Debug.Assert(service != null);
+            if (service == null) return;
 
-            Visible = options.GetOptionValue(IndentGuideVisibilityOption.OptionKey);
-            if (Visible)
-            {
-                UpdateAdornments();
-            }
-            else
-            {
-                if (Layer != null) Layer.RemoveAllAdornments();
-            }
+            Visible = service.Visible;
+            if (Visible) UpdateAdornments();
+            else if (Layer != null) Layer.RemoveAllAdornments();
         }
 
+        /// <summary>
+        /// Updates the color of all adornments.
+        /// </summary>
         void UpdateFormat(IEditorFormatMap formatMap)
         {
             Debug.Assert(formatMap != null);
@@ -97,18 +116,19 @@ namespace IndentGuide
             }
         }
 
+        /// <summary>
+        /// Recreates all adornments.
+        /// </summary>
         void UpdateAdornments()
         {
             Debug.Assert(View != null);
             Debug.Assert(Layer != null);
-            if (View == null || Layer == null) return;
-            if (View.Options == null || View.TextViewLines == null) return;
+            Debug.Assert(View.TextViewLines != null);
+            if (View == null || Layer == null || View.TextViewLines == null) return;
 
-            if (!Visible)
-            {
-                Layer.RemoveAllAdornments();
-                return;
-            }
+            Layer.RemoveAllAdornments();
+
+            if (!Visible) return;
 
             int tabSize = View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
 
@@ -154,6 +174,12 @@ namespace IndentGuide
             }
         }
 
+        /// <summary>
+        /// Adds a guideline at the specified location.
+        /// </summary>
+        /// <param name="line">The line to add the guide for.</param>
+        /// <param name="left">The horizontal location to add the
+        /// guide.</param>
         private void AddGuide(ITextViewLine line, double left)
         {
             var guide = new Line()
@@ -164,10 +190,22 @@ namespace IndentGuide
                 Y2 = line.Bottom,
                 Stroke = GuideBrush,
                 StrokeThickness = 1.0,
-                StrokeDashArray = new DoubleCollection { 1.0, 1.0 },
                 StrokeDashOffset = line.Top,
                 SnapsToDevicePixels = true
             };
+
+            if (LineStyle == LineStyle.Thick)
+            {
+                guide.StrokeThickness = 3.0;
+            }
+            else if (LineStyle == LineStyle.Dotted)
+            {
+                guide.StrokeDashArray = new DoubleCollection { 1.0, 1.0 };
+            }
+            else if (LineStyle == LineStyle.Dashed)
+            {
+                guide.StrokeDashArray = new DoubleCollection { 3.0, 3.0 };
+            }
 
             Layer.AddAdornment(new SnapshotSpan(line.Start, line.End), null, guide);
         }

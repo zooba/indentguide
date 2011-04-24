@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Text.Classification;
 using System.ComponentModel.Design;
+using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide
 {
@@ -35,8 +36,8 @@ namespace IndentGuide
         /// <param name="textView">The <see cref="IWpfTextView"/> upon which the adornment should be placed</param>
         public void TextViewCreated(IWpfTextView textView)
         {
-            var options = textView.Options;
-            new IndentGuide(textView, FormatMapService, options);
+            var service = ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide)) as IIndentGuide;
+            new IndentGuideView(textView, FormatMapService, service);
         }
     }
     #endregion //Adornment Factory
