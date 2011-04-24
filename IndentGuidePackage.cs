@@ -16,7 +16,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 namespace IndentGuide
 {
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [InstalledProductRegistration("#110", "#112", "7.0", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", "8.0", IconResourceID = 400)]
     [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string)]
     [ProvideMenuResource(1000, 1)]
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, true)]
