@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 namespace IndentGuide
 {
@@ -15,6 +16,18 @@ namespace IndentGuide
         Thick,
         Dotted,
         Dashed
+    }
+
+    /// <summary>
+    /// The supported modes for handling empty lines.
+    /// </summary>
+    public enum EmptyLineMode
+    {
+        NoGuides,
+        SameAsLineAboveActual,
+        SameAsLineAboveLogical,
+        SameAsLineBelowActual,
+        SameAsLineBelowLogical
     }
     
     /// <summary>
@@ -32,6 +45,10 @@ namespace IndentGuide
         /// The style of guides shown.
         /// </summary>
         LineStyle LineStyle { get; set; }
+        /// <summary>
+        /// The mode to use for empty lines.
+        /// </summary>
+        EmptyLineMode EmptyLineMode { get; set; }
 
         /// <summary>
         /// Raised when <see cref="Visible"/> changes.
@@ -41,6 +58,10 @@ namespace IndentGuide
         /// Raised when <see cref="LineStyle"/> changes.
         /// </summary>
         event EventHandler LineStyleChanged;
+        /// <summary>
+        /// Raised when <see cref="EmptyLineMode"/> changes.
+        /// </summary>
+        event EventHandler EmptyLineModeChanged;
     }
 
     /// <summary>
@@ -103,6 +124,24 @@ namespace IndentGuide
         }
 
         public event EventHandler LineStyleChanged;
+
+        private EmptyLineMode _EmptyLineMode = EmptyLineMode.SameAsLineAboveLogical;
+        public EmptyLineMode EmptyLineMode
+        {
+            get { return _EmptyLineMode; }
+            set
+            {
+                if (_EmptyLineMode != value)
+                {
+                    _EmptyLineMode = value;
+
+                    var evt = EmptyLineModeChanged;
+                    if (evt != null) evt(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        public event EventHandler EmptyLineModeChanged;
 
         #endregion
     }

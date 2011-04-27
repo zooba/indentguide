@@ -22,7 +22,7 @@ namespace IndentGuide
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, true)]
     [ProvideProfile(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, true)]
     [ProvideService(typeof(SIndentGuide))]
-    [Description("Indent Guides Package")]
+    [ResourceDescription("IndentGuidePackage")]
     [Guid("959BEB25-6C38-440A-A37F-5D6717E9A41B")]
     public sealed class IndentGuidePackage : Package
     {

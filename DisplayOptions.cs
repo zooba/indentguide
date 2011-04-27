@@ -48,12 +48,22 @@ namespace IndentGuide
             Line = LineStyle.Dotted;
         }
 
-        [Description("True to display indentation guides in all text editors; otherwise, False.")]
-        [Category("Appearance")]
+        [ResourceDescription("VisibilityDescription")]
+        [ResourceCategory("Appearance")]
         public bool Visible { get; set; }
 
-        [Description("The style of guides to display.")]
-        [Category("Appearance")]
+        [ResourceDisplayName("LineStyleDisplayName")]
+        [ResourceDescription("LineStyleDescription")]
+        [ResourceCategory("Appearance")]
         public LineStyle Line { get; set; }
+
+        private class EmptyLineModeTypeConverter : EnumResourceTypeConverter<EmptyLineMode>
+        { }
+
+        [ResourceDisplayName("EmptyLineModeDisplayName")]
+        [ResourceDescription("EmptyLineModeDescription")]
+        [ResourceCategory("Appearance")]
+        [TypeConverter(typeof(EmptyLineModeTypeConverter))]
+        public EmptyLineMode EmptyLineMode { get; set; }
     }
 }
