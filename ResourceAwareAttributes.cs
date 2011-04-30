@@ -57,9 +57,24 @@ namespace IndentGuide
 
     public class EnumResourceTypeConverter<T> : EnumConverter
     {
+        private Dictionary<T, string> ToCurrentCulture;
+        private Dictionary<string, T> FromCurrentCulture;
+
         public EnumResourceTypeConverter()
             : base(typeof(T))
-        { }
+        {
+            ToCurrentCulture = new Dictionary<T, string>();
+            FromCurrentCulture = new Dictionary<string, T>();
+
+            var prefix = typeof(T).Name + "_";
+            foreach (var name in Enum.GetNames(typeof(T)))
+            {
+                var localized = ResourceLoader.LoadString(prefix + name, null, CultureInfo.CurrentCulture);
+                var value = (T)Enum.Parse(typeof(T), name);
+                ToCurrentCulture[value] = localized;
+                FromCurrentCulture[localized] = value;
+            }
+        }
 
         public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
         {
@@ -75,6 +90,14 @@ namespace IndentGuide
         {
             if (destinationType == typeof(string))
             {
+                if (culture.Equals(CultureInfo.CurrentCulture))
+                {
+                    return ToCurrentCulture[(T)value];
+                }
+                else if (culture.Equals(CultureInfo.InvariantCulture))
+                {
+                    return value.ToString();
+                }
                 var name = value.ToString();
                 return ResourceLoader.LoadString(typeof(T).Name + "_" + name, name, culture);
             }
@@ -88,6 +111,15 @@ namespace IndentGuide
         {
             if (value.GetType() == typeof(string))
             {
+                if (culture.Equals(CultureInfo.CurrentCulture))
+                {
+                    return FromCurrentCulture[(string)value];
+                }
+                else if (culture.Equals(CultureInfo.InvariantCulture))
+                {
+                    return (T)Enum.Parse(typeof(T), (string)value);
+                }
+
                 var prefix = typeof(T).Name + "_";
                 foreach (var name in Enum.GetNames(typeof(T)))
                 {

@@ -22,6 +22,7 @@ namespace IndentGuide
         Brush GuideBrush;
         bool Visible;
         LineStyle LineStyle;
+        EmptyLineMode EmptyLineMode;
 
         /// <summary>
         /// Instantiates a new indent guide manager for a view.
@@ -42,8 +43,19 @@ namespace IndentGuide
 
             Visible = service.Visible;
             LineStyle = service.LineStyle;
+            EmptyLineMode = service.EmptyLineMode;
             service.VisibleChanged += new EventHandler(OnVisibleChanged);
             service.LineStyleChanged += new EventHandler(OnLineStyleChanged);
+            service.EmptyLineModeChanged += new EventHandler(OnEmptyLineModeChanged);
+        }
+
+        /// <summary>
+        /// Updates the empty line mode and redraws all adornments.
+        /// </summary>
+        void OnEmptyLineModeChanged(object sender, EventArgs e)
+        {
+            EmptyLineMode = ((IIndentGuide)sender).EmptyLineMode;
+            UpdateAdornments();
         }
 
         /// <summary>
@@ -133,45 +145,73 @@ namespace IndentGuide
             int tabSize = View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
 
             var lastGuidesAt = new List<double>();
+            
+            var lines = View.TextViewLines.Cast<IWpfTextViewLine>().ToList();
+            if (EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineBelowActual ||
+                EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineBelowLogical)
+            {
+                lines.Reverse();
+            }
 
-            foreach (var line in View.TextViewLines)
+            bool logical = (EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineAboveLogical ||
+                EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineBelowLogical);
+
+            foreach(var line in lines)
             {
                 if (line.Length == 0)
                 {
-                    foreach (var left in lastGuidesAt)
+                    if (EmptyLineMode == IndentGuide.EmptyLineMode.NoGuides)
+                    { }
+                    else if (logical)
                     {
-                        AddGuide(line, left);
+                        foreach (var left in lastGuidesAt)
+                            AddGuide(line, left);
+                    }
+                    else
+                    {
+                        foreach (var left in lastGuidesAt.Take(lastGuidesAt.Count - 1))
+                            AddGuide(line, left);
                     }
                 }
                 else
                 {
-                    lastGuidesAt.Clear();
-                    var snapshot = line.Snapshot;
-                    int actualPos = 0;
-                    int spaceCount = tabSize;
-                    int end = line.End;
-                    for (int i = line.Start; i <= end; ++i)
-                    {
-                        char c = i == end ? ' ' : snapshot[i];
-
-                        if (actualPos > 0 && (actualPos % tabSize) == 0 && char.IsWhiteSpace(c) &&
-                            snapshot.Length > i)
-                        {
-                            var span = new SnapshotSpan(snapshot, i, 1);
-                            double left = View.TextViewLines.GetMarkerGeometry(span).Bounds.Left;
-                            lastGuidesAt.Add(left);
-                            AddGuide(line, left);
-                        }
-
-                        if (c == '\t')
-                            actualPos = ((actualPos / tabSize) + 1) * tabSize;
-                        else if (c == ' ')
-                            actualPos += 1;
-                        else
-                            break;
-                    }
+                    lastGuidesAt = GetIndentLocations(tabSize, line);
+                    foreach (var left in lastGuidesAt.Take(lastGuidesAt.Count - 1))
+                        AddGuide(line, left);
                 }
             }
+        }
+
+        private List<double> GetIndentLocations(int tabSize, IWpfTextViewLine line)
+        {
+            var locations = new List<double>();
+            var snapshot = line.Snapshot;
+            int actualPos = 0;
+            int spaceCount = tabSize;
+            int end = line.End;
+            for (int i = line.Start; i <= end; ++i)
+            {
+                char c = i == end ? ' ' : snapshot[i];
+
+                if (actualPos > 0 && (actualPos % tabSize) == 0 && //char.IsWhiteSpace(c) &&
+                    snapshot.Length > i)
+                {
+                    var span = new SnapshotSpan(snapshot, i, 1);
+                    double left = View.TextViewLines.GetMarkerGeometry(span).Bounds.Left;
+                    locations.Add(left);
+                }
+
+                if (c == '\t')
+                    actualPos = ((actualPos / tabSize) + 1) * tabSize;
+                else if (c == ' ')
+                    actualPos += 1;
+                else
+                    break;
+            }
+
+            if (actualPos > 0 && (actualPos % tabSize) != 0) locations.Add(0);
+
+            return locations;
         }
 
         /// <summary>
@@ -182,6 +222,8 @@ namespace IndentGuide
         /// guide.</param>
         private void AddGuide(ITextViewLine line, double left)
         {
+            if (left == 0) return;
+
             var guide = new Line()
             {
                 X1 = left,

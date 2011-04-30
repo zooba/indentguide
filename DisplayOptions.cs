@@ -39,6 +39,7 @@ namespace IndentGuide
             base.OnApply(e);
             Service.Visible = Visible;
             Service.LineStyle = Line;
+            Service.EmptyLineMode = EmptyLineMode;
         }
 
         public override void ResetSettings()
@@ -46,6 +47,7 @@ namespace IndentGuide
             base.ResetSettings();
             Visible = true;
             Line = LineStyle.Dotted;
+            EmptyLineMode = EmptyLineMode.SameAsLineAboveActual;
         }
 
         [ResourceDescription("VisibilityDescription")]
