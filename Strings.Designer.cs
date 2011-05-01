@@ -142,6 +142,24 @@ namespace IndentGuide {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The color of the guide lines..
+        /// </summary>
+        internal static string LineColorDescription {
+            get {
+                return ResourceManager.GetString("LineColorDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line Color.
+        /// </summary>
+        internal static string LineColorDisplayName {
+            get {
+                return ResourceManager.GetString("LineColorDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The style of guides to display..
         /// </summary>
         internal static string LineStyleDescription {

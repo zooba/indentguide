@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Runtime.InteropServices;
-using System.ComponentModel;
+using System.Windows.Media;
 
 namespace IndentGuide
 {
@@ -33,7 +30,7 @@ namespace IndentGuide
     /// <summary>
     /// Provides settings storage and update notifications.
     /// </summary>
-    [Guid("A65F346F-3F88-4949-BFC1-F5DD3848754F")]
+    [Guid(Guids.IIndentGuideGuid)]
     [ComVisible(true)]
     public interface IIndentGuide
     {
@@ -45,6 +42,10 @@ namespace IndentGuide
         /// The style of guides shown.
         /// </summary>
         LineStyle LineStyle { get; set; }
+        /// <summary>
+        /// The color to use for guide lines.
+        /// </summary>
+        Color LineColor { get; set; }
         /// <summary>
         /// The mode to use for empty lines.
         /// </summary>
@@ -59,6 +60,10 @@ namespace IndentGuide
         /// </summary>
         event EventHandler LineStyleChanged;
         /// <summary>
+        /// Raised when <see cref="LineColor"/> changes.
+        /// </summary>
+        event EventHandler LineColorChanged;
+        /// <summary>
         /// Raised when <see cref="EmptyLineMode"/> changes.
         /// </summary>
         event EventHandler EmptyLineModeChanged;
@@ -67,7 +72,7 @@ namespace IndentGuide
     /// <summary>
     /// The service interface.
     /// </summary>
-    [Guid("46A005F6-0E33-47A8-9791-190D4121678E")]
+    [Guid(Guids.SIndentGuideGuid)]
     public interface SIndentGuide
     {
         void Initialize(EnvDTE.DTE dte);
@@ -83,8 +88,18 @@ namespace IndentGuide
         void SIndentGuide.Initialize(EnvDTE.DTE dte)
         {
             var props = dte.get_Properties("IndentGuide", "Display");
-            Visible = (bool)props.Item("Visible").Value;
-            LineStyle = (LineStyle)props.Item("Line").Value;
+            
+            var p = props.Item("Visible");
+            if (p.NumIndices > 0) Visible = (bool)p.Value;
+
+            p = props.Item("LineStyle");
+            if (p.NumIndices > 0) LineStyle = (LineStyle)p.Value;
+
+            p = props.Item("LineColor");
+            if (p.NumIndices > 0) LineColor = (Color)p.Value;
+
+            p = props.Item("EmptyLineMode");
+            if (p.NumIndices > 0) EmptyLineMode = (EmptyLineMode)p.Value;
         }
 
         #region IIndentGuide Members
@@ -124,6 +139,24 @@ namespace IndentGuide
         }
 
         public event EventHandler LineStyleChanged;
+
+        private Color _LineColor = Colors.Teal;
+        public Color LineColor
+        {
+            get { return _LineColor; }
+            set
+            {
+                if (_LineColor != value)
+                {
+                    _LineColor = value;
+
+                    var evt = LineColorChanged;
+                    if (evt != null) evt(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        public event EventHandler LineColorChanged;
 
         private EmptyLineMode _EmptyLineMode = EmptyLineMode.SameAsLineAboveLogical;
         public EmptyLineMode EmptyLineMode

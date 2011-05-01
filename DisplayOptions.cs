@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Shell;
-using System.ComponentModel.Composition;
 using System.ComponentModel;
+using System.Drawing;
 using System.Runtime.InteropServices;
+using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide
 {
@@ -17,16 +14,15 @@ namespace IndentGuide
         public DisplayOptions()
         {
             Visible = true;
-            Line = LineStyle.Dotted;
+            LineStyle = LineStyle.Dotted;
+            LineColor = Color.Teal;
+            EmptyLineMode = EmptyLineMode.SameAsLineAboveActual;
             
             Service = (IIndentGuide)ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide));
             Service.VisibleChanged += new EventHandler(Service_VisibleChanged);
             Service.LineStyleChanged += new EventHandler(Service_LineStyleChanged);
-        }
-
-        void Service_LineStyleChanged(object sender, EventArgs e)
-        {
-            Line = ((IIndentGuide)sender).LineStyle;
+            Service.LineColorChanged += new EventHandler(Service_LineColorChanged);
+            Service.EmptyLineModeChanged += new EventHandler(Service_EmptyLineModeChanged);
         }
 
         void Service_VisibleChanged(object sender, EventArgs e)
@@ -34,11 +30,28 @@ namespace IndentGuide
             Visible = ((IIndentGuide)sender).Visible;
         }
 
+        void Service_LineStyleChanged(object sender, EventArgs e)
+        {
+            LineStyle = ((IIndentGuide)sender).LineStyle;
+        }
+
+        void Service_LineColorChanged(object sender, EventArgs e)
+        {
+            var color = ((IIndentGuide)sender).LineColor;
+            LineColor = Color.FromArgb(color.A, color.R, color.G, color.B);
+        }
+
+        void Service_EmptyLineModeChanged(object sender, EventArgs e)
+        {
+            EmptyLineMode = ((IIndentGuide)sender).EmptyLineMode;
+        }
+
         protected override void OnApply(DialogPage.PageApplyEventArgs e)
         {
             base.OnApply(e);
             Service.Visible = Visible;
-            Service.LineStyle = Line;
+            Service.LineStyle = LineStyle;
+            Service.LineColor = System.Windows.Media.Color.FromArgb(LineColor.A, LineColor.R, LineColor.G, LineColor.B);
             Service.EmptyLineMode = EmptyLineMode;
         }
 
@@ -46,7 +59,8 @@ namespace IndentGuide
         {
             base.ResetSettings();
             Visible = true;
-            Line = LineStyle.Dotted;
+            LineStyle = LineStyle.Dotted;
+            LineColor = Color.Teal;
             EmptyLineMode = EmptyLineMode.SameAsLineAboveActual;
         }
 
@@ -57,7 +71,13 @@ namespace IndentGuide
         [ResourceDisplayName("LineStyleDisplayName")]
         [ResourceDescription("LineStyleDescription")]
         [ResourceCategory("Appearance")]
-        public LineStyle Line { get; set; }
+        public LineStyle LineStyle { get; set; }
+
+        [ResourceDisplayName("LineColorDisplayName")]
+        [ResourceDescription("LineColorDescription")]
+        [ResourceCategory("Appearance")]
+        [TypeConverter(typeof(ColorConverter))]
+        public Color LineColor { get; set; }
 
         private class EmptyLineModeTypeConverter : EnumResourceTypeConverter<EmptyLineMode>
         { }

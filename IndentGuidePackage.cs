@@ -1,29 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace IndentGuide
 {
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "8.0", IconResourceID = 400)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string)]
     [ProvideMenuResource(1000, 1)]
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, true)]
     [ProvideProfile(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, true)]
     [ProvideService(typeof(SIndentGuide))]
     [ResourceDescription("IndentGuidePackage")]
-    [Guid("959BEB25-6C38-440A-A37F-5D6717E9A41B")]
+    [Guid(Guids.IndentGuidePackageGuid)]
     public sealed class IndentGuidePackage : Package
     {
         public IndentGuidePackage()
@@ -43,7 +33,7 @@ namespace IndentGuide
                 return null;
         }
 
-        private static readonly Guid guidIndentGuideCmdSet = Guid.Parse("1AE9DCDB-7723-4651-ABDC-3D4BBAA0731F");
+        private static readonly Guid guidIndentGuideCmdSet = Guid.Parse(Guids.IndentGuideCmdSetGuid);
         private const int cmdidViewIndentGuides = 0x0102;
 
         private EnvDTE.WindowEvents WindowEvents;
@@ -51,7 +41,6 @@ namespace IndentGuide
 
         protected override void Initialize()
         {
-            Trace.WriteLine("Entering Initialise() of IndentGuide");
             base.Initialize();
 
             // Adding the command is deferred to reduce VS start-up time.

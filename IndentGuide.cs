@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
-using System.ComponentModel.Composition;
-using System.Windows.Shapes;
-using System.Diagnostics;
 
 namespace IndentGuide
 {
@@ -28,24 +26,22 @@ namespace IndentGuide
         /// Instantiates a new indent guide manager for a view.
         /// </summary>
         /// <param name="view">The text view to provide guides for.</param>
-        /// <param name="formatMapService">The format map provider.</param>
         /// <param name="service">The Indent Guide service.</param>
-        public IndentGuideView(IWpfTextView view, IEditorFormatMapService formatMapService, IIndentGuide service)
+        public IndentGuideView(IWpfTextView view, IIndentGuide service)
         {
             View = view;
             View.LayoutChanged += OnLayoutChanged;
 
             Layer = view.GetAdornmentLayer("IndentGuide");
 
-            var formatMap = formatMapService.GetEditorFormatMap(View);
-            UpdateFormat(formatMap);
-            formatMap.FormatMappingChanged += new EventHandler<FormatItemsEventArgs>(OnFormatMappingChanged);
-
             Visible = service.Visible;
             LineStyle = service.LineStyle;
+            GuideBrush = new SolidColorBrush(service.LineColor);
+            if (GuideBrush.CanFreeze) GuideBrush.Freeze();
             EmptyLineMode = service.EmptyLineMode;
             service.VisibleChanged += new EventHandler(OnVisibleChanged);
             service.LineStyleChanged += new EventHandler(OnLineStyleChanged);
+            service.LineColorChanged += new EventHandler(OnLineColorChanged);
             service.EmptyLineModeChanged += new EventHandler(OnEmptyLineModeChanged);
         }
 
@@ -67,6 +63,13 @@ namespace IndentGuide
             UpdateAdornments();
         }
 
+        /// <summary>
+        /// Updates the line color and redraws all adornments.
+        /// </summary>
+        void OnLineColorChanged(object sender, EventArgs e)
+        {
+            UpdateFormat((IIndentGuide)sender);
+        }
 
         /// <summary>
         /// Updates visibility and redraws or removes all adornments.
@@ -74,17 +77,6 @@ namespace IndentGuide
         void OnVisibleChanged(object sender, EventArgs e)
         {
             UpdateVisibility(sender as IIndentGuide);
-        }
-
-        /// <summary>
-        /// On format change update the line color.
-        /// </summary>
-        private void OnFormatMappingChanged(object sender, FormatItemsEventArgs e)
-        {
-            if (e.ChangedItems.Contains(IndentGuideFormat.Name))
-            {
-                UpdateFormat(sender as IEditorFormatMap);
-            }
         }
 
         /// <summary>
@@ -112,13 +104,14 @@ namespace IndentGuide
         /// <summary>
         /// Updates the color of all adornments.
         /// </summary>
-        void UpdateFormat(IEditorFormatMap formatMap)
+        void UpdateFormat(IIndentGuide service)
         {
-            Debug.Assert(formatMap != null);
-            if (formatMap == null) return;
+            Debug.Assert(service != null);
+            if (service == null) return;
 
-            var format = formatMap.GetProperties(IndentGuideFormat.Name);
-            GuideBrush = (SolidColorBrush)format[EditorFormatDefinition.ForegroundBrushId];
+            var color = service.LineColor;
+            GuideBrush = new SolidColorBrush(color);
+            if (GuideBrush.CanFreeze) GuideBrush.Freeze();
             if (Layer != null && Layer.Elements.Count > 0)
             {
                 foreach (var line in Layer.Elements.Select(e => e.Adornment).OfType<Line>())
@@ -158,7 +151,7 @@ namespace IndentGuide
 
             foreach(var line in lines)
             {
-                if (line.Length == 0)
+                if (line.IsEmpty())
                 {
                     if (EmptyLineMode == IndentGuide.EmptyLineMode.NoGuides)
                     { }
@@ -193,7 +186,7 @@ namespace IndentGuide
             {
                 char c = i == end ? ' ' : snapshot[i];
 
-                if (actualPos > 0 && (actualPos % tabSize) == 0 && //char.IsWhiteSpace(c) &&
+                if (actualPos > 0 && (actualPos % tabSize) == 0 && 
                     snapshot.Length > i)
                 {
                     var span = new SnapshotSpan(snapshot, i, 1);

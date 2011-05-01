@@ -6,7 +6,7 @@
         <Version>8.0</Version>
         <Description xml:space="preserve">Adds vertical lines at each indent level.</Description>
         <Locale>1033</Locale>
-        <MoreInfoUrl>http://indentguide.codeplex.com/</MoreInfoUrl>
+        <MoreInfoUrl>http://visualstudiogallery.msdn.microsoft.com/e792686d-542b-474a-8c55-630980e72c30</MoreInfoUrl>
         <License>Licence.txt</License>
         <Icon>embed_icon.png</Icon>
         <PreviewImage>embed_screen.png</PreviewImage>

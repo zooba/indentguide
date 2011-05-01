@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel;
 using System.Globalization;
 
@@ -18,7 +16,7 @@ namespace IndentGuide
 
         internal static string LoadString(string id, CultureInfo culture = null)
         {
-            return ResourceManager.GetString(id, culture ?? CultureInfo.CurrentUICulture);
+            return ResourceManager.GetString(id, culture ?? CultureInfo.CurrentCulture);
         }
         
         internal static string LoadString(string id, string fallback, CultureInfo culture = null)

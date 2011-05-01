@@ -1,9 +1,8 @@
+using System;
 using System.ComponentModel.Composition;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.Text.Classification;
-using System.ComponentModel.Design;
-using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide
 {
@@ -27,9 +26,6 @@ namespace IndentGuide
         [TextViewRole(PredefinedTextViewRoles.Document)]
         public AdornmentLayerDefinition editorAdornmentLayer = null;
 
-        [Import]
-        internal IEditorFormatMapService FormatMapService = null;
-
         /// <summary>
         /// Instantiates a IndentGuide manager when a textView is created.
         /// </summary>
@@ -37,7 +33,7 @@ namespace IndentGuide
         public void TextViewCreated(IWpfTextView textView)
         {
             var service = ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide)) as IIndentGuide;
-            new IndentGuideView(textView, FormatMapService, service);
+            new IndentGuideView(textView, service);
         }
     }
     #endregion //Adornment Factory

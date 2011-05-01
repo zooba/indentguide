@@ -73,13 +73,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Data.Linq" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
@@ -143,7 +139,8 @@
     <Compile Include="DisplayOptions.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="IndentGuideFormat.cs" />
+    <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Guids.cs" />
     <Compile Include="IndentGuideFactory.cs" />
     <Compile Include="IndentGuidePackage.cs" />
     <Compile Include="IndentGuideService.cs" />
@@ -178,6 +175,8 @@
     <None Include="Package.ico" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Strings.en-AU.resx" />
+    <EmbeddedResource Include="Strings.en-GB.resx" />
     <EmbeddedResource Include="Strings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Strings.Designer.cs</LastGenOutput>
