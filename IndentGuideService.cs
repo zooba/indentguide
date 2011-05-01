@@ -88,18 +88,18 @@ namespace IndentGuide
         void SIndentGuide.Initialize(EnvDTE.DTE dte)
         {
             var props = dte.get_Properties("IndentGuide", "Display");
-            
-            var p = props.Item("Visible");
-            if (p.NumIndices > 0) Visible = (bool)p.Value;
 
-            p = props.Item("LineStyle");
-            if (p.NumIndices > 0) LineStyle = (LineStyle)p.Value;
+            try { Visible = (bool)props.Item("Visible").Value; }
+            catch { }
 
-            p = props.Item("LineColor");
-            if (p.NumIndices > 0) LineColor = (Color)p.Value;
+            try { LineStyle = (LineStyle)props.Item("LineStyle").Value; }
+            catch { }
 
-            p = props.Item("EmptyLineMode");
-            if (p.NumIndices > 0) EmptyLineMode = (EmptyLineMode)p.Value;
+            try { LineColor = (Color)props.Item("LineColor").Value; }
+            catch { }
+
+            try { EmptyLineMode = (EmptyLineMode)props.Item("EmptyLineMode").Value; }
+            catch { }
         }
 
         #region IIndentGuide Members

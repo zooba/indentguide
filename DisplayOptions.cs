@@ -16,7 +16,7 @@ namespace IndentGuide
             Visible = true;
             LineStyle = LineStyle.Dotted;
             LineColor = Color.Teal;
-            EmptyLineMode = EmptyLineMode.SameAsLineAboveActual;
+            EmptyLineMode = EmptyLineMode.SameAsLineAboveLogical;
             
             Service = (IIndentGuide)ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide));
             Service.VisibleChanged += new EventHandler(Service_VisibleChanged);
@@ -61,7 +61,7 @@ namespace IndentGuide
             Visible = true;
             LineStyle = LineStyle.Dotted;
             LineColor = Color.Teal;
-            EmptyLineMode = EmptyLineMode.SameAsLineAboveActual;
+            EmptyLineMode = EmptyLineMode.SameAsLineAboveLogical;
         }
 
         [ResourceDescription("VisibilityDescription")]
