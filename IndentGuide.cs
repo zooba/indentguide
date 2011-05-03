@@ -21,6 +21,7 @@ namespace IndentGuide
         bool Visible;
         LineStyle LineStyle;
         EmptyLineMode EmptyLineMode;
+        int VersionNumber;
 
         /// <summary>
         /// Instantiates a new indent guide manager for a view.
@@ -29,6 +30,8 @@ namespace IndentGuide
         /// <param name="service">The Indent Guide service.</param>
         public IndentGuideView(IWpfTextView view, IIndentGuide service)
         {
+            VersionNumber = 0;
+
             View = view;
             View.LayoutChanged += OnLayoutChanged;
 
@@ -131,14 +134,17 @@ namespace IndentGuide
             Debug.Assert(View.TextViewLines != null);
             if (View == null || Layer == null || View.TextViewLines == null) return;
 
-            Layer.RemoveAllAdornments();
+            if (!Visible)
+            {
+                Layer.RemoveAllAdornments();
+                return;
+            }
 
-            if (!Visible) return;
-
+            int previousVersionNumber = VersionNumber;
+            VersionNumber = (VersionNumber == int.MaxValue) ? int.MinValue : VersionNumber + 1;
             int tabSize = View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
 
-            var lastGuidesAt = new List<double>();
-            
+
             var lines = View.TextViewLines.Cast<IWpfTextViewLine>().ToList();
             if (EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineBelowActual ||
                 EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineBelowLogical)
@@ -149,35 +155,73 @@ namespace IndentGuide
             bool logical = (EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineAboveLogical ||
                 EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineBelowLogical);
 
-            foreach(var line in lines)
+            var activeGuides = new Dictionary<int, Tuple<double, IWpfTextViewLine>>();
+            var previousGuidesAt = new Dictionary<int, double>();
+            IWpfTextViewLine previousLine = null;
+
+            foreach (var line in lines)
             {
+                Dictionary<int, double> guidesAt = null;
+                bool excludeLast = !logical;
+
                 if (line.IsEmpty())
                 {
                     if (EmptyLineMode == IndentGuide.EmptyLineMode.NoGuides)
-                    { }
-                    else if (logical)
-                    {
-                        foreach (var left in lastGuidesAt)
-                            AddGuide(line, left);
-                    }
+                        guidesAt = null;
                     else
-                    {
-                        foreach (var left in lastGuidesAt.Take(lastGuidesAt.Count - 1))
-                            AddGuide(line, left);
-                    }
+                        guidesAt = previousGuidesAt;
                 }
                 else
                 {
-                    lastGuidesAt = GetIndentLocations(tabSize, line);
-                    foreach (var left in lastGuidesAt.Take(lastGuidesAt.Count - 1))
-                        AddGuide(line, left);
+                    guidesAt = GetIndentLocations(tabSize, line);
+                    excludeLast = true;
                 }
+
+                int exclude = 0;
+                if (excludeLast && guidesAt != null && guidesAt.Any())
+                {
+                    exclude = guidesAt.Max(kv => kv.Key);
+                }
+
+                foreach (var kv in activeGuides.ToList())
+                {
+                    if (guidesAt == null || !guidesAt.ContainsKey(kv.Key) || kv.Key == exclude)
+                    {
+                        var pos = kv.Value.Item1;
+                        var firstLine = kv.Value.Item2;
+                        var lastLine = previousLine ?? firstLine;
+                        AddGuide(firstLine, lastLine, pos);
+                        activeGuides.Remove(kv.Key);
+                    }
+                }
+
+                if (guidesAt != null)
+                {
+                    foreach (var kv in guidesAt)
+                    {
+                        if (!activeGuides.ContainsKey(kv.Key) && kv.Key != exclude)
+                            activeGuides[kv.Key] = new Tuple<double, IWpfTextViewLine>(kv.Value, line);
+                    }
+                }
+
+                previousGuidesAt = guidesAt;
+                previousLine = line;
             }
+
+            foreach (var kv in activeGuides)
+            {
+                var pos = kv.Value.Item1;
+                var firstLine = kv.Value.Item2;
+                var lastLine = previousLine ?? firstLine;
+                AddGuide(firstLine, lastLine, pos);
+            }
+
+            Layer.RemoveAdornmentsByTag(previousVersionNumber);
         }
 
-        private List<double> GetIndentLocations(int tabSize, IWpfTextViewLine line)
+        private Dictionary<int, double> GetIndentLocations(int tabSize, IWpfTextViewLine line)
         {
-            var locations = new List<double>();
+            var locations = new Dictionary<int, double>();
             var snapshot = line.Snapshot;
             int actualPos = 0;
             int spaceCount = tabSize;
@@ -186,12 +230,12 @@ namespace IndentGuide
             {
                 char c = i == end ? ' ' : snapshot[i];
 
-                if (actualPos > 0 && (actualPos % tabSize) == 0 && 
+                if (actualPos > 0 && (actualPos % tabSize) == 0 &&
                     snapshot.Length > i)
                 {
                     var span = new SnapshotSpan(snapshot, i, 1);
                     double left = View.TextViewLines.GetMarkerGeometry(span).Bounds.Left;
-                    locations.Add(left);
+                    locations[actualPos] = left;
                 }
 
                 if (c == '\t')
@@ -202,7 +246,7 @@ namespace IndentGuide
                     break;
             }
 
-            if (actualPos > 0 && (actualPos % tabSize) != 0) locations.Add(0);
+            if (actualPos > 0 && (actualPos % tabSize) != 0) locations[actualPos] = double.MaxValue;
 
             return locations;
         }
@@ -213,19 +257,22 @@ namespace IndentGuide
         /// <param name="line">The line to add the guide for.</param>
         /// <param name="left">The horizontal location to add the
         /// guide.</param>
-        private void AddGuide(ITextViewLine line, double left)
+        private void AddGuide(ITextViewLine lineFirst, ITextViewLine lineLast, double left)
         {
-            if (left == 0) return;
+            if (left == 0 || left > View.ViewportWidth) return;
+
+            var top = Math.Min(lineFirst.Top, lineLast.Top);
+            var bottom = Math.Max(lineFirst.Bottom, lineLast.Bottom);
 
             var guide = new Line()
             {
                 X1 = left,
-                Y1 = line.Top,
+                Y1 = top,
                 X2 = left,
-                Y2 = line.Bottom,
+                Y2 = bottom,
                 Stroke = GuideBrush,
                 StrokeThickness = 1.0,
-                StrokeDashOffset = line.Top,
+                StrokeDashOffset = top,
                 SnapsToDevicePixels = true
             };
 
@@ -242,7 +289,13 @@ namespace IndentGuide
                 guide.StrokeDashArray = new DoubleCollection { 3.0, 3.0 };
             }
 
-            Layer.AddAdornment(new SnapshotSpan(line.Start, line.End), null, guide);
+            SnapshotSpan span;
+            if (lineFirst.Start < lineLast.Start)
+                span = new SnapshotSpan(lineFirst.Start, lineLast.End);
+            else
+                span = new SnapshotSpan(lineLast.Start, lineFirst.End);
+
+            Layer.AddAdornment(span, VersionNumber, guide);
         }
     }
 }
