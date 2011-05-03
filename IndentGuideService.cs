@@ -67,6 +67,11 @@ namespace IndentGuide
         /// Raised when <see cref="EmptyLineMode"/> changes.
         /// </summary>
         event EventHandler EmptyLineModeChanged;
+
+        /// <summary>
+        /// Sets all properties at the same time.
+        /// </summary>
+        void BatchUpdate(bool visible, LineStyle lineStyle, Color lineColor, EmptyLineMode emptyLineMode);
     }
 
     /// <summary>
@@ -87,19 +92,9 @@ namespace IndentGuide
         
         void SIndentGuide.Initialize(EnvDTE.DTE dte)
         {
-            var props = dte.get_Properties("IndentGuide", "Display");
-
-            try { Visible = (bool)props.Item("Visible").Value; }
-            catch { }
-
-            try { LineStyle = (LineStyle)props.Item("LineStyle").Value; }
-            catch { }
-
-            try { LineColor = (Color)props.Item("LineColor").Value; }
-            catch { }
-
-            try { EmptyLineMode = (EmptyLineMode)props.Item("EmptyLineMode").Value; }
-            catch { }
+            // Force the options to be loaded. DisplayOptions will then
+            // initialise the values here.
+            dte.get_Properties("IndentGuide", "Display");
         }
 
         #region IIndentGuide Members
@@ -175,6 +170,16 @@ namespace IndentGuide
         }
 
         public event EventHandler EmptyLineModeChanged;
+
+
+        public void BatchUpdate(bool visible, LineStyle lineStyle, Color lineColor, EmptyLineMode emptyLineMode)
+        {
+            if (!visible) Visible = visible;
+            if (emptyLineMode != EmptyLineMode) EmptyLineMode = emptyLineMode;
+            if (lineStyle != LineStyle) LineStyle = lineStyle;
+            if (lineColor != LineColor) LineColor = lineColor;
+            if (visible) Visible = visible;
+        }
 
         #endregion
     }

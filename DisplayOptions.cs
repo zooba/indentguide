@@ -46,13 +46,25 @@ namespace IndentGuide
             EmptyLineMode = ((IIndentGuide)sender).EmptyLineMode;
         }
 
+        private void UpdateService()
+        {
+            Service.BatchUpdate(
+                Visible,
+                LineStyle,
+                System.Windows.Media.Color.FromArgb(LineColor.A, LineColor.R, LineColor.G, LineColor.B),
+                EmptyLineMode);
+        }
+
+        public override void LoadSettingsFromStorage()
+        {
+            base.LoadSettingsFromStorage();
+            UpdateService();
+        }
+
         protected override void OnApply(DialogPage.PageApplyEventArgs e)
         {
             base.OnApply(e);
-            Service.Visible = Visible;
-            Service.LineStyle = LineStyle;
-            Service.LineColor = System.Windows.Media.Color.FromArgb(LineColor.A, LineColor.R, LineColor.G, LineColor.B);
-            Service.EmptyLineMode = EmptyLineMode;
+            UpdateService();
         }
 
         public override void ResetSettings()
@@ -62,6 +74,7 @@ namespace IndentGuide
             LineStyle = LineStyle.Dotted;
             LineColor = Color.Teal;
             EmptyLineMode = EmptyLineMode.SameAsLineAboveLogical;
+            UpdateService();
         }
 
         [ResourceDescription("VisibilityDescription")]
