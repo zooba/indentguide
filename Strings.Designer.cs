@@ -70,6 +70,33 @@ namespace IndentGuide {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Delete.
+        /// </summary>
+        internal static string btnThemeDelete {
+            get {
+                return ResourceManager.GetString("btnThemeDelete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Save as....
+        /// </summary>
+        internal static string btnThemeSaveAs {
+            get {
+                return ResourceManager.GetString("btnThemeSaveAs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Default).
+        /// </summary>
+        internal static string DefaultThemeName {
+            get {
+                return ResourceManager.GetString("DefaultThemeName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No guidelines on empty lines.
         /// </summary>
         internal static string EmptyLineMode_NoGuides {
@@ -133,6 +160,15 @@ namespace IndentGuide {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Line Style.
+        /// </summary>
+        internal static string grpLineStyle {
+            get {
+                return ResourceManager.GetString("grpLineStyle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Indent Guides Package.
         /// </summary>
         internal static string IndentGuidePackage {
@@ -174,6 +210,24 @@ namespace IndentGuide {
         internal static string LineStyleDisplayName {
             get {
                 return ResourceManager.GetString("LineStyleDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of this theme. Themes are automatically loaded if the name matches the content type of the open document..
+        /// </summary>
+        internal static string ThemeNameDescription {
+            get {
+                return ResourceManager.GetString("ThemeNameDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Theme Name.
+        /// </summary>
+        internal static string ThemeNameDisplayName {
+            get {
+                return ResourceManager.GetString("ThemeNameDisplayName", resourceCulture);
             }
         }
         

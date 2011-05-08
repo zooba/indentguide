@@ -1,32 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Windows.Media;
+using System.Collections.Generic;
 
 namespace IndentGuide
 {
-    /// <summary>
-    /// The supported styles of guideline.
-    /// </summary>
-    public enum LineStyle
-    {
-        Solid,
-        Thick,
-        Dotted,
-        Dashed
-    }
-
-    /// <summary>
-    /// The supported modes for handling empty lines.
-    /// </summary>
-    public enum EmptyLineMode
-    {
-        NoGuides,
-        SameAsLineAboveActual,
-        SameAsLineAboveLogical,
-        SameAsLineBelowActual,
-        SameAsLineBelowLogical
-    }
-    
     /// <summary>
     /// Provides settings storage and update notifications.
     /// </summary>
@@ -39,39 +17,22 @@ namespace IndentGuide
         /// </summary>
         bool Visible { get; set; }
         /// <summary>
-        /// The style of guides shown.
+        /// The loaded themes.
         /// </summary>
-        LineStyle LineStyle { get; set; }
+        IDictionary<string, IndentTheme> Themes { get; }
         /// <summary>
-        /// The color to use for guide lines.
+        /// The default theme.
         /// </summary>
-        Color LineColor { get; set; }
-        /// <summary>
-        /// The mode to use for empty lines.
-        /// </summary>
-        EmptyLineMode EmptyLineMode { get; set; }
+        IndentTheme DefaultTheme { get; }
 
         /// <summary>
-        /// Raised when <see cref="Visible"/> changes.
+        /// Raised when the collection of themes changes.
+        /// </summary>
+        event EventHandler ThemesChanged;
+        /// <summary>
+        /// Raised when the global visibility changes.
         /// </summary>
         event EventHandler VisibleChanged;
-        /// <summary>
-        /// Raised when <see cref="LineStyle"/> changes.
-        /// </summary>
-        event EventHandler LineStyleChanged;
-        /// <summary>
-        /// Raised when <see cref="LineColor"/> changes.
-        /// </summary>
-        event EventHandler LineColorChanged;
-        /// <summary>
-        /// Raised when <see cref="EmptyLineMode"/> changes.
-        /// </summary>
-        event EventHandler EmptyLineModeChanged;
-
-        /// <summary>
-        /// Sets all properties at the same time.
-        /// </summary>
-        void BatchUpdate(bool visible, LineStyle lineStyle, Color lineColor, EmptyLineMode emptyLineMode);
     }
 
     /// <summary>
@@ -114,72 +75,19 @@ namespace IndentGuide
                 }
             }
         }
-        
+
         public event EventHandler VisibleChanged;
 
-        private LineStyle _LineStyle = LineStyle.Dotted;
-        public LineStyle LineStyle
-        {
-            get { return _LineStyle; }
-            set
-            {
-                if (_LineStyle != value)
-                {
-                    _LineStyle = value;
+        public IDictionary<string, IndentTheme> Themes { get; set; }
+        public IndentTheme DefaultTheme { get; set; }
 
-                    var evt = LineStyleChanged;
-                    if (evt != null) evt(this, EventArgs.Empty);
-                }
-            }
+        public void OnThemesChanged()
+        {
+            var evt = ThemesChanged;
+            if (evt != null) evt(this, EventArgs.Empty);
         }
 
-        public event EventHandler LineStyleChanged;
-
-        private Color _LineColor = Colors.Teal;
-        public Color LineColor
-        {
-            get { return _LineColor; }
-            set
-            {
-                if (_LineColor != value)
-                {
-                    _LineColor = value;
-
-                    var evt = LineColorChanged;
-                    if (evt != null) evt(this, EventArgs.Empty);
-                }
-            }
-        }
-
-        public event EventHandler LineColorChanged;
-
-        private EmptyLineMode _EmptyLineMode = EmptyLineMode.SameAsLineAboveLogical;
-        public EmptyLineMode EmptyLineMode
-        {
-            get { return _EmptyLineMode; }
-            set
-            {
-                if (_EmptyLineMode != value)
-                {
-                    _EmptyLineMode = value;
-
-                    var evt = EmptyLineModeChanged;
-                    if (evt != null) evt(this, EventArgs.Empty);
-                }
-            }
-        }
-
-        public event EventHandler EmptyLineModeChanged;
-
-
-        public void BatchUpdate(bool visible, LineStyle lineStyle, Color lineColor, EmptyLineMode emptyLineMode)
-        {
-            if (!visible) Visible = visible;
-            if (emptyLineMode != EmptyLineMode) EmptyLineMode = emptyLineMode;
-            if (lineStyle != LineStyle) LineStyle = lineStyle;
-            if (lineColor != LineColor) LineColor = lineColor;
-            if (visible) Visible = visible;
-        }
+        public event EventHandler ThemesChanged;
 
         #endregion
     }

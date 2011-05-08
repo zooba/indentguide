@@ -3,102 +3,153 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
+using System.Collections.Generic;
+using Microsoft.Win32;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace IndentGuide
 {
     [ComVisible(true)]
     public sealed class DisplayOptions : DialogPage
     {
-        private IIndentGuide Service;
+        private IndentGuideService Service;
+
+        private IDictionary<string, IndentTheme> Themes;
 
         public DisplayOptions()
         {
-            Visible = true;
-            LineStyle = LineStyle.Dotted;
-            LineColor = Color.Teal;
-            EmptyLineMode = EmptyLineMode.SameAsLineAboveLogical;
-            
-            Service = (IIndentGuide)ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide));
-            Service.VisibleChanged += new EventHandler(Service_VisibleChanged);
-            Service.LineStyleChanged += new EventHandler(Service_LineStyleChanged);
-            Service.LineColorChanged += new EventHandler(Service_LineColorChanged);
-            Service.EmptyLineModeChanged += new EventHandler(Service_EmptyLineModeChanged);
+            Upgrade();
+
+            Themes = new Dictionary<string, IndentTheme>();
+            Service = (IndentGuideService)ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide));
+
+            Service.Themes = Themes;
+            Service.DefaultTheme = new IndentTheme(true);
         }
 
-        void Service_VisibleChanged(object sender, EventArgs e)
+        private DisplayOptionsControl _Window = null;
+        protected override System.Windows.Forms.IWin32Window Window
         {
-            Visible = ((IIndentGuide)sender).Visible;
+            get
+            {
+                if (_Window == null)
+                {
+                    var newWindow = new DisplayOptionsControl();
+                    System.Threading.Interlocked.CompareExchange(ref _Window, newWindow, null);
+                }
+                return _Window;
+            }
         }
 
-        void Service_LineStyleChanged(object sender, EventArgs e)
+        private RegistryKey RegistryRoot
         {
-            LineStyle = ((IIndentGuide)sender).LineStyle;
+            get
+            {
+                var vsRoot = VSRegistry.RegistryRoot(Microsoft.VisualStudio.Shell.Interop.__VsLocalRegistryType.RegType_UserSettings);
+                return vsRoot.OpenSubKey("IndentGuide");
+            }
         }
 
-        void Service_LineColorChanged(object sender, EventArgs e)
+        private RegistryKey RegistryRootWritable
         {
-            var color = ((IIndentGuide)sender).LineColor;
-            LineColor = Color.FromArgb(color.A, color.R, color.G, color.B);
-        }
-
-        void Service_EmptyLineModeChanged(object sender, EventArgs e)
-        {
-            EmptyLineMode = ((IIndentGuide)sender).EmptyLineMode;
-        }
-
-        private void UpdateService()
-        {
-            Service.BatchUpdate(
-                Visible,
-                LineStyle,
-                System.Windows.Media.Color.FromArgb(LineColor.A, LineColor.R, LineColor.G, LineColor.B),
-                EmptyLineMode);
+            get
+            {
+                var vsRoot = VSRegistry.RegistryRoot(Microsoft.VisualStudio.Shell.Interop.__VsLocalRegistryType.RegType_UserSettings, true);
+                return vsRoot.OpenSubKey("IndentGuide");
+            }
         }
 
         public override void LoadSettingsFromStorage()
         {
-            base.LoadSettingsFromStorage();
-            UpdateService();
+            var reg = RegistryRoot;
+            Themes.Clear();
+            foreach (var themeName in reg.GetSubKeyNames())
+            {
+                var theme = IndentTheme.Load(reg, themeName);
+                if (theme.IsDefault) Service.DefaultTheme = theme;
+                Themes[theme.Name] = theme;
+            }
+            Service.OnThemesChanged();
+        }
+
+        public override void LoadSettingsFromXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsReader reader)
+        {
+            string xml;
+            reader.ReadSettingXmlAsString("IndentGuide", out xml);
+            var root = XElement.Parse(xml);
+            Themes.Clear();
+            foreach (var theme in root.Elements("Theme").Select(x => IndentTheme.Load(x)))
+            {
+                Themes[theme.Name] = theme;
+            }
+            Service.OnThemesChanged();
+        }
+
+        public override void SaveSettingsToStorage()
+        {
+            base.SaveSettingsToStorage();
+
+            var reg = RegistryRoot;
+            foreach (var theme in Themes.Values)
+            {
+                theme.Save(reg);
+            }
+        }
+
+        public override void SaveSettingsToXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsWriter writer)
+        {
+            var root = new XElement("IndentGuide",
+                Themes.Values.Select(t => t.ToXElement()));
+            string xml = root.CreateReader().ReadOuterXml();
+            writer.WriteSettingXmlFromString(xml);
+        }
+
+        protected override void OnActivate(CancelEventArgs e)
+        {
+            base.OnActivate(e);
         }
 
         protected override void OnApply(DialogPage.PageApplyEventArgs e)
         {
             base.OnApply(e);
-            UpdateService();
+            
         }
 
         public override void ResetSettings()
         {
             base.ResetSettings();
-            Visible = true;
-            LineStyle = LineStyle.Dotted;
-            LineColor = Color.Teal;
-            EmptyLineMode = EmptyLineMode.SameAsLineAboveLogical;
-            UpdateService();
+            
         }
 
-        [ResourceDescription("VisibilityDescription")]
-        [ResourceCategory("Appearance")]
-        public bool Visible { get; set; }
+        #region Upgrade settings from v8.2
+        
+        private void Upgrade()
+        {
+            if (RegistryRoot != null) return;
 
-        [ResourceDisplayName("LineStyleDisplayName")]
-        [ResourceDescription("LineStyleDescription")]
-        [ResourceCategory("Appearance")]
-        public LineStyle LineStyle { get; set; }
+            var vsRoot = VSRegistry.RegistryRoot(Microsoft.VisualStudio.Shell.Interop.__VsLocalRegistryType.RegType_UserSettings, true);
 
-        [ResourceDisplayName("LineColorDisplayName")]
-        [ResourceDescription("LineColorDescription")]
-        [ResourceCategory("Appearance")]
-        [TypeConverter(typeof(ColorConverter))]
-        public Color LineColor { get; set; }
+            using (var newKey = vsRoot.CreateSubKey("IndentGuide"))
+            using (var key = vsRoot.OpenSubKey(SettingsRegistryPath))
+            {
+                var theme = new IndentTheme(true);
+                theme.Name = (string)key.GetValue("Name", IndentTheme.DefaultThemeName);
+                theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
+                    .ConvertFromInvariantString((string)key.GetValue("EmptyLineMode"));
 
-        private class EmptyLineModeTypeConverter : EnumResourceTypeConverter<EmptyLineMode>
-        { }
+                theme.LineFormat.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
+                    .ConvertFromInvariantString((string)key.GetValue("LineColor"));
+                theme.LineFormat.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
+                    .ConvertFromInvariantString((string)key.GetValue("LineStyle"));
+                theme.LineFormat.Visible = bool.Parse((string)key.GetValue("Visible"));
 
-        [ResourceDisplayName("EmptyLineModeDisplayName")]
-        [ResourceDescription("EmptyLineModeDescription")]
-        [ResourceCategory("Appearance")]
-        [TypeConverter(typeof(EmptyLineModeTypeConverter))]
-        public EmptyLineMode EmptyLineMode { get; set; }
+                theme.Save(newKey);
+            }
+
+            vsRoot.DeleteSubKeyTree(SettingsRegistryPath, false);
+        }
+
+        #endregion
     }
 }

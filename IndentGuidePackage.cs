@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.Shell;
 namespace IndentGuide
 {
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [InstalledProductRegistration("#110", "#112", "8.2", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", "9.0", IconResourceID = 400)]
     [ProvideMenuResource(1000, 1)]
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, true)]
     [ProvideProfile(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, true)]

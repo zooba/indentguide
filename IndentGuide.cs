@@ -18,9 +18,7 @@ namespace IndentGuide
         IAdornmentLayer Layer;
         IWpfTextView View;
         Brush GuideBrush;
-        bool Visible;
-        LineStyle LineStyle;
-        EmptyLineMode EmptyLineMode;
+        IndentTheme Theme;
         int VersionNumber;
 
         /// <summary>
@@ -33,96 +31,34 @@ namespace IndentGuide
             VersionNumber = 0;
 
             View = view;
-            View.LayoutChanged += OnLayoutChanged;
+            View.LayoutChanged += View_LayoutChanged;
 
             Layer = view.GetAdornmentLayer("IndentGuide");
 
-            Visible = service.Visible;
-            LineStyle = service.LineStyle;
-            GuideBrush = new SolidColorBrush(service.LineColor);
+            Theme = service.DefaultTheme;
+            Theme.Updated += Theme_Updated;
+
+            GuideBrush = new SolidColorBrush(Theme.LineFormat.LineColor.ToSWMC());
             if (GuideBrush.CanFreeze) GuideBrush.Freeze();
-            EmptyLineMode = service.EmptyLineMode;
-            service.VisibleChanged += new EventHandler(OnVisibleChanged);
-            service.LineStyleChanged += new EventHandler(OnLineStyleChanged);
-            service.LineColorChanged += new EventHandler(OnLineColorChanged);
-            service.EmptyLineModeChanged += new EventHandler(OnEmptyLineModeChanged);
         }
 
         /// <summary>
-        /// Updates the empty line mode and redraws all adornments.
+        /// Raised when the display changes.
         /// </summary>
-        void OnEmptyLineModeChanged(object sender, EventArgs e)
-        {
-            EmptyLineMode = ((IIndentGuide)sender).EmptyLineMode;
-            UpdateAdornments();
-        }
-
-        /// <summary>
-        /// Updates the line style and redraws all adornments.
-        /// </summary>
-        void OnLineStyleChanged(object sender, EventArgs e)
-        {
-            LineStyle = ((IIndentGuide)sender).LineStyle;
-            UpdateAdornments();
-        }
-
-        /// <summary>
-        /// Updates the line color and redraws all adornments.
-        /// </summary>
-        void OnLineColorChanged(object sender, EventArgs e)
-        {
-            UpdateFormat((IIndentGuide)sender);
-        }
-
-        /// <summary>
-        /// Updates visibility and redraws or removes all adornments.
-        /// </summary>
-        void OnVisibleChanged(object sender, EventArgs e)
-        {
-            UpdateVisibility(sender as IIndentGuide);
-        }
-
-        /// <summary>
-        /// On layout change add the adornment to all visible lines.
-        /// </summary>
-        private void OnLayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
+        void View_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
         {
             UpdateAdornments();
         }
 
         /// <summary>
-        /// Either clears all adornments or draws adornments, depending
-        /// on the current visibility value.
+        /// Raised when the theme is updated.
         /// </summary>
-        void UpdateVisibility(IIndentGuide service)
+        void Theme_Updated(object sender, EventArgs e)
         {
-            Debug.Assert(service != null);
-            if (service == null) return;
-
-            Visible = service.Visible;
-            if (Visible) UpdateAdornments();
-            else if (Layer != null) Layer.RemoveAllAdornments();
+            UpdateAdornments();
         }
 
-        /// <summary>
-        /// Updates the color of all adornments.
-        /// </summary>
-        void UpdateFormat(IIndentGuide service)
-        {
-            Debug.Assert(service != null);
-            if (service == null) return;
 
-            var color = service.LineColor;
-            GuideBrush = new SolidColorBrush(color);
-            if (GuideBrush.CanFreeze) GuideBrush.Freeze();
-            if (Layer != null && Layer.Elements.Count > 0)
-            {
-                foreach (var line in Layer.Elements.Select(e => e.Adornment).OfType<Line>())
-                {
-                    line.Stroke = GuideBrush;
-                }
-            }
-        }
 
         /// <summary>
         /// Recreates all adornments.
@@ -134,7 +70,7 @@ namespace IndentGuide
             Debug.Assert(View.TextViewLines != null);
             if (View == null || Layer == null || View.TextViewLines == null) return;
 
-            if (!Visible)
+            if (!Theme.LineFormat.Visible)
             {
                 Layer.RemoveAllAdornments();
                 return;
@@ -146,14 +82,14 @@ namespace IndentGuide
 
 
             var lines = View.TextViewLines.Cast<IWpfTextViewLine>().ToList();
-            if (EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineBelowActual ||
-                EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineBelowLogical)
+            if (Theme.EmptyLineMode == EmptyLineMode.SameAsLineBelowActual ||
+                Theme.EmptyLineMode == EmptyLineMode.SameAsLineBelowLogical)
             {
                 lines.Reverse();
             }
 
-            bool logical = (EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineAboveLogical ||
-                EmptyLineMode == IndentGuide.EmptyLineMode.SameAsLineBelowLogical);
+            bool logical = (Theme.EmptyLineMode == EmptyLineMode.SameAsLineAboveLogical ||
+                Theme.EmptyLineMode == EmptyLineMode.SameAsLineBelowLogical);
 
             var activeGuides = new Dictionary<int, Tuple<double, IWpfTextViewLine>>();
             var previousGuidesAt = new Dictionary<int, double>();
@@ -166,7 +102,7 @@ namespace IndentGuide
 
                 if (line.IsEmpty())
                 {
-                    if (EmptyLineMode == IndentGuide.EmptyLineMode.NoGuides)
+                    if (Theme.EmptyLineMode == EmptyLineMode.NoGuides)
                         guidesAt = null;
                     else
                         guidesAt = previousGuidesAt;
@@ -275,19 +211,13 @@ namespace IndentGuide
                 StrokeDashOffset = top,
                 SnapsToDevicePixels = true
             };
-
-            if (LineStyle == LineStyle.Thick)
-            {
+            
+            if (Theme.LineFormat.LineStyle == LineStyle.Thick)
                 guide.StrokeThickness = 3.0;
-            }
-            else if (LineStyle == LineStyle.Dotted)
-            {
+            else if (Theme.LineFormat.LineStyle == LineStyle.Dotted)
                 guide.StrokeDashArray = new DoubleCollection { 1.0, 1.0 };
-            }
-            else if (LineStyle == LineStyle.Dashed)
-            {
+            else if (Theme.LineFormat.LineStyle == LineStyle.Dashed)
                 guide.StrokeDashArray = new DoubleCollection { 3.0, 3.0 };
-            }
 
             SnapshotSpan span;
             if (lineFirst.Start < lineLast.Start)

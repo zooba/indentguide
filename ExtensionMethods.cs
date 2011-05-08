@@ -18,5 +18,16 @@ namespace IndentGuide
 
             return string.IsNullOrWhiteSpace(text);
         }
+
+
+        public static System.Drawing.Color ToSDC(this System.Windows.Media.Color source)
+        {
+            return System.Drawing.Color.FromArgb(source.A, source.R, source.G, source.B);
+        }
+
+        public static System.Windows.Media.Color ToSWMC(this System.Drawing.Color source)
+        {
+            return System.Windows.Media.Color.FromArgb(source.A, source.R, source.G, source.B);
+        }
     }
 }
