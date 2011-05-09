@@ -45,6 +45,16 @@ namespace IndentGuide
             LineColor = Color.Teal;
         }
 
+        public LineFormat Clone()
+        {
+            return new LineFormat
+            {
+                Visible = Visible,
+                LineStyle = LineStyle,
+                LineColor = LineColor
+            };
+        }
+
         public void Reset()
         {
             Visible = true;
@@ -89,6 +99,16 @@ namespace IndentGuide
             LineFormat = new LineFormat();
             EmptyLineMode = IndentGuide.EmptyLineMode.SameAsLineAboveLogical;
             RegistryName = isDefaultTheme ? Guid.Empty : Guid.NewGuid();
+        }
+
+        public IndentTheme Clone(bool makeNonDefault = false)
+        {
+            var inst = new IndentTheme(!makeNonDefault && IsDefault);
+            inst.Name = Name;
+            inst.LineFormat = LineFormat.Clone();
+            inst.EmptyLineMode = EmptyLineMode;
+            if (!makeNonDefault) inst.RegistryName = RegistryName;
+            return inst;
         }
 
         [ResourceDisplayName("ThemeNameDisplayName")]
@@ -174,6 +194,11 @@ namespace IndentGuide
                     new XAttribute("LineColor", LineFormat.LineColor),
                     new XAttribute("LineStyle", LineFormat.LineStyle),
                     new XAttribute("Visible", LineFormat.Visible)));
+        }
+
+        public void Delete(RegistryKey reg)
+        {
+            reg.DeleteSubKeyTree(RegistryName.ToString("B"));
         }
 
         public int CompareTo(IndentTheme other)

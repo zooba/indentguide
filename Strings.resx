@@ -177,4 +177,28 @@
   <data name="ThemeNameDisplayName" xml:space="preserve">
     <value>Theme Name</value>
   </data>
+  <data name="grpLineBehavior" xml:space="preserve">
+    <value>Empty Line Behavior</value>
+  </data>
+  <data name="chkLineAbove" xml:space="preserve">
+    <value>&amp;above</value>
+  </data>
+  <data name="chkLineActual" xml:space="preserve">
+    <value>where they appeared</value>
+  </data>
+  <data name="chkLineBelow" xml:space="preserve">
+    <value>&amp;below</value>
+  </data>
+  <data name="chkLineLogical" xml:space="preserve">
+    <value>for all indents</value>
+  </data>
+  <data name="lblShowAboveBelow" xml:space="preserve">
+    <value>on the line</value>
+  </data>
+  <data name="lblShowActualLogical" xml:space="preserve">
+    <value>Show guide lines</value>
+  </data>
+  <data name="lblContentType" xml:space="preserve">
+    <value>Content Type:</value>
+  </data>
 </root>

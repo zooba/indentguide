@@ -88,6 +88,42 @@ namespace IndentGuide {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;above.
+        /// </summary>
+        internal static string chkLineAbove {
+            get {
+                return ResourceManager.GetString("chkLineAbove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to where they appeared.
+        /// </summary>
+        internal static string chkLineActual {
+            get {
+                return ResourceManager.GetString("chkLineActual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;below.
+        /// </summary>
+        internal static string chkLineBelow {
+            get {
+                return ResourceManager.GetString("chkLineBelow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to for all indents.
+        /// </summary>
+        internal static string chkLineLogical {
+            get {
+                return ResourceManager.GetString("chkLineLogical", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to (Default).
         /// </summary>
         internal static string DefaultThemeName {
@@ -160,6 +196,15 @@ namespace IndentGuide {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Empty Line Behavior.
+        /// </summary>
+        internal static string grpLineBehavior {
+            get {
+                return ResourceManager.GetString("grpLineBehavior", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Line Style.
         /// </summary>
         internal static string grpLineStyle {
@@ -174,6 +219,33 @@ namespace IndentGuide {
         internal static string IndentGuidePackage {
             get {
                 return ResourceManager.GetString("IndentGuidePackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Content Type:.
+        /// </summary>
+        internal static string lblContentType {
+            get {
+                return ResourceManager.GetString("lblContentType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to on the line.
+        /// </summary>
+        internal static string lblShowAboveBelow {
+            get {
+                return ResourceManager.GetString("lblShowAboveBelow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show guide lines.
+        /// </summary>
+        internal static string lblShowActualLogical {
+            get {
+                return ResourceManager.GetString("lblShowActualLogical", resourceCulture);
             }
         }
         

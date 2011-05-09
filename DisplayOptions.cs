@@ -56,7 +56,7 @@ namespace IndentGuide
             get
             {
                 var vsRoot = VSRegistry.RegistryRoot(Microsoft.VisualStudio.Shell.Interop.__VsLocalRegistryType.RegType_UserSettings, true);
-                return vsRoot.OpenSubKey("IndentGuide");
+                return vsRoot.OpenSubKey("IndentGuide", true);
             }
         }
 
@@ -88,9 +88,7 @@ namespace IndentGuide
 
         public override void SaveSettingsToStorage()
         {
-            base.SaveSettingsToStorage();
-
-            var reg = RegistryRoot;
+            var reg = RegistryRootWritable;
             foreach (var theme in Themes.Values)
             {
                 theme.Save(reg);
@@ -108,12 +106,38 @@ namespace IndentGuide
         protected override void OnActivate(CancelEventArgs e)
         {
             base.OnActivate(e);
+            ((DisplayOptionsControl)Window).LocalThemes = 
+                Service.Themes.Values.OrderBy(t => t).Select(t => t.Clone()).ToList();
         }
 
         protected override void OnApply(DialogPage.PageApplyEventArgs e)
         {
+            var changedThemes = ((DisplayOptionsControl)Window).ChangedThemes;
+            var deletedThemes = ((DisplayOptionsControl)Window).DeletedThemes;
+            if (changedThemes.Any())
+            {
+                foreach (var theme in changedThemes)
+                {
+                    Service.Themes[theme.Name] = theme;
+                    if (theme.IsDefault) Service.DefaultTheme = theme;
+                }
+                if (!deletedThemes.Any()) Service.OnThemesChanged();
+                changedThemes.Clear();
+            }
+            if (deletedThemes.Any())
+            {
+                var reg = RegistryRootWritable;
+                foreach (var theme in deletedThemes)
+                {
+                    try { theme.Delete(reg); }
+                    catch { }
+                    Service.Themes.Remove(theme.Name);
+                }
+                Service.OnThemesChanged();
+                deletedThemes.Clear();
+            }
+
             base.OnApply(e);
-            
         }
 
         public override void ResetSettings()

@@ -33,7 +33,7 @@ namespace IndentGuide
         public void TextViewCreated(IWpfTextView textView)
         {
             var service = ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide)) as IIndentGuide;
-            new IndentGuideView(textView, service);
+            new IndentGuideView(textView, service, textView.TextDataModel.ContentType.DisplayName);
         }
     }
     #endregion //Adornment Factory
