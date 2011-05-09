@@ -79,7 +79,7 @@ namespace IndentGuide {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &amp;Save as....
+        ///   Looks up a localized string similar to &amp;Save.
         /// </summary>
         internal static string btnThemeSaveAs {
             get {

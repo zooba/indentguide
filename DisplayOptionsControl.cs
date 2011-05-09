@@ -13,7 +13,7 @@ namespace IndentGuide
     public partial class DisplayOptionsControl : UserControl
     {
         private IndentGuideService Service;
-        
+
         public DisplayOptionsControl()
         {
             InitializeComponent();
@@ -38,16 +38,20 @@ namespace IndentGuide
                 ChangedThemes.Clear();
                 DeletedThemes.Clear();
 
-                Invoke((Action)(() =>
-                {
-                    cmbTheme.Items.Clear();
-                    foreach (var theme in LocalThemes)
-                    {
-                        cmbTheme.Items.Add(theme);
-                    }
-                    cmbTheme.SelectedIndex = 0;
-                }));
+                Invoke((Action)UpdateThemeList);
             }
+        }
+
+        private void UpdateThemeList()
+        {
+            cmbTheme.Items.Clear();
+            foreach (var theme in LocalThemes)
+            {
+                cmbTheme.Items.Add(theme);
+            }
+            cmbTheme.SelectedIndex = 0;
+            btnThemeDelete.Enabled = false;
+            btnThemeSaveAs.Enabled = false;
         }
 
         private void LoadControlStrings(IEnumerable<Control> controls)
@@ -122,7 +126,7 @@ namespace IndentGuide
         private void cmbTheme_SelectedIndexChanged(object sender, EventArgs e)
         {
             ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
-            
+
             btnThemeSaveAs.Enabled = false;
             btnThemeDelete.Enabled = !ActiveTheme.IsDefault;
 
@@ -131,7 +135,20 @@ namespace IndentGuide
 
         private void cmbTheme_TextChanged(object sender, EventArgs e)
         {
-            btnThemeSaveAs.Enabled = !LocalThemes.Any(t => t.Name.Equals(cmbTheme.Text));
+            var match = LocalThemes.FirstOrDefault(t => t.Name.Equals(cmbTheme.Text, StringComparison.CurrentCultureIgnoreCase));
+            if (match == null)
+            {
+                if (LocalThemes.Contains(ActiveTheme)) ActiveTheme = ActiveTheme.Clone(true);
+                btnThemeSaveAs.Enabled = true;
+                btnThemeDelete.Enabled = false;
+            }
+            else
+            {
+                ActiveTheme = match;
+                btnThemeSaveAs.Enabled = false;
+                btnThemeDelete.Enabled = !ActiveTheme.IsDefault;
+            }
+            UpdateDisplay();
         }
 
         private void gridLineStyle_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -140,17 +157,21 @@ namespace IndentGuide
             UpdateDisplay();
         }
 
+        internal void SaveIfRequired()
+        {
+            if (btnThemeSaveAs.Enabled) btnThemeSaveAs.PerformClick();
+        }
+
         private void btnThemeSaveAs_Click(object sender, EventArgs e)
         {
             if (ActiveTheme == null) return;
 
-            var newTheme = ActiveTheme.Clone(true);
+            var newTheme = ActiveTheme;
             newTheme.Name = cmbTheme.Text;
             ChangedThemes.Add(newTheme);
-            var localThemes = LocalThemes.ToList();
-            localThemes.Add(newTheme);
-            localThemes.Sort();
-            LocalThemes = localThemes;
+            LocalThemes.Add(newTheme);
+            LocalThemes.Sort();
+            UpdateThemeList();
             cmbTheme.SelectedItem = newTheme;
         }
 
@@ -161,11 +182,13 @@ namespace IndentGuide
 
             DeletedThemes.Add(ActiveTheme);
             LocalThemes.Remove(ActiveTheme);
-            
+
             int i = cmbTheme.SelectedIndex;
             cmbTheme.Items.Remove(ActiveTheme);
             if (i < cmbTheme.Items.Count) cmbTheme.SelectedIndex = i;
             else cmbTheme.SelectedIndex = cmbTheme.Items.Count - 1;
+            ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
+            UpdateDisplay();
         }
 
         private void chkEmptyLineBehaviour_CheckedChanged(object sender, EventArgs e)

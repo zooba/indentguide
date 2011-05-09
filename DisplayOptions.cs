@@ -112,8 +112,11 @@ namespace IndentGuide
 
         protected override void OnApply(DialogPage.PageApplyEventArgs e)
         {
-            var changedThemes = ((DisplayOptionsControl)Window).ChangedThemes;
-            var deletedThemes = ((DisplayOptionsControl)Window).DeletedThemes;
+            var window = (DisplayOptionsControl)Window;
+            window.SaveIfRequired();
+            
+            var changedThemes = window.ChangedThemes;
+            var deletedThemes = window.DeletedThemes;
             if (changedThemes.Any())
             {
                 foreach (var theme in changedThemes)
@@ -142,8 +145,17 @@ namespace IndentGuide
 
         public override void ResetSettings()
         {
-            base.ResetSettings();
-            
+            var reg = RegistryRootWritable;
+            foreach (var theme in Service.Themes.Values)
+            {
+                try { theme.Delete(reg); }
+                catch { }
+            }
+            Service.Themes.Clear();
+            var defaultTheme = new IndentTheme(true);
+            Service.Themes[defaultTheme.Name] = defaultTheme;
+            defaultTheme.Save(reg);
+            Service.OnThemesChanged();
         }
 
         #region Upgrade settings from v8.2

@@ -124,7 +124,7 @@
     <value>&amp;Delete</value>
   </data>
   <data name="btnThemeSaveAs" xml:space="preserve">
-    <value>&amp;Save as...</value>
+    <value>&amp;Save</value>
   </data>
   <data name="DefaultThemeName" xml:space="preserve">
     <value>(Default)</value>

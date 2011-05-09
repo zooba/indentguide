@@ -47,7 +47,7 @@ namespace IndentGuide
         /// </summary>
         /// <param name="view">The text view to provide guides for.</param>
         /// <param name="service">The Indent Guide service.</param>
-        public IndentGuideView(IWpfTextView view, IIndentGuide service, string themeName)
+        public IndentGuideView(IWpfTextView view, IIndentGuide service)
         {
             ActiveLines = new Dictionary<int, GuidePositions>();
             CachedLefts = new Dictionary<int, double>();
@@ -57,7 +57,7 @@ namespace IndentGuide
 
             Layer = view.GetAdornmentLayer("IndentGuide");
 
-            if (!service.Themes.TryGetValue(themeName, out Theme))
+            if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme))
                 Theme = service.DefaultTheme;
             service.ThemesChanged += new EventHandler(Service_ThemesChanged);
 
@@ -85,7 +85,7 @@ namespace IndentGuide
         void Service_ThemesChanged(object sender, EventArgs e)
         {
             var service = (IIndentGuide)sender;
-            if (!service.Themes.TryGetValue(Theme.Name, out Theme))
+            if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme))
                 Theme = service.DefaultTheme;
 
             GuideBrush = new SolidColorBrush(Theme.LineFormat.LineColor.ToSWMC());
