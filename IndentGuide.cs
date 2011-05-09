@@ -27,13 +27,17 @@ namespace IndentGuide
             {
                 Original = original;
                 Tabs = tabs;
+                DependantLines = new List<int>();
             }
-            public GuidePositions Clone()
+
+            public GuidePositions Clone(int line)
             {
+                DependantLines.Add(line);
                 return new GuidePositions(false, Tabs);
             }
             public bool Original;
             public List<int> Tabs;
+            public List<int> DependantLines;
         }
         Dictionary<int, GuidePositions> ActiveLines;
         Dictionary<int, double> CachedLefts;
@@ -83,7 +87,7 @@ namespace IndentGuide
             var service = (IIndentGuide)sender;
             if (!service.Themes.TryGetValue(Theme.Name, out Theme))
                 Theme = service.DefaultTheme;
-            
+
             GuideBrush = new SolidColorBrush(Theme.LineFormat.LineColor.ToSWMC());
             if (GuideBrush.CanFreeze) GuideBrush.Freeze();
 
@@ -98,11 +102,29 @@ namespace IndentGuide
         void View_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
         {
             foreach (var line in e.NewOrReformattedLines)
+                InvalidateLine(line);
+            foreach (var line in e.TranslatedLines)
+                InvalidateLine(line);
+            UpdateAdornments();
+        }
+
+        /// <summary>
+        /// Removes the specified line from the line cache. Any empty
+        /// lines that are dependant upon this line are also removed.
+        /// </summary>
+        /// <param name="line"></param>
+        /// <param name="lineNumber"></param>
+        void InvalidateLine(ITextViewLine line, int lineNumber = -1)
+        {
+            if (line != null)
+                lineNumber = line.Snapshot.GetLineNumberFromPosition(line.Start.Position);
+
+            GuidePositions gp;
+            if (ActiveLines.TryGetValue(lineNumber, out gp))
             {
-                int lineNumber = line.Snapshot.GetLineNumberFromPosition(line.Start.Position);
+                foreach (var i in gp.DependantLines) InvalidateLine(null, i);
                 ActiveLines.Remove(lineNumber);
             }
-            UpdateAdornments();
         }
 
         /// <summary>
@@ -158,10 +180,10 @@ namespace IndentGuide
                         while (!ActiveLines.ContainsKey(source_i) && source_i < View.TextSnapshot.LineCount)
                             source_i += 1;
                     }
-                    
+
                     if (ActiveLines.ContainsKey(source_i))
                     {
-                        ActiveLines[line_i] = ActiveLines[source_i].Clone();
+                        ActiveLines[line_i] = ActiveLines[source_i].Clone(line_i);
                         newLines.Add(line_i);
                     }
                 }
