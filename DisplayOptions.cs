@@ -1,12 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Shell;
-using System.Collections.Generic;
-using Microsoft.Win32;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.Win32;
 
 namespace IndentGuide
 {
@@ -14,6 +18,8 @@ namespace IndentGuide
     public sealed class DisplayOptions : DialogPage
     {
         private IndentGuideService Service;
+        private IVsTextManager TextManagerService;
+        internal IVsEditorAdaptersFactoryService EditorAdapters;
 
         private IDictionary<string, IndentTheme> Themes;
 
@@ -23,6 +29,11 @@ namespace IndentGuide
 
             Themes = new Dictionary<string, IndentTheme>();
             Service = (IndentGuideService)ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide));
+            TextManagerService = (IVsTextManager)ServiceProvider.GlobalProvider.GetService(typeof(SVsTextManager));
+            
+            var componentModel = (IComponentModel)ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel));
+            EditorAdapters = (IVsEditorAdaptersFactoryService)componentModel
+                .GetService<IVsEditorAdaptersFactoryService>();
 
             Service.Themes = Themes;
             Service.DefaultTheme = new IndentTheme(true);
@@ -108,6 +119,18 @@ namespace IndentGuide
             base.OnActivate(e);
             ((DisplayOptionsControl)Window).LocalThemes = 
                 Service.Themes.Values.OrderBy(t => t).Select(t => t.Clone()).ToList();
+            
+            IVsTextView view = null;
+            IWpfTextView wpfView = null;
+            TextManagerService.GetActiveView(0, null, out view);
+            if (view != null && (wpfView = EditorAdapters.GetWpfTextView(view)) != null)
+            {
+                ((DisplayOptionsControl)Window).CurrentContentType = wpfView.TextDataModel.ContentType.DisplayName;
+            }
+            else
+            {
+                ((DisplayOptionsControl)Window).CurrentContentType = null;
+            }
         }
 
         protected override void OnApply(DialogPage.PageApplyEventArgs e)

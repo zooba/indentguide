@@ -42,6 +42,18 @@ namespace IndentGuide
             }
         }
 
+        private string _CurrentContentType;
+        internal string CurrentContentType
+        {
+            get { return _CurrentContentType; }
+            set
+            {
+                lblCurrentContentType.Text = value ?? ResourceLoader.LoadString("UnknownContentType");
+                btnCustomizeThisContentType.Enabled = (value != null);
+                _CurrentContentType = value;
+            }
+        }
+
         private void UpdateThemeList()
         {
             cmbTheme.Items.Clear();
@@ -206,6 +218,21 @@ namespace IndentGuide
                 ActiveTheme.EmptyLineMode = chkLineAbove.Checked
                     ? EmptyLineMode.SameAsLineAboveLogical
                     : EmptyLineMode.SameAsLineBelowLogical;
+            }
+        }
+
+        private void btnCustomizeThisContentType_Click(object sender, EventArgs e)
+        {
+            var theme = LocalThemes.FirstOrDefault(t => t.Name.Equals(CurrentContentType,
+                StringComparison.InvariantCultureIgnoreCase));
+            if (theme == null)
+            {
+                cmbTheme.Text = CurrentContentType;
+                btnThemeSaveAs.PerformClick();
+            }
+            else
+            {
+                cmbTheme.SelectedItem = theme;
             }
         }
 

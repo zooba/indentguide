@@ -126,4 +126,7 @@
   <data name="LineColorDisplayName" xml:space="preserve">
     <value>Line Colour</value>
   </data>
+  <data name="btnCustomizeThisContentType" xml:space="preserve">
+    <value>&amp;Customise this content type</value>
+  </data>
 </root>

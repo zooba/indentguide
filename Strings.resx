@@ -201,4 +201,16 @@
   <data name="lblContentType" xml:space="preserve">
     <value>Content Type:</value>
   </data>
+  <data name="grpCurrentContentType" xml:space="preserve">
+    <value>Active Content Type</value>
+  </data>
+  <data name="btnCustomizeThisContentType" xml:space="preserve">
+    <value>&amp;Customize this content type</value>
+  </data>
+  <data name="lblCurrentContentTypeIs" xml:space="preserve">
+    <value>The active content type is</value>
+  </data>
+  <data name="UnknownContentType" xml:space="preserve">
+    <value>not known.</value>
+  </data>
 </root>

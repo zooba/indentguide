@@ -70,6 +70,15 @@ namespace IndentGuide {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Customize this content type.
+        /// </summary>
+        internal static string btnCustomizeThisContentType {
+            get {
+                return ResourceManager.GetString("btnCustomizeThisContentType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Delete.
         /// </summary>
         internal static string btnThemeDelete {
@@ -196,6 +205,15 @@ namespace IndentGuide {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Active Content Type.
+        /// </summary>
+        internal static string grpCurrentContentType {
+            get {
+                return ResourceManager.GetString("grpCurrentContentType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Empty Line Behavior.
         /// </summary>
         internal static string grpLineBehavior {
@@ -228,6 +246,15 @@ namespace IndentGuide {
         internal static string lblContentType {
             get {
                 return ResourceManager.GetString("lblContentType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The active content type is.
+        /// </summary>
+        internal static string lblCurrentContentTypeIs {
+            get {
+                return ResourceManager.GetString("lblCurrentContentTypeIs", resourceCulture);
             }
         }
         
@@ -300,6 +327,15 @@ namespace IndentGuide {
         internal static string ThemeNameDisplayName {
             get {
                 return ResourceManager.GetString("ThemeNameDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to not known..
+        /// </summary>
+        internal static string UnknownContentType {
+            get {
+                return ResourceManager.GetString("UnknownContentType", resourceCulture);
             }
         }
         

@@ -47,6 +47,11 @@
             this.chkLineActual = new System.Windows.Forms.RadioButton();
             this.chkLineLogical = new System.Windows.Forms.RadioButton();
             this.lblContentType = new System.Windows.Forms.Label();
+            this.grpCurrentContentType = new System.Windows.Forms.GroupBox();
+            this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
+            this.lblCurrentContentTypeIs = new System.Windows.Forms.Label();
+            this.lblCurrentContentType = new System.Windows.Forms.Label();
+            this.btnCustomizeThisContentType = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.grpLineStyle.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -54,6 +59,8 @@
             this.tableLayoutPanel3.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
+            this.grpCurrentContentType.SuspendLayout();
+            this.tableLayoutPanel4.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -69,6 +76,7 @@
             this.tableLayoutPanel1.Controls.Add(this.grpLineStyle, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.grpLineBehavior, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.lblContentType, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.grpCurrentContentType, 0, 3);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -315,6 +323,72 @@
             this.lblContentType.TabIndex = 5;
             this.lblContentType.Text = "lblContentType";
             // 
+            // grpCurrentContentType
+            // 
+            this.grpCurrentContentType.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel1.SetColumnSpan(this.grpCurrentContentType, 4);
+            this.grpCurrentContentType.Controls.Add(this.tableLayoutPanel4);
+            this.grpCurrentContentType.Location = new System.Drawing.Point(3, 215);
+            this.grpCurrentContentType.Name = "grpCurrentContentType";
+            this.grpCurrentContentType.Size = new System.Drawing.Size(389, 99);
+            this.grpCurrentContentType.TabIndex = 6;
+            this.grpCurrentContentType.TabStop = false;
+            this.grpCurrentContentType.Text = "grpCurrentContentType";
+            // 
+            // tableLayoutPanel4
+            // 
+            this.tableLayoutPanel4.ColumnCount = 2;
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel4.Controls.Add(this.lblCurrentContentTypeIs, 0, 0);
+            this.tableLayoutPanel4.Controls.Add(this.lblCurrentContentType, 1, 0);
+            this.tableLayoutPanel4.Controls.Add(this.btnCustomizeThisContentType, 0, 1);
+            this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 16);
+            this.tableLayoutPanel4.Name = "tableLayoutPanel4";
+            this.tableLayoutPanel4.RowCount = 2;
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(383, 80);
+            this.tableLayoutPanel4.TabIndex = 0;
+            // 
+            // lblCurrentContentTypeIs
+            // 
+            this.lblCurrentContentTypeIs.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.lblCurrentContentTypeIs.AutoSize = true;
+            this.lblCurrentContentTypeIs.Location = new System.Drawing.Point(68, 16);
+            this.lblCurrentContentTypeIs.Name = "lblCurrentContentTypeIs";
+            this.lblCurrentContentTypeIs.Size = new System.Drawing.Size(120, 13);
+            this.lblCurrentContentTypeIs.TabIndex = 0;
+            this.lblCurrentContentTypeIs.Text = "lblCurrentContentTypeIs";
+            // 
+            // lblCurrentContentType
+            // 
+            this.lblCurrentContentType.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.lblCurrentContentType.AutoSize = true;
+            this.lblCurrentContentType.Location = new System.Drawing.Point(194, 16);
+            this.lblCurrentContentType.Name = "lblCurrentContentType";
+            this.lblCurrentContentType.Size = new System.Drawing.Size(112, 13);
+            this.lblCurrentContentType.TabIndex = 1;
+            this.lblCurrentContentType.Text = "lblCurrentContentType";
+            // 
+            // btnCustomizeThisContentType
+            // 
+            this.btnCustomizeThisContentType.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btnCustomizeThisContentType.AutoSize = true;
+            this.btnCustomizeThisContentType.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.tableLayoutPanel4.SetColumnSpan(this.btnCustomizeThisContentType, 2);
+            this.btnCustomizeThisContentType.Location = new System.Drawing.Point(108, 48);
+            this.btnCustomizeThisContentType.Name = "btnCustomizeThisContentType";
+            this.btnCustomizeThisContentType.Padding = new System.Windows.Forms.Padding(3);
+            this.btnCustomizeThisContentType.Size = new System.Drawing.Size(167, 29);
+            this.btnCustomizeThisContentType.TabIndex = 2;
+            this.btnCustomizeThisContentType.Text = "btnCustomizeThisContentType";
+            this.btnCustomizeThisContentType.UseVisualStyleBackColor = true;
+            this.btnCustomizeThisContentType.Click += new System.EventHandler(this.btnCustomizeThisContentType_Click);
+            // 
             // DisplayOptionsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -335,6 +409,9 @@
             this.flowLayoutPanel2.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
+            this.grpCurrentContentType.ResumeLayout(false);
+            this.tableLayoutPanel4.ResumeLayout(false);
+            this.tableLayoutPanel4.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -360,5 +437,10 @@
         private System.Windows.Forms.RadioButton chkLineActual;
         private System.Windows.Forms.RadioButton chkLineLogical;
         private System.Windows.Forms.Label lblContentType;
+        private System.Windows.Forms.GroupBox grpCurrentContentType;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
+        private System.Windows.Forms.Label lblCurrentContentTypeIs;
+        private System.Windows.Forms.Label lblCurrentContentType;
+        private System.Windows.Forms.Button btnCustomizeThisContentType;
     }
 }
