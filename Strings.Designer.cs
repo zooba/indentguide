@@ -250,7 +250,7 @@ namespace IndentGuide {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The active content type is.
+        ///   Looks up a localized string similar to The current document&apos;s content type is.
         /// </summary>
         internal static string lblCurrentContentTypeIs {
             get {

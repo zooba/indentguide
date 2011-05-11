@@ -51,7 +51,7 @@ namespace IndentGuide
         {
             ActiveLines = new Dictionary<int, GuidePositions>();
             CachedLefts = new Dictionary<int, double>();
-
+            
             View = view;
             View.LayoutChanged += View_LayoutChanged;
 
@@ -233,8 +233,9 @@ namespace IndentGuide
                 {
                     if (!CachedLefts.ContainsKey(actualPos))
                     {
-                        var span = new SnapshotSpan(snapshot, i, 1);
-                        double left = View.TextViewLines.GetMarkerGeometry(span).Bounds.Left;
+                        var endOfLine = new SnapshotPoint(snapshot, i);
+                        var span = new SnapshotSpan(endOfLine.GetContainingLine().Start, endOfLine);
+                        double left = View.TextViewLines.GetMarkerGeometry(span).Bounds.Right;
                         CachedLefts[actualPos] = left;
                     }
                     locations.Add(actualPos);

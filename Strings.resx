@@ -208,7 +208,7 @@
     <value>&amp;Customize this content type</value>
   </data>
   <data name="lblCurrentContentTypeIs" xml:space="preserve">
-    <value>The active content type is</value>
+    <value>The current document's content type is</value>
   </data>
   <data name="UnknownContentType" xml:space="preserve">
     <value>not known.</value>

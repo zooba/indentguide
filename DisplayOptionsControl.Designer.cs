@@ -340,8 +340,8 @@
             // tableLayoutPanel4
             // 
             this.tableLayoutPanel4.ColumnCount = 2;
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
             this.tableLayoutPanel4.Controls.Add(this.lblCurrentContentTypeIs, 0, 0);
             this.tableLayoutPanel4.Controls.Add(this.lblCurrentContentType, 1, 0);
             this.tableLayoutPanel4.Controls.Add(this.btnCustomizeThisContentType, 0, 1);
@@ -349,7 +349,7 @@
             this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
             this.tableLayoutPanel4.RowCount = 2;
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel4.Size = new System.Drawing.Size(383, 80);
             this.tableLayoutPanel4.TabIndex = 0;
@@ -358,7 +358,7 @@
             // 
             this.lblCurrentContentTypeIs.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblCurrentContentTypeIs.AutoSize = true;
-            this.lblCurrentContentTypeIs.Location = new System.Drawing.Point(68, 16);
+            this.lblCurrentContentTypeIs.Location = new System.Drawing.Point(145, 16);
             this.lblCurrentContentTypeIs.Name = "lblCurrentContentTypeIs";
             this.lblCurrentContentTypeIs.Size = new System.Drawing.Size(120, 13);
             this.lblCurrentContentTypeIs.TabIndex = 0;
@@ -368,9 +368,10 @@
             // 
             this.lblCurrentContentType.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblCurrentContentType.AutoSize = true;
-            this.lblCurrentContentType.Location = new System.Drawing.Point(194, 16);
+            this.lblCurrentContentType.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblCurrentContentType.Location = new System.Drawing.Point(271, 9);
             this.lblCurrentContentType.Name = "lblCurrentContentType";
-            this.lblCurrentContentType.Size = new System.Drawing.Size(112, 13);
+            this.lblCurrentContentType.Size = new System.Drawing.Size(105, 26);
             this.lblCurrentContentType.TabIndex = 1;
             this.lblCurrentContentType.Text = "lblCurrentContentType";
             // 
