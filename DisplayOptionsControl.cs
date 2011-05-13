@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
-using System.Data;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.Shell;
 
@@ -38,17 +36,24 @@ namespace IndentGuide
             set
             {
                 _LocalThemes = value;
-                ChangedThemes.Clear();
-                DeletedThemes.Clear();
-                if (_LocalThemes.Count == 0)
+                try
                 {
-                    var defaultTheme = new IndentTheme(true);
-                    _LocalThemes.Add(defaultTheme);
-                    ChangedThemes.Add(defaultTheme);
-                    if (OptionsOwner != null) defaultTheme.Save(OptionsOwner.RegistryRootWritable);
-                }
+                    ChangedThemes.Clear();
+                    DeletedThemes.Clear();
+                    if (_LocalThemes.Count == 0)
+                    {
+                        var defaultTheme = new IndentTheme(true);
+                        _LocalThemes.Add(defaultTheme);
+                        ChangedThemes.Add(defaultTheme);
+                        if (OptionsOwner != null) defaultTheme.Save(OptionsOwner.RegistryRootWritable);
+                    }
 
-                Invoke((Action)UpdateThemeList);
+                    Invoke((Action)UpdateThemeList);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine(string.Format("get_LocalThemes: {0}", ex), "IndentGuide");
+                }
             }
         }
 
@@ -66,30 +71,44 @@ namespace IndentGuide
 
         private void UpdateThemeList()
         {
-            cmbTheme.Items.Clear();
-            foreach (var theme in LocalThemes)
+            try
             {
-                cmbTheme.Items.Add(theme);
+                cmbTheme.Items.Clear();
+                foreach (var theme in LocalThemes)
+                {
+                    cmbTheme.Items.Add(theme);
+                }
+                if (cmbTheme.Items.Count > 0) cmbTheme.SelectedIndex = 0;
+                btnThemeDelete.Enabled = false;
+                btnThemeSaveAs.Enabled = false;
             }
-            if (cmbTheme.Items.Count > 0) cmbTheme.SelectedIndex = 0;
-            btnThemeDelete.Enabled = false;
-            btnThemeSaveAs.Enabled = false;
+            catch (Exception ex)
+            {
+                Trace.WriteLine(string.Format("UpdateThemeList: {0}", ex), "IndentGuide");
+            }
         }
 
         private void LoadControlStrings(IEnumerable<Control> controls)
         {
-            foreach (var control in controls)
+            try
             {
-                try
+                foreach (var control in controls)
                 {
-                    control.Text = ResourceLoader.LoadString(control.Name);
-                }
-                catch (InvalidOperationException) { }
+                    try
+                    {
+                        control.Text = ResourceLoader.LoadString(control.Name);
+                    }
+                    catch (InvalidOperationException) { }
 
-                if (control.Controls.Count > 0)
-                {
-                    LoadControlStrings(control.Controls.OfType<Control>());
+                    if (control.Controls.Count > 0)
+                    {
+                        LoadControlStrings(control.Controls.OfType<Control>());
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(string.Format("LoadControlStrings: {0}", ex), "IndentGuide");
             }
         }
 
@@ -101,7 +120,14 @@ namespace IndentGuide
 
         private void cmbTheme_Format(object sender, ListControlConvertEventArgs e)
         {
-            e.Value = ((IndentTheme)e.ListItem).Name;
+            try
+            {
+                e.Value = ((IndentTheme)e.ListItem).Name;
+            }
+            catch
+            {
+                e.Value = (e.ListItem ?? "(null)").ToString();
+            }
         }
 
         private IndentTheme ActiveTheme = null;
@@ -199,18 +225,24 @@ namespace IndentGuide
 
         private void btnThemeDelete_Click(object sender, EventArgs e)
         {
-            if (ActiveTheme == null) return;
-            if (ActiveTheme.IsDefault) return;
+            if (ActiveTheme == null || ActiveTheme.IsDefault) return;
 
-            DeletedThemes.Add(ActiveTheme);
-            LocalThemes.Remove(ActiveTheme);
+            try
+            {
+                DeletedThemes.Add(ActiveTheme);
+                LocalThemes.Remove(ActiveTheme);
 
-            int i = cmbTheme.SelectedIndex;
-            cmbTheme.Items.Remove(ActiveTheme);
-            if (i < cmbTheme.Items.Count) cmbTheme.SelectedIndex = i;
-            else cmbTheme.SelectedIndex = cmbTheme.Items.Count - 1;
-            ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
-            UpdateDisplay();
+                int i = cmbTheme.SelectedIndex;
+                cmbTheme.Items.Remove(ActiveTheme);
+                if (i < cmbTheme.Items.Count) cmbTheme.SelectedIndex = i;
+                else cmbTheme.SelectedIndex = cmbTheme.Items.Count - 1;
+                ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
+                UpdateDisplay();
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(string.Format("btnThemeDelete_Click: {0}", ex), "IndentGuide");
+            }
         }
 
         private void chkEmptyLineBehaviour_CheckedChanged(object sender, EventArgs e)
@@ -233,16 +265,23 @@ namespace IndentGuide
 
         private void btnCustomizeThisContentType_Click(object sender, EventArgs e)
         {
-            var theme = LocalThemes.FirstOrDefault(t => t.Name.Equals(CurrentContentType,
-                StringComparison.InvariantCultureIgnoreCase));
-            if (theme == null)
+            try
             {
-                cmbTheme.Text = CurrentContentType;
-                btnThemeSaveAs.PerformClick();
+                var theme = LocalThemes.FirstOrDefault(t => t.Name.Equals(CurrentContentType,
+                    StringComparison.InvariantCultureIgnoreCase));
+                if (theme == null)
+                {
+                    cmbTheme.Text = CurrentContentType;
+                    btnThemeSaveAs.PerformClick();
+                }
+                else
+                {
+                    cmbTheme.SelectedItem = theme;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                cmbTheme.SelectedItem = theme;
+                Trace.WriteLine(string.Format("btnCustomizeThisContentType_Click: {0}", ex), "IndentGuide");
             }
         }
 

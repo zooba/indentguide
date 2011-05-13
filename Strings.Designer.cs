@@ -331,7 +331,7 @@ namespace IndentGuide {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to not known..
+        ///   Looks up a localized string similar to not available..
         /// </summary>
         internal static string UnknownContentType {
             get {

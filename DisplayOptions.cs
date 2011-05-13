@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -73,13 +74,20 @@ namespace IndentGuide
 
         public override void LoadSettingsFromStorage()
         {
-            var reg = RegistryRoot;
             Themes.Clear();
-            foreach (var themeName in reg.GetSubKeyNames())
+            try
             {
-                var theme = IndentTheme.Load(reg, themeName);
-                if (theme.IsDefault) Service.DefaultTheme = theme;
-                Themes[theme.Name] = theme;
+                var reg = RegistryRoot;
+                foreach (var themeName in reg.GetSubKeyNames())
+                {
+                    var theme = IndentTheme.Load(reg, themeName);
+                    if (theme.IsDefault) Service.DefaultTheme = theme;
+                    Themes[theme.Name] = theme;
+                }
+            }
+            catch(Exception ex)
+            {
+                Trace.WriteLine(string.Format("LoadSettingsFromStorage: {0}", ex), "IndentGuide");
             }
             Service.OnThemesChanged();
         }
@@ -99,10 +107,19 @@ namespace IndentGuide
 
         public override void SaveSettingsToStorage()
         {
-            var reg = RegistryRootWritable;
-            foreach (var theme in Themes.Values)
+            try
             {
-                theme.Save(reg);
+                using (var reg = RegistryRootWritable)
+                {
+                    foreach (var theme in Themes.Values)
+                    {
+                        theme.Save(reg);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Trace.WriteLine(string.Format("SaveSettingsToStorage: {0}", ex), "IndentGuide");
             }
         }
 
@@ -117,29 +134,30 @@ namespace IndentGuide
         protected override void OnActivate(CancelEventArgs e)
         {
             base.OnActivate(e);
-            ((DisplayOptionsControl)Window).LocalThemes = 
-                Service.Themes.Values.OrderBy(t => t).Select(t => t.Clone()).ToList();
-            
-            IVsTextView view = null;
-            IWpfTextView wpfView = null;
-            TextManagerService.GetActiveView(0, null, out view);
-            if (view != null && (wpfView = EditorAdapters.GetWpfTextView(view)) != null)
+            var doc = (DisplayOptionsControl)Window;
+            doc.LocalThemes = Service.Themes.Values.OrderBy(t => t).Select(t => t.Clone()).ToList();
+
+            try
             {
-                ((DisplayOptionsControl)Window).CurrentContentType = wpfView.TextDataModel.ContentType.DisplayName;
+                IVsTextView view = null;
+                IWpfTextView wpfView = null;
+                TextManagerService.GetActiveView(0, null, out view);
+                wpfView = EditorAdapters.GetWpfTextView(view);
+                doc.CurrentContentType = wpfView.TextDataModel.ContentType.DisplayName;
             }
-            else
+            catch
             {
-                ((DisplayOptionsControl)Window).CurrentContentType = null;
+                doc.CurrentContentType = null;
             }
         }
 
         protected override void OnApply(DialogPage.PageApplyEventArgs e)
         {
-            var window = (DisplayOptionsControl)Window;
-            window.SaveIfRequired();
+            var doc = (DisplayOptionsControl)Window;
+            doc.SaveIfRequired();
             
-            var changedThemes = window.ChangedThemes;
-            var deletedThemes = window.DeletedThemes;
+            var changedThemes = doc.ChangedThemes;
+            var deletedThemes = doc.DeletedThemes;
             if (changedThemes.Any())
             {
                 foreach (var theme in changedThemes)
@@ -185,31 +203,38 @@ namespace IndentGuide
         
         private void Upgrade()
         {
-            if (RegistryRoot != null) return;
-
-            var vsRoot = VSRegistry.RegistryRoot(Microsoft.VisualStudio.Shell.Interop.__VsLocalRegistryType.RegType_UserSettings, true);
-
-            using (var newKey = vsRoot.CreateSubKey("IndentGuide"))
-            using (var key = vsRoot.OpenSubKey(SettingsRegistryPath))
+            try
             {
-                var theme = new IndentTheme(true);
-                if (key != null)
-                {
-                    theme.Name = (string)key.GetValue("Name", IndentTheme.DefaultThemeName);
-                    theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
-                        .ConvertFromInvariantString((string)key.GetValue("EmptyLineMode"));
+                if (RegistryRoot != null) return;
 
-                    theme.LineFormat.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
-                        .ConvertFromInvariantString((string)key.GetValue("LineColor"));
-                    theme.LineFormat.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
-                        .ConvertFromInvariantString((string)key.GetValue("LineStyle"));
-                    theme.LineFormat.Visible = bool.Parse((string)key.GetValue("Visible"));
+                var vsRoot = VSRegistry.RegistryRoot(Microsoft.VisualStudio.Shell.Interop.__VsLocalRegistryType.RegType_UserSettings, true);
+
+                using (var newKey = vsRoot.CreateSubKey("IndentGuide"))
+                using (var key = vsRoot.OpenSubKey(SettingsRegistryPath))
+                {
+                    var theme = new IndentTheme(true);
+                    if (key != null)
+                    {
+                        theme.Name = (string)key.GetValue("Name", IndentTheme.DefaultThemeName);
+                        theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
+                            .ConvertFromInvariantString((string)key.GetValue("EmptyLineMode"));
+
+                        theme.LineFormat.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
+                            .ConvertFromInvariantString((string)key.GetValue("LineColor"));
+                        theme.LineFormat.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
+                            .ConvertFromInvariantString((string)key.GetValue("LineStyle"));
+                        theme.LineFormat.Visible = bool.Parse((string)key.GetValue("Visible"));
+                    }
+
+                    theme.Save(newKey);
                 }
 
-                theme.Save(newKey);
+                vsRoot.DeleteSubKeyTree(SettingsRegistryPath, false);
             }
-
-            vsRoot.DeleteSubKeyTree(SettingsRegistryPath, false);
+            catch (Exception ex)
+            {
+                Trace.WriteLine(string.Format("Upgrade: {0}", ex), "IndentGuide");
+            }
         }
 
         #endregion

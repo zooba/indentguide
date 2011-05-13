@@ -211,6 +211,6 @@
     <value>The current document's content type is</value>
   </data>
   <data name="UnknownContentType" xml:space="preserve">
-    <value>not known.</value>
+    <value>not available.</value>
   </data>
 </root>
