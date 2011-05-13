@@ -46,14 +46,14 @@ namespace IndentGuide
             {
                 if (_Window == null)
                 {
-                    var newWindow = new DisplayOptionsControl();
+                    var newWindow = new DisplayOptionsControl(this);
                     System.Threading.Interlocked.CompareExchange(ref _Window, newWindow, null);
                 }
                 return _Window;
             }
         }
 
-        private RegistryKey RegistryRoot
+        internal RegistryKey RegistryRoot
         {
             get
             {
@@ -62,7 +62,7 @@ namespace IndentGuide
             }
         }
 
-        private RegistryKey RegistryRootWritable
+        internal RegistryKey RegistryRootWritable
         {
             get
             {
@@ -193,15 +193,18 @@ namespace IndentGuide
             using (var key = vsRoot.OpenSubKey(SettingsRegistryPath))
             {
                 var theme = new IndentTheme(true);
-                theme.Name = (string)key.GetValue("Name", IndentTheme.DefaultThemeName);
-                theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
-                    .ConvertFromInvariantString((string)key.GetValue("EmptyLineMode"));
+                if (key != null)
+                {
+                    theme.Name = (string)key.GetValue("Name", IndentTheme.DefaultThemeName);
+                    theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
+                        .ConvertFromInvariantString((string)key.GetValue("EmptyLineMode"));
 
-                theme.LineFormat.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
-                    .ConvertFromInvariantString((string)key.GetValue("LineColor"));
-                theme.LineFormat.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
-                    .ConvertFromInvariantString((string)key.GetValue("LineStyle"));
-                theme.LineFormat.Visible = bool.Parse((string)key.GetValue("Visible"));
+                    theme.LineFormat.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
+                        .ConvertFromInvariantString((string)key.GetValue("LineColor"));
+                    theme.LineFormat.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
+                        .ConvertFromInvariantString((string)key.GetValue("LineStyle"));
+                    theme.LineFormat.Visible = bool.Parse((string)key.GetValue("Visible"));
+                }
 
                 theme.Save(newKey);
             }

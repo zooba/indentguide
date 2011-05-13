@@ -12,14 +12,17 @@ namespace IndentGuide
 {
     public partial class DisplayOptionsControl : UserControl
     {
+        private DisplayOptions OptionsOwner;
         private IndentGuideService Service;
 
-        public DisplayOptionsControl()
+        public DisplayOptionsControl(DisplayOptions owner = null)
         {
             InitializeComponent();
 
             ChangedThemes = new List<IndentTheme>();
             DeletedThemes = new List<IndentTheme>();
+
+            OptionsOwner = owner;
         }
 
         internal readonly List<IndentTheme> ChangedThemes;
@@ -37,6 +40,13 @@ namespace IndentGuide
                 _LocalThemes = value;
                 ChangedThemes.Clear();
                 DeletedThemes.Clear();
+                if (_LocalThemes.Count == 0)
+                {
+                    var defaultTheme = new IndentTheme(true);
+                    _LocalThemes.Add(defaultTheme);
+                    ChangedThemes.Add(defaultTheme);
+                    if (OptionsOwner != null) defaultTheme.Save(OptionsOwner.RegistryRootWritable);
+                }
 
                 Invoke((Action)UpdateThemeList);
             }
@@ -61,7 +71,7 @@ namespace IndentGuide
             {
                 cmbTheme.Items.Add(theme);
             }
-            cmbTheme.SelectedIndex = 0;
+            if (cmbTheme.Items.Count > 0) cmbTheme.SelectedIndex = 0;
             btnThemeDelete.Enabled = false;
             btnThemeSaveAs.Enabled = false;
         }
@@ -140,7 +150,7 @@ namespace IndentGuide
             ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
 
             btnThemeSaveAs.Enabled = false;
-            btnThemeDelete.Enabled = !ActiveTheme.IsDefault;
+            btnThemeDelete.Enabled = (ActiveTheme != null) && !ActiveTheme.IsDefault;
 
             UpdateDisplay();
         }
