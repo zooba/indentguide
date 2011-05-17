@@ -59,6 +59,7 @@ namespace IndentGuide
 
             if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme))
                 Theme = service.DefaultTheme;
+            Debug.Assert(Theme != null, "No themes loaded");
             service.ThemesChanged += new EventHandler(Service_ThemesChanged);
 
             GlobalVisible = service.Visible;

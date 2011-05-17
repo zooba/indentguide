@@ -23,11 +23,8 @@ namespace IndentGuide
         private IVsTextManager TextManagerService;
         internal IVsEditorAdaptersFactoryService EditorAdapters;
 
-        private IDictionary<string, IndentTheme> Themes;
-
         public DisplayOptions()
         {
-            Themes = new Dictionary<string, IndentTheme>();
             var provider = ServiceProvider.GlobalProvider;
             Service = (IndentGuideService)provider.GetService(typeof(SIndentGuide));
             TextManagerService = (IVsTextManager)provider.GetService(typeof(SVsTextManager));
@@ -35,12 +32,6 @@ namespace IndentGuide
             var componentModel = (IComponentModel)provider.GetService(typeof(SComponentModel));
             EditorAdapters = (IVsEditorAdaptersFactoryService)componentModel
                 .GetService<IVsEditorAdaptersFactoryService>();
-
-            Service.Themes = Themes;
-            Service.DefaultTheme = new IndentTheme(true);
-
-            Upgrade();
-            LoadSettingsFromStorage();
         }
 
         private DisplayOptionsControl _Window = null;
@@ -57,94 +48,24 @@ namespace IndentGuide
             }
         }
 
-        internal RegistryKey GetRegistryRoot(bool writable)
-        {
-            using (var key = Service.Package.UserRegistryRoot)
-                return key.OpenSubKey("IndentGuide", writable);
-        }
-
         public override void LoadSettingsFromStorage()
         {
-            Themes.Clear();
-            RegistryKey reg = null;
-            try
-            {
-                reg = GetRegistryRoot(false);
-                foreach (var themeName in reg.GetSubKeyNames())
-                {
-                    var theme = IndentTheme.Load(reg, themeName);
-                    if (theme.IsDefault) Service.DefaultTheme = theme;
-                    Themes[theme.Name] = theme;
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine(string.Format("LoadSettingsFromStorage: {0}", ex), "IndentGuide");
-            }
-            finally
-            {
-                if (reg != null) reg.Close();
-            }
-            Service.OnThemesChanged();
+            Service.Load();
         }
 
         public override void LoadSettingsFromXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsReader reader)
         {
-            string themeKeysString;
-            reader.ReadSettingString("Themes", out themeKeysString);
-
-            using (var reg = GetRegistryRoot(true))
-            {
-                foreach (var key in themeKeysString.Split(';'))
-                {
-                    if (string.IsNullOrWhiteSpace(key)) continue;
-
-                    try
-                    {
-                        var theme = IndentTheme.Load(reader, key);
-                        theme.Save(reg);
-                    }
-                    catch (Exception ex)
-                    {
-                        Trace.WriteLine(string.Format("LoadSettingsFromXML: {0}", ex), "IndentGuide");
-                    }
-                }
-            }
-
-            LoadSettingsFromStorage();
+            Service.Load(reader);
         }
 
         public override void SaveSettingsToStorage()
         {
-            RegistryKey reg = null;
-            try
-            {
-                reg = GetRegistryRoot(true);
-                foreach (var theme in Themes.Values)
-                {
-                    theme.Save(reg);
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine(string.Format("SaveSettingsToStorage: {0}", ex), "IndentGuide");
-            }
-            finally
-            {
-                if (reg != null) reg.Close();
-            }
+            Service.Save();
         }
 
         public override void SaveSettingsToXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsWriter writer)
         {
-            LoadSettingsFromStorage();
-            var sb = new StringBuilder();
-            foreach (var theme in Themes.Values)
-            {
-                sb.Append(theme.Save(writer));
-                sb.Append(";");
-            }
-            writer.WriteSettingString("Themes", sb.ToString());
+            Service.Save(writer);
         }
 
         protected override void OnActivate(CancelEventArgs e)
@@ -186,14 +107,9 @@ namespace IndentGuide
             }
             if (deletedThemes.Any())
             {
-                using (var reg = GetRegistryRoot(true))
+                foreach (var theme in deletedThemes)
                 {
-                    foreach (var theme in deletedThemes)
-                    {
-                        try { theme.Delete(reg); }
-                        catch { }
-                        Service.Themes.Remove(theme.Name);
-                    }
+                    Service.Themes.Remove(theme.Name);
                 }
                 Service.OnThemesChanged();
                 deletedThemes.Clear();
@@ -204,75 +120,7 @@ namespace IndentGuide
 
         public override void ResetSettings()
         {
-            RegistryKey reg = null;
-            try
-            {
-                reg = GetRegistryRoot(true);
-                foreach (var theme in Service.Themes.Values)
-                {
-                    try { theme.Delete(reg); }
-                    catch { }
-                }
-                Service.Themes.Clear();
-                var defaultTheme = new IndentTheme(true);
-                Service.Themes[defaultTheme.Name] = defaultTheme;
-                defaultTheme.Save(reg);
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine(string.Format("ResetSettings: {0}", ex), "IndentGuide");
-            }
-            finally
-            {
-                if (reg != null) reg.Close();
-            }
-            Service.OnThemesChanged();
+            Service.Reset();
         }
-
-        #region Upgrade settings from v8.2
-        
-        private void Upgrade()
-        {
-            try
-            {
-                var reg = GetRegistryRoot(false);
-                if (reg != null)
-                {
-                    reg.Close();
-                    return;
-                }
-
-                using (var vsRoot = Service.Package.UserRegistryRoot)
-                {
-                    using (var newKey = vsRoot.CreateSubKey("IndentGuide"))
-                    using (var key = vsRoot.OpenSubKey(SettingsRegistryPath))
-                    {
-                        var theme = new IndentTheme(true);
-                        if (key != null)
-                        {
-                            theme.Name = (string)key.GetValue("Name", IndentTheme.DefaultThemeName);
-                            theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
-                                .ConvertFromInvariantString((string)key.GetValue("EmptyLineMode"));
-
-                            theme.LineFormat.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
-                                .ConvertFromInvariantString((string)key.GetValue("LineColor"));
-                            theme.LineFormat.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
-                                .ConvertFromInvariantString((string)key.GetValue("LineStyle"));
-                            theme.LineFormat.Visible = bool.Parse((string)key.GetValue("Visible"));
-                        }
-
-                        theme.Save(newKey);
-                    }
-
-                    vsRoot.DeleteSubKeyTree(SettingsRegistryPath, false);
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine(string.Format("Upgrade: {0}", ex), "IndentGuide");
-            }
-        }
-
-        #endregion
     }
 }

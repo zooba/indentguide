@@ -26,9 +26,7 @@ namespace IndentGuide
         private object CreateService(IServiceContainer container, Type serviceType)
         {
             if (typeof(SIndentGuide) == serviceType)
-            {
                 return new IndentGuideService(this);
-            }
             else
                 return null;
         }
@@ -37,6 +35,7 @@ namespace IndentGuide
         private const int cmdidViewIndentGuides = 0x0102;
 
         private EnvDTE.WindowEvents WindowEvents;
+        private EnvDTE.DTEEvents DTEEvents;
         private IIndentGuide Service;
 
         protected override void Initialize()
@@ -53,15 +52,23 @@ namespace IndentGuide
                 WindowEvents = dte.Events.WindowEvents;
                 WindowEvents.WindowActivated += 
                     new EnvDTE._dispWindowEvents_WindowActivatedEventHandler(WindowEvents_WindowActivated);
+                DTEEvents = dte.Events.DTEEvents;
+                DTEEvents.OnBeginShutdown += 
+                    new EnvDTE._dispDTEEvents_OnBeginShutdownEventHandler(DTEEvents_OnBeginShutdown);
             }
 
             // Assume the service exists, otherwise, crash the extension.
-            var service = (SIndentGuide)GetService(typeof(SIndentGuide));
-            
-            Service = (IIndentGuide)service;
+            Service = (IIndentGuide)GetService(typeof(SIndentGuide));
             Service.VisibleChanged += new EventHandler(Service_VisibleChanged);
-            
-            service.Initialize(dte);
+        }
+
+        /// <summary>
+        /// Saves the current settings.
+        /// </summary>
+        void DTEEvents_OnBeginShutdown()
+        {
+            if (Service != null)
+                Service.Save();
         }
 
         private MenuCommand _menuCommand;

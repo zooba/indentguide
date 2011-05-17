@@ -45,20 +45,13 @@ namespace IndentGuide
                         var defaultTheme = new IndentTheme(true);
                         _LocalThemes.Add(defaultTheme);
                         ChangedThemes.Add(defaultTheme);
-                        if (OptionsOwner != null)
-                        {
-                            using (var reg = OptionsOwner.GetRegistryRoot(true))
-                            {
-                                defaultTheme.Save(reg);
-                            }
-                        }
                     }
 
                     Invoke((Action)UpdateThemeList);
                 }
                 catch (Exception ex)
                 {
-                    Trace.WriteLine(string.Format("get_LocalThemes: {0}", ex), "IndentGuide");
+                    Trace.WriteLine(string.Format("IndentGuide::get_LocalThemes: {0}", ex));
                 }
             }
         }
@@ -90,7 +83,7 @@ namespace IndentGuide
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(string.Format("UpdateThemeList: {0}", ex), "IndentGuide");
+                Trace.WriteLine(string.Format("IndentGuide::UpdateThemeList: {0}", ex));
             }
         }
 
@@ -114,7 +107,7 @@ namespace IndentGuide
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(string.Format("LoadControlStrings: {0}", ex), "IndentGuide");
+                Trace.WriteLine(string.Format("IndentGuide::LoadControlStrings: {0}", ex));
             }
         }
 
@@ -232,7 +225,7 @@ namespace IndentGuide
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(string.Format("btnThemeSaveAs_Click: {0}", ex), "IndentGuide");
+                Trace.WriteLine(string.Format("IndentGuide::btnThemeSaveAs_Click: {0}", ex));
             }
         }
 
@@ -254,7 +247,7 @@ namespace IndentGuide
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(string.Format("btnThemeDelete_Click: {0}", ex), "IndentGuide");
+                Trace.WriteLine(string.Format("IndentGuide::btnThemeDelete_Click: {0}", ex));
             }
         }
 
@@ -294,7 +287,7 @@ namespace IndentGuide
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(string.Format("btnCustomizeThisContentType_Click: {0}", ex), "IndentGuide");
+                Trace.WriteLine(string.Format("IndentGuide::btnCustomizeThisContentType_Click: {0}", ex));
             }
         }
 
