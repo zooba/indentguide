@@ -6,3 +6,4 @@ glob:ipch\*
 glob:*.suo
 glob:*.user
 glob:*.sdf
+glob:*.docstates

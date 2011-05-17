@@ -13,6 +13,11 @@ namespace IndentGuide
     public interface IIndentGuide
     {
         /// <summary>
+        /// The package that owns this service.
+        /// </summary>
+        IndentGuidePackage Package { get; }
+
+        /// <summary>
         /// Whether guides are shown or not.
         /// </summary>
         bool Visible { get; set; }
@@ -49,7 +54,10 @@ namespace IndentGuide
     /// </summary>
     class IndentGuideService : SIndentGuide, IIndentGuide
     {
-        public IndentGuideService() { }
+        public IndentGuideService(IndentGuidePackage package)
+        {
+            _Package = package;
+        }
         
         void SIndentGuide.Initialize(EnvDTE.DTE dte)
         {
@@ -59,6 +67,12 @@ namespace IndentGuide
         }
 
         #region IIndentGuide Members
+
+        private readonly IndentGuidePackage _Package;
+        public IndentGuidePackage Package
+        {
+            get { return _Package; }
+        }
 
         private bool _Visible = true;
         public bool Visible

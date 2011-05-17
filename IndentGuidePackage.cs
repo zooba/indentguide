@@ -27,7 +27,7 @@ namespace IndentGuide
         {
             if (typeof(SIndentGuide) == serviceType)
             {
-                return new IndentGuideService();
+                return new IndentGuideService(this);
             }
             else
                 return null;

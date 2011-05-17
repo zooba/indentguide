@@ -45,7 +45,13 @@ namespace IndentGuide
                         var defaultTheme = new IndentTheme(true);
                         _LocalThemes.Add(defaultTheme);
                         ChangedThemes.Add(defaultTheme);
-                        if (OptionsOwner != null) defaultTheme.Save(OptionsOwner.RegistryRootWritable);
+                        if (OptionsOwner != null)
+                        {
+                            using (var reg = OptionsOwner.GetRegistryRoot(true))
+                            {
+                                defaultTheme.Save(reg);
+                            }
+                        }
                     }
 
                     Invoke((Action)UpdateThemeList);
@@ -214,13 +220,20 @@ namespace IndentGuide
         {
             if (ActiveTheme == null) return;
 
-            var newTheme = ActiveTheme;
-            newTheme.Name = cmbTheme.Text;
-            ChangedThemes.Add(newTheme);
-            LocalThemes.Add(newTheme);
-            LocalThemes.Sort();
-            UpdateThemeList();
-            cmbTheme.SelectedItem = newTheme;
+            try
+            {
+                var newTheme = ActiveTheme;
+                newTheme.Name = cmbTheme.Text;
+                ChangedThemes.Add(newTheme);
+                LocalThemes.Add(newTheme);
+                LocalThemes.Sort();
+                UpdateThemeList();
+                cmbTheme.SelectedItem = newTheme;
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(string.Format("btnThemeSaveAs_Click: {0}", ex), "IndentGuide");
+            }
         }
 
         private void btnThemeDelete_Click(object sender, EventArgs e)

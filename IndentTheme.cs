@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel;
 using System.Drawing;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
-using System.Globalization;
-using System.Xml.Linq;
 
 namespace IndentGuide
 {
@@ -150,25 +146,33 @@ namespace IndentGuide
             return theme;
         }
 
-        public static IndentTheme Load(XElement root)
+        public static IndentTheme Load(IVsSettingsReader reader, string key)
         {
-            var theme = new IndentTheme(true);
-            theme.Name = (string)root.Attribute("Name");
-            theme.RegistryName = Guid.Parse((string)root.Attribute("RegistryName"));
-            theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
-                    .ConvertFromInvariantString((string)root.Attribute("EmptyLineMode"));
+            var theme = new IndentTheme();
+            string temp;
+            
+            theme.RegistryName = Guid.Parse(key);
+            
+            reader.ReadSettingString(key, out temp);
+            theme.Name = temp;
 
-            var key = root.Element("LineFormat");
+            reader.ReadSettingAttribute(key, "EmptyLineMode", out temp);
+            theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
+                .ConvertFromInvariantString(temp);
+
+            reader.ReadSettingAttribute(key, "LineColor", out temp);
             theme.LineFormat.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
-                .ConvertFromInvariantString((string)key.Attribute("LineColor"));
+                .ConvertFromInvariantString(temp);
+            reader.ReadSettingAttribute(key, "LineStyle", out temp);
             theme.LineFormat.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
-                .ConvertFromInvariantString((string)key.Attribute("LineStyle"));
-            theme.LineFormat.Visible = bool.Parse((string)key.Attribute("Visible"));
+                .ConvertFromInvariantString(temp);
+            reader.ReadSettingAttribute(key, "Visible", out temp);
+            theme.LineFormat.Visible = bool.Parse(temp);
 
             return theme;
         }
 
-        public void Save(RegistryKey reg)
+        public string Save(RegistryKey reg)
         {
             using (var key = reg.CreateSubKey(RegistryName.ToString("B")))
             {
@@ -182,18 +186,23 @@ namespace IndentGuide
                     .ConvertToInvariantString(LineFormat.LineStyle));
                 key.SetValue("Visible", LineFormat.Visible.ToString());
             }
+            return RegistryName.ToString("B");
         }
 
-        internal XElement ToXElement()
+        public string Save(IVsSettingsWriter writer)
         {
-            return new XElement("Theme",
-                new XAttribute("Name", Name),
-                new XAttribute("RegistryName", RegistryName.ToString("B")),
-                new XAttribute("EmptyLineMode", EmptyLineMode),
-                new XElement("LineFormat",
-                    new XAttribute("LineColor", LineFormat.LineColor),
-                    new XAttribute("LineStyle", LineFormat.LineStyle),
-                    new XAttribute("Visible", LineFormat.Visible)));
+            var key = RegistryName.ToString();
+            writer.WriteSettingString(key, Name);
+            writer.WriteSettingAttribute(key, "EmptyLineMode", TypeDescriptor.GetConverter(typeof(EmptyLineMode))
+                .ConvertToInvariantString(EmptyLineMode));
+
+            writer.WriteSettingAttribute(key, "LineColor", TypeDescriptor.GetConverter(typeof(Color))
+                .ConvertToInvariantString(LineFormat.LineColor));
+            writer.WriteSettingAttribute(key, "LineStyle", TypeDescriptor.GetConverter(typeof(LineStyle))
+                .ConvertToInvariantString(LineFormat.LineStyle));
+            writer.WriteSettingAttribute(key, "Visible", LineFormat.Visible.ToString());
+
+            return key;
         }
 
         public void Delete(RegistryKey reg)
@@ -209,5 +218,6 @@ namespace IndentGuide
             if (other.IsDefault) return 1;
             return Name.CompareTo(other.Name);
         }
+
     }
 }

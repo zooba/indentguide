@@ -74,8 +74,7 @@ namespace IndentGuide
         void Service_VisibleChanged(object sender, EventArgs e)
         {
             GlobalVisible = ((IIndentGuide)sender).Visible;
-            ActiveLines.Clear();
-            CachedLefts.Clear();
+            InvalidateLines();
             UpdateAdornments();
         }
 
@@ -91,8 +90,7 @@ namespace IndentGuide
             GuideBrush = new SolidColorBrush(Theme.LineFormat.LineColor.ToSWMC());
             if (GuideBrush.CanFreeze) GuideBrush.Freeze();
 
-            ActiveLines.Clear();
-            CachedLefts.Clear();
+            InvalidateLines();
             UpdateAdornments();
         }
 
@@ -109,11 +107,27 @@ namespace IndentGuide
         }
 
         /// <summary>
+        /// Removes all lines from the line cache.
+        /// </summary>
+        void InvalidateLines()
+        {
+            if (Layer != null) Layer.RemoveAllAdornments();
+            ActiveLines.Clear();
+                CachedLefts.Clear();
+        }
+
+        /// <summary>
         /// Removes the specified line from the line cache. Any empty
         /// lines that are dependant upon this line are also removed.
         /// </summary>
-        /// <param name="line"></param>
-        /// <param name="lineNumber"></param>
+        /// <param name="line">
+        /// The line to remove. If not <c>null</c>, the line number is
+        /// obtained from this object and invalidated.
+        /// </param>
+        /// <param name="lineNumber">
+        /// The line number to invalidate. Only required if
+        /// <paramref name="line"/> is <c>null</c>.
+        /// </param>
         void InvalidateLine(ITextViewLine line, int lineNumber = -1)
         {
             if (line != null)
@@ -126,6 +140,13 @@ namespace IndentGuide
                 ActiveLines.Remove(lineNumber);
             }
         }
+
+        /// <summary>
+        /// Raised by <see cref="GetIndentLocations"/> if the left
+        /// coordinate cache is detected to be invalid.
+        /// </summary>
+        private class InvalidCacheException : Exception
+        { }
 
         /// <summary>
         /// Recreates all adornments.
@@ -148,19 +169,36 @@ namespace IndentGuide
             var emptyLines = new List<int>();
             var newLines = new List<int>();
 
-            foreach (var line in lines)
-            {
-                int lineNumber = line.Snapshot.GetLineNumberFromPosition(line.Start.Position);
-                if (ActiveLines.ContainsKey(lineNumber)) continue;
+            bool succeeded = false;
 
-                if (line.IsEmpty())
+            while (!succeeded)
+            {
+                emptyLines.Clear();
+                newLines.Clear();
+
+                try
                 {
-                    emptyLines.Add(lineNumber);
+                    foreach (var line in lines)
+                    {
+                        int lineNumber = line.Snapshot.GetLineNumberFromPosition(line.Start.Position);
+                        if (ActiveLines.ContainsKey(lineNumber)) continue;
+
+                        if (line.IsEmpty())
+                        {
+                            emptyLines.Add(lineNumber);
+                        }
+                        else
+                        {
+                            newLines.Add(lineNumber);
+                            ActiveLines[lineNumber] = new GuidePositions(true, GetIndentLocations(tabSize, line));
+                        }
+                    }
+                    succeeded = true;
                 }
-                else
+                catch (InvalidCacheException)
                 {
-                    newLines.Add(lineNumber);
-                    ActiveLines[lineNumber] = new GuidePositions(true, GetIndentLocations(tabSize, line));
+                    InvalidateLines();
+                    succeeded = false;
                 }
             }
 
@@ -217,6 +255,7 @@ namespace IndentGuide
             }
         }
 
+        int CacheRetestTime = 0;
         private List<int> GetIndentLocations(int tabSize, IWpfTextViewLine line)
         {
             var locations = new List<int>();
@@ -231,12 +270,21 @@ namespace IndentGuide
                 if (actualPos > 0 && (actualPos % tabSize) == 0 &&
                     snapshot.Length > i)
                 {
-                    if (!CachedLefts.ContainsKey(actualPos))
+                    if (!CachedLefts.ContainsKey(actualPos) || --CacheRetestTime < 0)
                     {
                         var endOfLine = new SnapshotPoint(snapshot, i);
                         var span = new SnapshotSpan(endOfLine.GetContainingLine().Start, endOfLine);
-                        double left = View.TextViewLines.GetMarkerGeometry(span).Bounds.Right;
-                        CachedLefts[actualPos] = left;
+                        double left = Math.Round(View.TextViewLines.GetMarkerGeometry(span).Bounds.Right);
+                        if (CacheRetestTime < 0)
+                        {
+                            CacheRetestTime = 128;
+                            if (CachedLefts[actualPos] != left)
+                                throw new InvalidCacheException();
+                        }
+                        else
+                        {
+                            CachedLefts[actualPos] = left;
+                        }
                     }
                     locations.Add(actualPos);
                 }
