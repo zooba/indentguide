@@ -164,11 +164,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IndentGuide.cs" />
     <Compile Include="ResourceAwareAttributes.cs" />
-    <Compile Include="Strings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Strings.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
@@ -198,10 +193,7 @@
     <EmbeddedResource Include="Strings.en-AU.resx" />
     <EmbeddedResource Include="Strings.en-GB.resx" />
     <EmbeddedResource Include="Strings.en.resx" />
-    <EmbeddedResource Include="Strings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <EmbeddedResource Include="Strings.resx" />
     <EmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
       <ManifestResourceName>VSPackage</ManifestResourceName>

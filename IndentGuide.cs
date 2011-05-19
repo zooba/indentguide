@@ -321,6 +321,8 @@ namespace IndentGuide
             if (!Theme.NumberedOverride.TryGetValue(formatIndex, out format))
                 format = Theme.DefaultLineFormat;
 
+            if (!format.Visible) return;
+
             if (!GuideBrushCache.TryGetValue(format.LineColor, out brush))
             {
                 brush = new SolidColorBrush(format.LineColor.ToSWMC());

@@ -99,6 +99,7 @@ namespace IndentGuide
             {
                 foreach (var theme in changedThemes)
                 {
+                    theme.Apply();
                     Service.Themes[theme.Name] = theme;
                     if (theme.IsDefault) Service.DefaultTheme = theme;
                 }

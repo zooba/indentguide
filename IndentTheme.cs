@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Globalization;
 using System.Text;
 
@@ -36,7 +37,7 @@ namespace IndentGuide
     /// <summary>
     /// The format of a particular type of guideline.
     /// </summary>
-    public class LineFormat
+    public class LineFormat : IEquatable<LineFormat>
     {
         public LineFormat()
         {
@@ -151,6 +152,18 @@ namespace IndentGuide
                 visible = true.ToString();
             }
         }
+
+        #region IEquatable<LineFormat> Members
+
+        public bool Equals(LineFormat other)
+        {
+            if (null == other) return false;
+            return LineStyle.Equals(other.LineStyle) &&
+                LineColor.Equals(other.LineColor) &&
+                Visible.Equals(other.Visible);
+        }
+
+        #endregion
     }
 
     /// <summary>
@@ -196,7 +209,7 @@ namespace IndentGuide
         public bool IsDefault { get { return RegistryName.Equals(Guid.Empty); } }
 
         [TypeConverter(typeof(ExpandableObjectConverter))]
-        public LineFormat DefaultLineFormat { get; private set; }
+        public LineFormat DefaultLineFormat { get; set; }
 
         [Browsable(false)]
         public IDictionary<int, LineFormat> NumberedOverride { get; private set; }
@@ -387,5 +400,15 @@ namespace IndentGuide
             return Name.CompareTo(other.Name);
         }
 
+        internal void Apply()
+        {
+            var toRemove = NumberedOverride
+                .Where(kv => DefaultLineFormat.Equals(kv.Value))
+                .Select(kv => kv.Key)
+                .ToList();
+            
+            foreach (var key in toRemove)
+                NumberedOverride.Remove(key);
+        }
     }
 }

@@ -115,6 +115,11 @@ namespace IndentGuide
         {
             Service = (IndentGuideService)ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide));
             LoadControlStrings(this.Controls.OfType<Control>());
+
+            var items = ResourceLoader.LoadString(txtLineFormatIndex.Name + "_Items").Split(';');
+            txtLineFormatIndex.Items.Clear();
+            txtLineFormatIndex.Items.AddRange(items);
+            txtLineFormatIndex.SelectedIndex = 0;
         }
 
         private void cmbTheme_Format(object sender, ListControlConvertEventArgs e)
@@ -135,6 +140,7 @@ namespace IndentGuide
         {
             if (ActiveTheme == null)
             {
+                btnResetLineFormat.Enabled = false;
                 gridLineStyle.SelectedObject = null;
                 linePreview.ForeColor = Color.Teal;
                 linePreview.Style = LineStyle.Solid;
@@ -143,9 +149,25 @@ namespace IndentGuide
             }
             else
             {
-                gridLineStyle.SelectedObject = ActiveTheme.DefaultLineFormat;
-                linePreview.ForeColor = ActiveTheme.DefaultLineFormat.LineColor;
-                linePreview.Style = ActiveTheme.DefaultLineFormat.LineStyle;
+                LineFormat activeFormat = ActiveTheme.DefaultLineFormat;
+                int i = txtLineFormatIndex.SelectedIndex;
+                if (i > 0)
+                {
+                    if (!ActiveTheme.NumberedOverride.TryGetValue(i, out activeFormat))
+                    {
+                        activeFormat = ActiveTheme.DefaultLineFormat.Clone();
+                        ActiveTheme.NumberedOverride[i] = activeFormat;
+                    }
+                    btnResetLineFormat.Enabled = !ActiveTheme.DefaultLineFormat.Equals(activeFormat);
+                }
+                else
+                {
+                    btnResetLineFormat.Enabled = !ActiveTheme.DefaultLineFormat.Equals(new LineFormat());
+                }
+
+                gridLineStyle.SelectedObject = activeFormat;
+                linePreview.ForeColor = activeFormat.LineColor;
+                linePreview.Style = activeFormat.LineStyle;
                 switch (ActiveTheme.EmptyLineMode)
                 {
                 case EmptyLineMode.NoGuides:
@@ -291,5 +313,40 @@ namespace IndentGuide
             }
         }
 
+        private int txtLineFormatIndex_PreviousIndex = -1;
+        private void txtLineFormatIndex_SelectedItemChanged(object sender, EventArgs e)
+        {
+            LineFormat prevFormat;
+            if (ActiveTheme != null &&
+                txtLineFormatIndex_PreviousIndex > 0 &&
+                ActiveTheme.NumberedOverride.TryGetValue(txtLineFormatIndex_PreviousIndex, out prevFormat) &&
+                prevFormat.Equals(ActiveTheme.DefaultLineFormat))
+            {
+                ActiveTheme.NumberedOverride.Remove(txtLineFormatIndex_PreviousIndex);
+            }
+
+            txtLineFormatIndex_PreviousIndex = txtLineFormatIndex.SelectedIndex;
+
+            UpdateDisplay();
+        }
+
+        private void btnResetLineFormat_Click(object sender, EventArgs e)
+        {
+            if (ActiveTheme == null) return;
+
+            int i = txtLineFormatIndex.SelectedIndex;
+            if (i > 0)
+            {
+                ActiveTheme.NumberedOverride.Remove(i);
+            }
+            else
+            {
+                ActiveTheme.Apply();
+                ActiveTheme.DefaultLineFormat = new LineFormat();
+            }
+            ChangedThemes.Add(ActiveTheme);
+            
+            UpdateDisplay();
+        }
     }
 }

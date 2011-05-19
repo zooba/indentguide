@@ -213,4 +213,13 @@
   <data name="UnknownContentType" xml:space="preserve">
     <value>not available.</value>
   </data>
+  <data name="btnResetLineFormat" xml:space="preserve">
+    <value>&amp;Reset</value>
+  </data>
+  <data name="lblLineFormatIndex" xml:space="preserve">
+    <value>Level:</value>
+  </data>
+  <data name="txtLineFormatIndex_Items" xml:space="preserve">
+    <value>Default;1st;2nd;3rd;4th;5th;6th;7th;8th;9th;10th;11th;12th;13th;14th;15th;16th;17th;18th;19th;20th</value>
+  </data>
 </root>

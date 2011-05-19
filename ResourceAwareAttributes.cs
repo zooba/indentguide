@@ -2,16 +2,17 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Resources;
 
 namespace IndentGuide
 {
     internal static class ResourceLoader
     {
-        private static System.Resources.ResourceManager ResourceManager;
+        private static ResourceManager ResourceManager;
 
         static ResourceLoader()
         {
-            ResourceManager = IndentGuide.Strings.ResourceManager;
+            ResourceManager = new ResourceManager("IndentGuide.Strings", typeof(ResourceLoader).Assembly);
         }
 
         internal static string LoadString(string id, CultureInfo culture = null)
