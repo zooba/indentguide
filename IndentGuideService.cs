@@ -282,14 +282,14 @@ namespace IndentGuide
                             theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
                                 .ConvertFromInvariantString(temp);
 
-                        if((temp = srcKey.GetValue("LineColor", null) as string) != null)
-                            theme.LineFormat.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
-                                .ConvertFromInvariantString(temp);
-                        if((temp = srcKey.GetValue("LineStyle", null) as string) != null)
-                            theme.LineFormat.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
-                                .ConvertFromInvariantString(temp);
-                        theme.LineFormat.Visible = true;
-
+                        var tempFormat = LineFormat.FromInvariantStrings(
+                            srcKey.GetValue("LineStyle", "Dotted") as string,
+                            srcKey.GetValue("LineColor", "Teal") as string,
+                            "");
+                        theme.DefaultLineFormat.LineStyle = tempFormat.LineStyle;
+                        theme.DefaultLineFormat.LineColor = tempFormat.LineColor;
+                        theme.DefaultLineFormat.Visible = true;
+                        
                         if((temp = srcKey.GetValue("Visible", null) as string) != null)
                             Visible = bool.Parse(temp);
 

@@ -3,6 +3,10 @@ using System.ComponentModel;
 using System.Drawing;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.Text;
 
 namespace IndentGuide
 {
@@ -72,6 +76,81 @@ namespace IndentGuide
         [ResourceCategory("Appearance")]
         [TypeConverter(typeof(ColorConverter))]
         public Color LineColor { get; set; }
+
+        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, string visible)
+        {
+            var inst = new LineFormat();
+            try
+            {
+                inst.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
+                    .ConvertFromInvariantString(lineStyle);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("IndentGuide::Error parsing " + lineStyle.ToString() + " into LineStyle");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
+            }
+
+            try
+            {
+                inst.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
+                    .ConvertFromInvariantString(lineColor);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("IndentGuide::Error parsing " + lineColor.ToString() + " into LineColor");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
+            }
+
+            try
+            {
+                inst.Visible = bool.Parse(visible);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("IndentGuide::Error parsing " + visible.ToString() + " into Visible");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
+            }
+            return inst;
+        }
+
+        public void ToInvariantStrings(out string lineStyle, out string lineColor, out string visible)
+        {
+            try
+            {
+                lineStyle = TypeDescriptor.GetConverter(typeof(LineStyle))
+                    .ConvertToInvariantString(LineStyle);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("IndentGuide::Error converting LineStyle into string");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
+                lineStyle = LineStyle.Dotted.ToString();
+            }
+
+            try
+            {
+                lineColor = TypeDescriptor.GetConverter(typeof(Color))
+                    .ConvertToInvariantString(LineColor);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("IndentGuide::Error converting LineColor into string");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
+                lineColor = Color.Teal.ToString();
+            }
+
+            try
+            {
+                visible = Visible.ToString();
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("IndentGuide::Error converting Visible into string");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
+                visible = true.ToString();
+            }
+        }
     }
 
     /// <summary>
@@ -92,7 +171,8 @@ namespace IndentGuide
         public IndentTheme(bool isDefaultTheme = false)
         {
             Name = DefaultThemeName;
-            LineFormat = new LineFormat();
+            DefaultLineFormat = new LineFormat();
+            NumberedOverride = new Dictionary<int, LineFormat>();
             EmptyLineMode = IndentGuide.EmptyLineMode.SameAsLineAboveLogical;
             RegistryName = isDefaultTheme ? Guid.Empty : Guid.NewGuid();
         }
@@ -101,7 +181,8 @@ namespace IndentGuide
         {
             var inst = new IndentTheme(!makeNonDefault && IsDefault);
             inst.Name = Name;
-            inst.LineFormat = LineFormat.Clone();
+            inst.DefaultLineFormat = DefaultLineFormat.Clone();
+            foreach (var item in NumberedOverride) inst.NumberedOverride[item.Key] = item.Value.Clone();
             inst.EmptyLineMode = EmptyLineMode;
             if (!makeNonDefault) inst.RegistryName = RegistryName;
             return inst;
@@ -115,7 +196,10 @@ namespace IndentGuide
         public bool IsDefault { get { return RegistryName.Equals(Guid.Empty); } }
 
         [TypeConverter(typeof(ExpandableObjectConverter))]
-        public LineFormat LineFormat { get; private set; }
+        public LineFormat DefaultLineFormat { get; private set; }
+
+        [Browsable(false)]
+        public IDictionary<int, LineFormat> NumberedOverride { get; private set; }
 
         private class EmptyLineModeTypeConverter : EnumResourceTypeConverter<EmptyLineMode>
         { }
@@ -125,22 +209,43 @@ namespace IndentGuide
         [TypeConverter(typeof(EmptyLineModeTypeConverter))]
         public EmptyLineMode EmptyLineMode { get; set; }
 
-        public static IndentTheme Load(RegistryKey reg, string subkey)
+        public static IndentTheme Load(RegistryKey reg, string themeKey)
         {
             var theme = new IndentTheme();
-            
-            using (var key = reg.OpenSubKey(subkey))
+
+            using (var key = reg.OpenSubKey(themeKey))
             {
-                theme.RegistryName = Guid.Parse(subkey);
-                theme.Name = (string)key.GetValue("Name", subkey);
+                theme.RegistryName = Guid.Parse(themeKey);
+                theme.Name = (string)key.GetValue("Name", themeKey);
                 theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
                     .ConvertFromInvariantString((string)key.GetValue("EmptyLineMode"));
 
-                theme.LineFormat.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
-                    .ConvertFromInvariantString((string)key.GetValue("LineColor"));
-                theme.LineFormat.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
-                    .ConvertFromInvariantString((string)key.GetValue("LineStyle"));
-                theme.LineFormat.Visible = bool.Parse((string)key.GetValue("Visible"));
+                theme.DefaultLineFormat = LineFormat.FromInvariantStrings(
+                    (string)key.GetValue("LineStyle"),
+                    (string)key.GetValue("LineColor"),
+                    (string)key.GetValue("Visible"));
+
+                foreach (var subkeyName in key.GetSubKeyNames())
+                {
+                    LineFormat format;
+                    using (var subkey = key.OpenSubKey(subkeyName))
+                    {
+                        format = LineFormat.FromInvariantStrings(
+                            (string)subkey.GetValue("LineStyle"),
+                            (string)subkey.GetValue("LineColor"),
+                            (string)subkey.GetValue("Visible"));
+                    }
+                    
+                    int i;
+                    if (int.TryParse(subkeyName, out i))
+                    {
+                        theme.NumberedOverride[i] = format;
+                    }
+                    else
+                    {
+                        Trace.WriteLine(string.Format("IndentGuide::Unable to parse {0}", subkeyName));
+                    }
+                }
             }
 
             return theme;
@@ -150,9 +255,9 @@ namespace IndentGuide
         {
             var theme = new IndentTheme();
             string temp;
-            
+
             theme.RegistryName = Guid.Parse(key);
-            
+
             reader.ReadSettingString(key, out temp);
             theme.Name = temp;
 
@@ -160,14 +265,39 @@ namespace IndentGuide
             theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
                 .ConvertFromInvariantString(temp);
 
-            reader.ReadSettingAttribute(key, "LineColor", out temp);
-            theme.LineFormat.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
-                .ConvertFromInvariantString(temp);
-            reader.ReadSettingAttribute(key, "LineStyle", out temp);
-            theme.LineFormat.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
-                .ConvertFromInvariantString(temp);
-            reader.ReadSettingAttribute(key, "Visible", out temp);
-            theme.LineFormat.Visible = bool.Parse(temp);
+            string lineStyle, lineColor, visible;
+            reader.ReadSettingAttribute(key, "LineStyle", out lineStyle);
+            reader.ReadSettingAttribute(key, "LineColor", out lineColor);
+            reader.ReadSettingAttribute(key, "Visible", out visible);
+            theme.DefaultLineFormat = LineFormat.FromInvariantStrings(lineStyle, lineColor, visible);
+
+            string subkeys;
+            reader.ReadSettingAttribute(key, "Subkeys", out subkeys);
+            if (!string.IsNullOrEmpty(subkeys))
+            {
+                foreach (var subkey in subkeys.Split(';'))
+                {
+                    if (string.IsNullOrEmpty(subkeys)) continue;
+
+                    int i = subkey.LastIndexOf('.');
+                    if (i < 0) continue;
+
+                    reader.ReadSettingAttribute(subkey, "LineStyle", out lineStyle);
+                    reader.ReadSettingAttribute(subkey, "LineColor", out lineColor);
+                    reader.ReadSettingAttribute(subkey, "Visible", out visible);
+                    var format = LineFormat.FromInvariantStrings(lineStyle, lineColor, visible);
+
+                    var keypart = subkey.Substring(i + 1);
+                    if (int.TryParse(keypart, out i))
+                    {
+                        theme.NumberedOverride[i] = format;
+                    }
+                    else
+                    {
+                        Trace.WriteLine(string.Format("IndentGuide::Unable to parse {0}", keypart));
+                    }
+                }
+            }
 
             return theme;
         }
@@ -180,11 +310,27 @@ namespace IndentGuide
                 key.SetValue("EmptyLineMode", TypeDescriptor.GetConverter(typeof(EmptyLineMode))
                     .ConvertToInvariantString(EmptyLineMode));
 
-                key.SetValue("LineColor", TypeDescriptor.GetConverter(typeof(Color))
-                    .ConvertToInvariantString(LineFormat.LineColor));
-                key.SetValue("LineStyle", TypeDescriptor.GetConverter(typeof(LineStyle))
-                    .ConvertToInvariantString(LineFormat.LineStyle));
-                key.SetValue("Visible", LineFormat.Visible.ToString());
+                string lineStyle, lineColor, visible;
+                DefaultLineFormat.ToInvariantStrings(out lineStyle, out lineColor, out visible);
+                key.SetValue("LineStyle", lineStyle);
+                key.SetValue("LineColor", lineColor);
+                key.SetValue("Visible", visible);
+
+                foreach (var subkey in key.GetSubKeyNames())
+                {
+                    key.DeleteSubKeyTree(subkey, false);
+                }
+
+                foreach(var item in NumberedOverride)
+                {
+                    using (var subkey = key.CreateSubKey(item.Key.ToString(CultureInfo.InvariantCulture)))
+                    {
+                        item.Value.ToInvariantStrings(out lineStyle, out lineColor, out visible);
+                        subkey.SetValue("LineStyle", lineStyle);
+                        subkey.SetValue("LineColor", lineColor);
+                        subkey.SetValue("Visible", visible);
+                    }
+                }
             }
             return RegistryName.ToString("B");
         }
@@ -196,11 +342,33 @@ namespace IndentGuide
             writer.WriteSettingAttribute(key, "EmptyLineMode", TypeDescriptor.GetConverter(typeof(EmptyLineMode))
                 .ConvertToInvariantString(EmptyLineMode));
 
-            writer.WriteSettingAttribute(key, "LineColor", TypeDescriptor.GetConverter(typeof(Color))
-                .ConvertToInvariantString(LineFormat.LineColor));
-            writer.WriteSettingAttribute(key, "LineStyle", TypeDescriptor.GetConverter(typeof(LineStyle))
-                .ConvertToInvariantString(LineFormat.LineStyle));
-            writer.WriteSettingAttribute(key, "Visible", LineFormat.Visible.ToString());
+            string lineStyle, lineColor, visible;
+            DefaultLineFormat.ToInvariantStrings(out lineStyle, out lineColor, out visible);
+            writer.WriteSettingAttribute(key, "LineStyle", lineStyle);
+            writer.WriteSettingAttribute(key, "LineColor", lineColor);
+            writer.WriteSettingAttribute(key, "Visible", visible);
+
+            var sb = new StringBuilder();
+
+            foreach (var item in NumberedOverride)
+            {
+                var subkey = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", key, item.Key);
+                sb.Append(subkey);
+                sb.Append(";");
+
+                writer.WriteSettingString(subkey, "");
+                
+                item.Value.ToInvariantStrings(out lineStyle, out lineColor, out visible);
+                writer.WriteSettingAttribute(subkey, "LineStyle", lineStyle);
+                writer.WriteSettingAttribute(subkey, "LineColor", lineColor);
+                writer.WriteSettingAttribute(subkey, "Visible", visible);
+            }
+
+            if (sb.Length > 1)
+            {
+                sb.Length -= 1;
+                writer.WriteSettingAttribute(key, "Subkeys", sb.ToString());
+            }
 
             return key;
         }

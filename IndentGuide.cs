@@ -17,7 +17,7 @@ namespace IndentGuide
     {
         IAdornmentLayer Layer;
         IWpfTextView View;
-        Brush GuideBrush;
+        IDictionary<System.Drawing.Color, Brush> GuideBrushCache;
         IndentTheme Theme;
         bool GlobalVisible;
 
@@ -51,6 +51,7 @@ namespace IndentGuide
         {
             ActiveLines = new Dictionary<int, GuidePositions>();
             CachedLefts = new Dictionary<int, double>();
+            GuideBrushCache = new Dictionary<System.Drawing.Color, Brush>();
             
             View = view;
             View.LayoutChanged += View_LayoutChanged;
@@ -64,9 +65,6 @@ namespace IndentGuide
 
             GlobalVisible = service.Visible;
             service.VisibleChanged += new EventHandler(Service_VisibleChanged);
-
-            GuideBrush = new SolidColorBrush(Theme.LineFormat.LineColor.ToSWMC());
-            if (GuideBrush.CanFreeze) GuideBrush.Freeze();
         }
 
         /// <summary>
@@ -88,8 +86,7 @@ namespace IndentGuide
             if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme))
                 Theme = service.DefaultTheme;
 
-            GuideBrush = new SolidColorBrush(Theme.LineFormat.LineColor.ToSWMC());
-            if (GuideBrush.CanFreeze) GuideBrush.Freeze();
+            GuideBrushCache.Clear();
 
             InvalidateLines();
             UpdateAdornments();
@@ -159,7 +156,7 @@ namespace IndentGuide
             Debug.Assert(View.TextViewLines != null);
             if (View == null || Layer == null || View.TextViewLines == null) return;
 
-            if (!Theme.LineFormat.Visible || !GlobalVisible)
+            if (!GlobalVisible)
             {
                 Layer.RemoveAllAdornments();
                 return;
@@ -312,12 +309,24 @@ namespace IndentGuide
         /// </param>
         /// <param name="tag">The tag to associate with the created
         /// adornment.</param>
-        private void AddGuide(ITextViewLine line, int indent, int format, object tag)
+        private void AddGuide(ITextViewLine line, int indent, int formatIndex, object tag)
         {
             double left;
             if (!CachedLefts.TryGetValue(indent, out left)) return;
 
             if (left == 0 || left > View.ViewportWidth) return;
+
+            LineFormat format;
+            Brush brush;
+            if (!Theme.NumberedOverride.TryGetValue(formatIndex, out format))
+                format = Theme.DefaultLineFormat;
+
+            if (!GuideBrushCache.TryGetValue(format.LineColor, out brush))
+            {
+                brush = new SolidColorBrush(format.LineColor.ToSWMC());
+                if (brush.CanFreeze) brush.Freeze();
+                GuideBrushCache[format.LineColor] = brush;
+            }
 
             var guide = new Line()
             {
@@ -325,17 +334,17 @@ namespace IndentGuide
                 Y1 = line.Top,
                 X2 = left,
                 Y2 = line.Bottom,
-                Stroke = GuideBrush,
+                Stroke = brush,
                 StrokeThickness = 1.0,
                 StrokeDashOffset = line.Top,
                 SnapsToDevicePixels = true
             };
 
-            if (Theme.LineFormat.LineStyle == LineStyle.Thick)
+            if (format.LineStyle == LineStyle.Thick)
                 guide.StrokeThickness = 3.0;
-            else if (Theme.LineFormat.LineStyle == LineStyle.Dotted)
+            else if (format.LineStyle == LineStyle.Dotted)
                 guide.StrokeDashArray = new DoubleCollection { 1.0, 1.0 };
-            else if (Theme.LineFormat.LineStyle == LineStyle.Dashed)
+            else if (format.LineStyle == LineStyle.Dashed)
                 guide.StrokeDashArray = new DoubleCollection { 3.0, 3.0 };
 
             SnapshotSpan span;

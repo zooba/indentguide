@@ -143,9 +143,9 @@ namespace IndentGuide
             }
             else
             {
-                gridLineStyle.SelectedObject = ActiveTheme.LineFormat;
-                linePreview.ForeColor = ActiveTheme.LineFormat.LineColor;
-                linePreview.Style = ActiveTheme.LineFormat.LineStyle;
+                gridLineStyle.SelectedObject = ActiveTheme.DefaultLineFormat;
+                linePreview.ForeColor = ActiveTheme.DefaultLineFormat.LineColor;
+                linePreview.Style = ActiveTheme.DefaultLineFormat.LineStyle;
                 switch (ActiveTheme.EmptyLineMode)
                 {
                 case EmptyLineMode.NoGuides:
