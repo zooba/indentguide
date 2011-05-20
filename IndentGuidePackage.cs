@@ -7,10 +7,12 @@ using Microsoft.VisualStudio.Shell;
 namespace IndentGuide
 {
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [InstalledProductRegistration("#110", "#112", "10 (beta 1)", IconResourceID = 400)]
-    [ProvideMenuResource(1000, 1)]
-    [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, true)]
+    [InstalledProductRegistration("#110", "#112", "10 (beta 2)", IconResourceID = 400)]
+    [ProvideMenuResource("Menus.ctmenu", 1)]
+    [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, false)]
+    [ProvideOptionPage(typeof(BehaviorOptions), "IndentGuide", "Behavior", 110, 130, false)]
     [ProvideProfile(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, true)]
+    [ProvideProfile(typeof(BehaviorOptions), "IndentGuide", "Behavior", 110, 130, true)]
     [ProvideService(typeof(SIndentGuide))]
     [ResourceDescription("IndentGuidePackage")]
     [Guid(Guids.IndentGuidePackageGuid)]

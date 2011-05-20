@@ -29,12 +29,8 @@
         private void InitializeComponent()
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.cmbTheme = new System.Windows.Forms.ComboBox();
-            this.btnThemeSaveAs = new System.Windows.Forms.Button();
-            this.btnThemeDelete = new System.Windows.Forms.Button();
             this.grpLineStyle = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.linePreview = new IndentGuide.LinePreview();
             this.gridLineStyle = new System.Windows.Forms.PropertyGrid();
             this.txtLineFormatIndex = new System.Windows.Forms.DomainUpDown();
             this.lblLineFormatIndex = new System.Windows.Forms.Label();
@@ -49,12 +45,7 @@
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.chkLineActual = new System.Windows.Forms.RadioButton();
             this.chkLineLogical = new System.Windows.Forms.RadioButton();
-            this.lblContentType = new System.Windows.Forms.Label();
-            this.grpCurrentContentType = new System.Windows.Forms.GroupBox();
-            this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
-            this.lblCurrentContentTypeIs = new System.Windows.Forms.Label();
-            this.lblCurrentContentType = new System.Windows.Forms.Label();
-            this.btnCustomizeThisContentType = new System.Windows.Forms.Button();
+            this.linePreview = new IndentGuide.LinePreview();
             this.tableLayoutPanel1.SuspendLayout();
             this.grpLineStyle.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -62,72 +53,27 @@
             this.tableLayoutPanel3.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
-            this.grpCurrentContentType.SuspendLayout();
-            this.tableLayoutPanel4.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 4;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.Controls.Add(this.cmbTheme, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.btnThemeSaveAs, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(this.btnThemeDelete, 3, 0);
-            this.tableLayoutPanel1.Controls.Add(this.grpLineStyle, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.grpLineBehavior, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.lblContentType, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.grpCurrentContentType, 0, 3);
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.Controls.Add(this.grpLineStyle, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.grpLineBehavior, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 4;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowCount = 3;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(395, 317);
             this.tableLayoutPanel1.TabIndex = 0;
-            // 
-            // cmbTheme
-            // 
-            this.cmbTheme.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.cmbTheme.FormattingEnabled = true;
-            this.cmbTheme.Location = new System.Drawing.Point(87, 4);
-            this.cmbTheme.Name = "cmbTheme";
-            this.cmbTheme.Size = new System.Drawing.Size(95, 21);
-            this.cmbTheme.TabIndex = 1;
-            this.cmbTheme.SelectedIndexChanged += new System.EventHandler(this.cmbTheme_SelectedIndexChanged);
-            this.cmbTheme.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.cmbTheme_Format);
-            this.cmbTheme.TextChanged += new System.EventHandler(this.cmbTheme_TextChanged);
-            // 
-            // btnThemeSaveAs
-            // 
-            this.btnThemeSaveAs.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnThemeSaveAs.AutoSize = true;
-            this.btnThemeSaveAs.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btnThemeSaveAs.Location = new System.Drawing.Point(188, 3);
-            this.btnThemeSaveAs.Name = "btnThemeSaveAs";
-            this.btnThemeSaveAs.Size = new System.Drawing.Size(102, 23);
-            this.btnThemeSaveAs.TabIndex = 2;
-            this.btnThemeSaveAs.Text = "btnThemeSaveAs";
-            this.btnThemeSaveAs.UseVisualStyleBackColor = true;
-            this.btnThemeSaveAs.Click += new System.EventHandler(this.btnThemeSaveAs_Click);
-            // 
-            // btnThemeDelete
-            // 
-            this.btnThemeDelete.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnThemeDelete.AutoSize = true;
-            this.btnThemeDelete.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btnThemeDelete.Location = new System.Drawing.Point(296, 3);
-            this.btnThemeDelete.Name = "btnThemeDelete";
-            this.btnThemeDelete.Size = new System.Drawing.Size(96, 23);
-            this.btnThemeDelete.TabIndex = 3;
-            this.btnThemeDelete.Text = "btnThemeDelete";
-            this.btnThemeDelete.UseVisualStyleBackColor = true;
-            this.btnThemeDelete.Click += new System.EventHandler(this.btnThemeDelete_Click);
             // 
             // grpLineStyle
             // 
@@ -135,9 +81,8 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.grpLineStyle.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel1.SetColumnSpan(this.grpLineStyle, 4);
             this.grpLineStyle.Controls.Add(this.tableLayoutPanel2);
-            this.grpLineStyle.Location = new System.Drawing.Point(3, 32);
+            this.grpLineStyle.Location = new System.Drawing.Point(3, 3);
             this.grpLineStyle.Name = "grpLineStyle";
             this.grpLineStyle.Size = new System.Drawing.Size(389, 100);
             this.grpLineStyle.TabIndex = 4;
@@ -164,17 +109,6 @@
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(383, 81);
             this.tableLayoutPanel2.TabIndex = 0;
-            // 
-            // linePreview
-            // 
-            this.linePreview.BackColor = System.Drawing.SystemColors.Window;
-            this.linePreview.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.linePreview.Location = new System.Drawing.Point(3, 3);
-            this.linePreview.Name = "linePreview";
-            this.tableLayoutPanel2.SetRowSpan(this.linePreview, 3);
-            this.linePreview.Size = new System.Drawing.Size(75, 75);
-            this.linePreview.Style = IndentGuide.LineStyle.Solid;
-            this.linePreview.TabIndex = 0;
             // 
             // gridLineStyle
             // 
@@ -235,9 +169,8 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.grpLineBehavior.AutoSize = true;
             this.grpLineBehavior.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel1.SetColumnSpan(this.grpLineBehavior, 4);
             this.grpLineBehavior.Controls.Add(this.tableLayoutPanel3);
-            this.grpLineBehavior.Location = new System.Drawing.Point(3, 138);
+            this.grpLineBehavior.Location = new System.Drawing.Point(3, 109);
             this.grpLineBehavior.Name = "grpLineBehavior";
             this.grpLineBehavior.Size = new System.Drawing.Size(389, 71);
             this.grpLineBehavior.TabIndex = 5;
@@ -359,82 +292,16 @@
             this.chkLineLogical.UseVisualStyleBackColor = true;
             this.chkLineLogical.CheckedChanged += new System.EventHandler(this.chkEmptyLineBehaviour_CheckedChanged);
             // 
-            // lblContentType
+            // linePreview
             // 
-            this.lblContentType.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.lblContentType.AutoSize = true;
-            this.lblContentType.Location = new System.Drawing.Point(3, 8);
-            this.lblContentType.Name = "lblContentType";
-            this.lblContentType.Size = new System.Drawing.Size(78, 13);
-            this.lblContentType.TabIndex = 0;
-            this.lblContentType.Text = "lblContentType";
-            // 
-            // grpCurrentContentType
-            // 
-            this.grpCurrentContentType.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel1.SetColumnSpan(this.grpCurrentContentType, 4);
-            this.grpCurrentContentType.Controls.Add(this.tableLayoutPanel4);
-            this.grpCurrentContentType.Location = new System.Drawing.Point(3, 215);
-            this.grpCurrentContentType.Name = "grpCurrentContentType";
-            this.grpCurrentContentType.Size = new System.Drawing.Size(389, 99);
-            this.grpCurrentContentType.TabIndex = 6;
-            this.grpCurrentContentType.TabStop = false;
-            this.grpCurrentContentType.Text = "grpCurrentContentType";
-            // 
-            // tableLayoutPanel4
-            // 
-            this.tableLayoutPanel4.ColumnCount = 2;
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
-            this.tableLayoutPanel4.Controls.Add(this.lblCurrentContentTypeIs, 0, 0);
-            this.tableLayoutPanel4.Controls.Add(this.lblCurrentContentType, 1, 0);
-            this.tableLayoutPanel4.Controls.Add(this.btnCustomizeThisContentType, 0, 1);
-            this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 16);
-            this.tableLayoutPanel4.Name = "tableLayoutPanel4";
-            this.tableLayoutPanel4.RowCount = 2;
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(383, 80);
-            this.tableLayoutPanel4.TabIndex = 0;
-            // 
-            // lblCurrentContentTypeIs
-            // 
-            this.lblCurrentContentTypeIs.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.lblCurrentContentTypeIs.AutoSize = true;
-            this.lblCurrentContentTypeIs.Location = new System.Drawing.Point(145, 16);
-            this.lblCurrentContentTypeIs.Name = "lblCurrentContentTypeIs";
-            this.lblCurrentContentTypeIs.Size = new System.Drawing.Size(120, 13);
-            this.lblCurrentContentTypeIs.TabIndex = 0;
-            this.lblCurrentContentTypeIs.Text = "lblCurrentContentTypeIs";
-            // 
-            // lblCurrentContentType
-            // 
-            this.lblCurrentContentType.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.lblCurrentContentType.AutoSize = true;
-            this.lblCurrentContentType.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblCurrentContentType.Location = new System.Drawing.Point(271, 9);
-            this.lblCurrentContentType.Name = "lblCurrentContentType";
-            this.lblCurrentContentType.Size = new System.Drawing.Size(105, 26);
-            this.lblCurrentContentType.TabIndex = 1;
-            this.lblCurrentContentType.Text = "lblCurrentContentType";
-            // 
-            // btnCustomizeThisContentType
-            // 
-            this.btnCustomizeThisContentType.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnCustomizeThisContentType.AutoSize = true;
-            this.btnCustomizeThisContentType.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel4.SetColumnSpan(this.btnCustomizeThisContentType, 2);
-            this.btnCustomizeThisContentType.Location = new System.Drawing.Point(108, 48);
-            this.btnCustomizeThisContentType.Name = "btnCustomizeThisContentType";
-            this.btnCustomizeThisContentType.Padding = new System.Windows.Forms.Padding(3);
-            this.btnCustomizeThisContentType.Size = new System.Drawing.Size(167, 29);
-            this.btnCustomizeThisContentType.TabIndex = 2;
-            this.btnCustomizeThisContentType.Text = "btnCustomizeThisContentType";
-            this.btnCustomizeThisContentType.UseVisualStyleBackColor = true;
-            this.btnCustomizeThisContentType.Click += new System.EventHandler(this.btnCustomizeThisContentType_Click);
+            this.linePreview.BackColor = System.Drawing.SystemColors.Window;
+            this.linePreview.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.linePreview.Location = new System.Drawing.Point(3, 3);
+            this.linePreview.Name = "linePreview";
+            this.tableLayoutPanel2.SetRowSpan(this.linePreview, 3);
+            this.linePreview.Size = new System.Drawing.Size(75, 75);
+            this.linePreview.Style = IndentGuide.LineStyle.Solid;
+            this.linePreview.TabIndex = 0;
             // 
             // DisplayOptionsControl
             // 
@@ -457,9 +324,6 @@
             this.flowLayoutPanel2.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);
             this.flowLayoutPanel1.PerformLayout();
-            this.grpCurrentContentType.ResumeLayout(false);
-            this.tableLayoutPanel4.ResumeLayout(false);
-            this.tableLayoutPanel4.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -467,9 +331,6 @@
         #endregion
 
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.ComboBox cmbTheme;
-        private System.Windows.Forms.Button btnThemeSaveAs;
-        private System.Windows.Forms.Button btnThemeDelete;
         private System.Windows.Forms.GroupBox grpLineStyle;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private LinePreview linePreview;
@@ -484,12 +345,6 @@
         private System.Windows.Forms.RadioButton chkLineBelow;
         private System.Windows.Forms.RadioButton chkLineActual;
         private System.Windows.Forms.RadioButton chkLineLogical;
-        private System.Windows.Forms.Label lblContentType;
-        private System.Windows.Forms.GroupBox grpCurrentContentType;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
-        private System.Windows.Forms.Label lblCurrentContentTypeIs;
-        private System.Windows.Forms.Label lblCurrentContentType;
-        private System.Windows.Forms.Button btnCustomizeThisContentType;
         private System.Windows.Forms.DomainUpDown txtLineFormatIndex;
         private System.Windows.Forms.Label lblLineFormatIndex;
         private System.Windows.Forms.Button btnResetLineFormat;

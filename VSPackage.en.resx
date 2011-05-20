@@ -117,4 +117,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="110" xml:space="preserve">
+    <value>Indent Guides</value>
+  </data>
+  <data name="112" xml:space="preserve">
+    <value>Indent Guides
+
+Adds visual guides at each indentation level.</value>
+  </data>
+  <data name="120" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="130" xml:space="preserve">
+    <value>Behavior</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Package.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

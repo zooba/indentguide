@@ -79,6 +79,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
     <Reference Include="UIAutomationProvider" />
     <Reference Include="WindowsBase" />
     <Reference Include="WindowsFormsIntegration" />
@@ -140,8 +141,11 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DisplayOptions.cs">
-      <SubType>Component</SubType>
+    <Compile Include="BehaviorOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BehaviorOptionsControl.Designer.cs">
+      <DependentUpon>BehaviorOptionsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="DisplayOptionsControl.cs">
       <SubType>UserControl</SubType>
@@ -150,11 +154,15 @@
       <DependentUpon>DisplayOptionsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="GenericOptions.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Guids.cs" />
     <Compile Include="IndentGuideFactory.cs" />
     <Compile Include="IndentGuidePackage.cs" />
     <Compile Include="IndentGuideService.cs" />
     <Compile Include="IndentTheme.cs" />
+    <Compile Include="IThemeAwareDialog.cs" />
     <Compile Include="LinePreview.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -164,6 +172,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IndentGuide.cs" />
     <Compile Include="ResourceAwareAttributes.cs" />
+    <Compile Include="ThemeOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ThemeOptionsControl.Designer.cs">
+      <DependentUpon>ThemeOptionsControl.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
@@ -194,12 +208,15 @@
     <EmbeddedResource Include="Strings.en-GB.resx" />
     <EmbeddedResource Include="Strings.en.resx" />
     <EmbeddedResource Include="Strings.resx" />
-    <EmbeddedResource Include="VSPackage.resx">
-      <MergeWithCTO>true</MergeWithCTO>
-      <ManifestResourceName>VSPackage</ManifestResourceName>
+    <EmbeddedResource Include="ThemeOptionsControl.resx">
+      <DependentUpon>ThemeOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <VSCTCompile Include="IndentGuide.vsct">
-      <ResourceName>1000</ResourceName>
+    <EmbeddedResource Include="VSPackage.en.resx">
+      <MergeWithCTO>true</MergeWithCTO>
+      <LogicalName>VSPackage.en.Resources</LogicalName>
+    </EmbeddedResource>
+    <VSCTCompile Include="IndentGuide.en.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
   </ItemGroup>
