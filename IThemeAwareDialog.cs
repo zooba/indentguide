@@ -28,7 +28,7 @@ namespace IndentGuide
         void Apply();
         void Cancel();
 
-        void Update(IndentTheme active);
+        void Update(IndentTheme active, IndentTheme previous);
 
         event EventHandler<ThemeEventArgs> ThemeChanged;
     }

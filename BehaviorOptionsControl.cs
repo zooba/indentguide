@@ -25,7 +25,7 @@ namespace IndentGuide
         public void Cancel()
         { }
 
-        public void Update(IndentTheme active)
+        public void Update(IndentTheme active, IndentTheme previous)
         {
             
         }

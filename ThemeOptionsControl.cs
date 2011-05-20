@@ -123,8 +123,14 @@ namespace IndentGuide
             {
                 if (_ActiveTheme != value)
                 {
+                    var old = _ActiveTheme;
                     _ActiveTheme = value;
                     Child.ActiveTheme = value;
+                    UpdateDisplay(_ActiveTheme, old);
+                }
+                else
+                {
+                    UpdateDisplay(_ActiveTheme, _ActiveTheme);
                 }
             }
         }
@@ -250,12 +256,12 @@ namespace IndentGuide
 
         protected void UpdateDisplay()
         {
-            UpdateDisplay(ActiveTheme);
+            UpdateDisplay(ActiveTheme, ActiveTheme);
         }
 
-        protected void UpdateDisplay(IndentTheme active)
+        protected void UpdateDisplay(IndentTheme active, IndentTheme previous)
         {
-            Child.Update(active);
+            Child.Update(active, previous);
         }
 
         private void ThemeOptionsControl_Load(object sender, EventArgs e)
