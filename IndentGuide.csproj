@@ -169,6 +169,12 @@
     <Compile Include="LinePreview.Designer.cs">
       <DependentUpon>LinePreview.cs</DependentUpon>
     </Compile>
+    <Compile Include="LineTextPreview.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="LineTextPreview.Designer.cs">
+      <DependentUpon>LineTextPreview.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IndentGuide.cs" />
     <Compile Include="ResourceAwareAttributes.cs" />
@@ -201,8 +207,14 @@
     <None Include="Package.ico" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="BehaviorOptionsControl.resx">
+      <DependentUpon>BehaviorOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DisplayOptionsControl.resx">
       <DependentUpon>DisplayOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LineTextPreview.resx">
+      <DependentUpon>LineTextPreview.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Strings.en-AU.resx" />
     <EmbeddedResource Include="Strings.en-GB.resx" />

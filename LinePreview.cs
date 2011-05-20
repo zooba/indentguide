@@ -36,6 +36,12 @@ namespace IndentGuide
             }
         }
 
+        protected override void OnForeColorChanged(EventArgs e)
+        {
+            base.OnForeColorChanged(e);
+            Invalidate();
+        }
+
         private Pen LinePen = null;
         protected override void OnPaint(PaintEventArgs e)
         {

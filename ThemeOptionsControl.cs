@@ -226,7 +226,7 @@ namespace IndentGuide
                 {
                     try
                     {
-                        control.Text = ResourceLoader.LoadString(control.Name);
+                        control.Text = ResourceLoader.LoadString(control.Name) ?? control.Text;
                     }
                     catch (InvalidOperationException) { }
 
