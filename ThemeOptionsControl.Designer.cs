@@ -28,13 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.tableContent = new System.Windows.Forms.TableLayoutPanel();
             this.tableTheme = new System.Windows.Forms.TableLayoutPanel();
             this.cmbTheme = new System.Windows.Forms.ComboBox();
-            this.btnThemeDelete = new System.Windows.Forms.Button();
             this.lblContentType = new System.Windows.Forms.Label();
             this.btnThemeSaveAs = new System.Windows.Forms.Button();
+            this.btnThemeDelete = new System.Windows.Forms.Button();
             this.btnCustomizeThisContentType = new System.Windows.Forms.Button();
+            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.tableContent.SuspendLayout();
             this.tableTheme.SuspendLayout();
             this.SuspendLayout();
@@ -89,19 +91,6 @@
             this.cmbTheme.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.cmbTheme_Format);
             this.cmbTheme.TextChanged += new System.EventHandler(this.cmbTheme_TextChanged);
             // 
-            // btnThemeDelete
-            // 
-            this.btnThemeDelete.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnThemeDelete.AutoSize = true;
-            this.btnThemeDelete.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btnThemeDelete.Location = new System.Drawing.Point(493, 3);
-            this.btnThemeDelete.Name = "btnThemeDelete";
-            this.btnThemeDelete.Size = new System.Drawing.Size(96, 23);
-            this.btnThemeDelete.TabIndex = 4;
-            this.btnThemeDelete.Text = "btnThemeDelete";
-            this.btnThemeDelete.UseVisualStyleBackColor = true;
-            this.btnThemeDelete.Click += new System.EventHandler(this.btnThemeDelete_Click);
-            // 
             // lblContentType
             // 
             this.lblContentType.Anchor = System.Windows.Forms.AnchorStyles.None;
@@ -124,6 +113,19 @@
             this.btnThemeSaveAs.Text = "btnThemeSaveAs";
             this.btnThemeSaveAs.UseVisualStyleBackColor = true;
             this.btnThemeSaveAs.Click += new System.EventHandler(this.btnThemeSaveAs_Click);
+            // 
+            // btnThemeDelete
+            // 
+            this.btnThemeDelete.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btnThemeDelete.AutoSize = true;
+            this.btnThemeDelete.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnThemeDelete.Location = new System.Drawing.Point(493, 3);
+            this.btnThemeDelete.Name = "btnThemeDelete";
+            this.btnThemeDelete.Size = new System.Drawing.Size(96, 23);
+            this.btnThemeDelete.TabIndex = 4;
+            this.btnThemeDelete.Text = "btnThemeDelete";
+            this.btnThemeDelete.UseVisualStyleBackColor = true;
+            this.btnThemeDelete.Click += new System.EventHandler(this.btnThemeDelete_Click);
             // 
             // btnCustomizeThisContentType
             // 
@@ -162,5 +164,6 @@
         private System.Windows.Forms.Label lblContentType;
         private System.Windows.Forms.Button btnThemeSaveAs;
         private System.Windows.Forms.Button btnCustomizeThisContentType;
+        private System.Windows.Forms.ToolTip toolTip;
     }
 }

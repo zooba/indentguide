@@ -235,9 +235,9 @@ namespace IndentGuide
                 var line = View.TextViewLines.GetTextViewLineContainingBufferPosition(pos);
                 var tabsRepeat = new List<int>(gp.Tabs);
 
-                if (gp.Original ||
+                if (!Theme.VisibleAtText && (gp.Original ||
                     Theme.EmptyLineMode == EmptyLineMode.SameAsLineAboveActual ||
-                    Theme.EmptyLineMode == EmptyLineMode.SameAsLineBelowActual)
+                    Theme.EmptyLineMode == EmptyLineMode.SameAsLineBelowActual))
                 {
                     tabsRepeat.Remove(gp.Tabs.Max());
                 }
@@ -345,7 +345,7 @@ namespace IndentGuide
             if (format.LineStyle == LineStyle.Thick)
                 guide.StrokeThickness = 3.0;
             else if (format.LineStyle == LineStyle.Dotted)
-                guide.StrokeDashArray = new DoubleCollection { 1.0, 1.0 };
+                guide.StrokeDashArray = new DoubleCollection { 1.0, 2.0 };
             else if (format.LineStyle == LineStyle.Dashed)
                 guide.StrokeDashArray = new DoubleCollection { 3.0, 3.0 };
 

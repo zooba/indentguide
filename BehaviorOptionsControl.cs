@@ -15,7 +15,7 @@ namespace IndentGuide
 
         #region IThemeAwareDialog Members
 
-        public IndentTheme ActiveTheme {get;set;}
+        public IndentTheme ActiveTheme { get; set; }
         public IIndentGuide Service { get; set; }
 
         public void Activate()
@@ -43,26 +43,28 @@ namespace IndentGuide
 
             switch (active.EmptyLineMode)
             {
-            case EmptyLineMode.NoGuides:
-                chkNoGuides.Checked = true;
-                break;
-            case EmptyLineMode.SameAsLineAboveActual:
-                chkSameAsAboveActual.Checked = true;
-                break;
-            case EmptyLineMode.SameAsLineAboveLogical:
-                chkSameAsAboveLogical.Checked = true;
-                break;
-            case EmptyLineMode.SameAsLineBelowActual:
-                chkSameAsBelowActual.Checked = true;
-                break;
-            case EmptyLineMode.SameAsLineBelowLogical:
-                chkSameAsBelowLogical.Checked = true;
-                break;
-            default:
-                break;
+                case EmptyLineMode.NoGuides:
+                    chkNoGuides.Checked = true;
+                    break;
+                case EmptyLineMode.SameAsLineAboveActual:
+                    chkSameAsAboveActual.Checked = true;
+                    break;
+                case EmptyLineMode.SameAsLineAboveLogical:
+                    chkSameAsAboveLogical.Checked = true;
+                    break;
+                case EmptyLineMode.SameAsLineBelowActual:
+                    chkSameAsBelowActual.Checked = true;
+                    break;
+                case EmptyLineMode.SameAsLineBelowLogical:
+                    chkSameAsBelowLogical.Checked = true;
+                    break;
+                default:
+                    break;
             }
-            
-            //lineTextPreview.ShowAtText = active.
+            chkEndOfLineVisible.Checked = active.VisibleAtText;
+            chkEndOfLineHidden.Checked = !active.VisibleAtText;
+
+            lineTextPreview.ShowAtText = active.VisibleAtText;
             lineTextPreview.EmptyLineMode = active.EmptyLineMode;
             lineTextPreview.Invalidate();
 
@@ -77,7 +79,7 @@ namespace IndentGuide
             var evt = ThemeChanged;
             if (evt != null) evt(this, new ThemeEventArgs(theme));
         }
-        
+
         public event EventHandler<ThemeEventArgs> ThemeChanged;
 
         #endregion
@@ -114,6 +116,7 @@ namespace IndentGuide
 
         private void chkEndOfLine_CheckedChanged(object sender, EventArgs e)
         {
+            if (ActiveTheme != null) ActiveTheme.VisibleAtText = chkEndOfLineVisible.Checked;
             lineTextPreview.ShowAtText = chkEndOfLineVisible.Checked;
             lineTextPreview.Invalidate();
             OnThemeChanged(ActiveTheme);

@@ -187,17 +187,19 @@ namespace IndentGuide
             DefaultLineFormat = new LineFormat();
             NumberedOverride = new Dictionary<int, LineFormat>();
             EmptyLineMode = IndentGuide.EmptyLineMode.SameAsLineAboveLogical;
+            VisibleAtText = false;
             RegistryName = isDefaultTheme ? Guid.Empty : Guid.NewGuid();
         }
 
-        public IndentTheme Clone(bool makeNonDefault = false)
+        public IndentTheme Clone(bool newKey = false)
         {
-            var inst = new IndentTheme(!makeNonDefault && IsDefault);
+            var inst = new IndentTheme();
+            if (!newKey) inst.RegistryName = RegistryName;
             inst.Name = Name;
             inst.DefaultLineFormat = DefaultLineFormat.Clone();
             foreach (var item in NumberedOverride) inst.NumberedOverride[item.Key] = item.Value.Clone();
             inst.EmptyLineMode = EmptyLineMode;
-            if (!makeNonDefault) inst.RegistryName = RegistryName;
+            inst.VisibleAtText = VisibleAtText;
             return inst;
         }
 
@@ -222,6 +224,11 @@ namespace IndentGuide
         [TypeConverter(typeof(EmptyLineModeTypeConverter))]
         public EmptyLineMode EmptyLineMode { get; set; }
 
+        [ResourceDisplayName("VisibleAtTextDisplayName")]
+        [ResourceDescription("VisibleAtTextDescription")]
+        [DefaultValue(false)]
+        public bool VisibleAtText { get; set; }
+        
         public static IndentTheme Load(RegistryKey reg, string themeKey)
         {
             var theme = new IndentTheme();
@@ -232,6 +239,7 @@ namespace IndentGuide
                 theme.Name = (string)key.GetValue("Name", themeKey);
                 theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
                     .ConvertFromInvariantString((string)key.GetValue("EmptyLineMode"));
+                theme.VisibleAtText = bool.Parse((string)key.GetValue("VisibleAtText", "false"));
 
                 theme.DefaultLineFormat = LineFormat.FromInvariantStrings(
                     (string)key.GetValue("LineStyle"),
@@ -277,6 +285,8 @@ namespace IndentGuide
             reader.ReadSettingAttribute(key, "EmptyLineMode", out temp);
             theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
                 .ConvertFromInvariantString(temp);
+            reader.ReadSettingAttribute(key, "VisibleAtText", out temp);
+            theme.VisibleAtText = bool.Parse(temp);
 
             string lineStyle, lineColor, visible;
             reader.ReadSettingAttribute(key, "LineStyle", out lineStyle);
@@ -322,6 +332,7 @@ namespace IndentGuide
                 key.SetValue("Name", Name);
                 key.SetValue("EmptyLineMode", TypeDescriptor.GetConverter(typeof(EmptyLineMode))
                     .ConvertToInvariantString(EmptyLineMode));
+                key.SetValue("VisibleAtText", VisibleAtText.ToString());
 
                 string lineStyle, lineColor, visible;
                 DefaultLineFormat.ToInvariantStrings(out lineStyle, out lineColor, out visible);
@@ -354,6 +365,7 @@ namespace IndentGuide
             writer.WriteSettingString(key, Name);
             writer.WriteSettingAttribute(key, "EmptyLineMode", TypeDescriptor.GetConverter(typeof(EmptyLineMode))
                 .ConvertToInvariantString(EmptyLineMode));
+            writer.WriteSettingAttribute(key, "VisibleAtText", VisibleAtText.ToString());
 
             string lineStyle, lineColor, visible;
             DefaultLineFormat.ToInvariantStrings(out lineStyle, out lineColor, out visible);

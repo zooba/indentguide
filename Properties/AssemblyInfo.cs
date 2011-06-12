@@ -32,4 +32,4 @@ using System.Resources;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("9.9.1.0")]
 [assembly: AssemblyFileVersion("9.9.1.0")]
-[assembly: NeutralResourcesLanguageAttribute("en", UltimateResourceFallbackLocation.Satellite)]
+[assembly: NeutralResourcesLanguageAttribute("")]

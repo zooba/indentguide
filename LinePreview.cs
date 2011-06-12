@@ -67,7 +67,7 @@ namespace IndentGuide
             }
             else if (Style == LineStyle.Dotted)
             {
-                LinePen.DashPattern = new float[] { 1.0f, 1.0f, 1.0f, 1.0f };
+                LinePen.DashPattern = new float[] { 1.0f, 2.0f, 1.0f, 2.0f };
                 e.Graphics.DrawLine(LinePen, x, y1, x, y2);
             }
             else if (Style == LineStyle.Dashed)

@@ -267,6 +267,7 @@ namespace IndentGuide
         private void ThemeOptionsControl_Load(object sender, EventArgs e)
         {
             LoadControlStrings(Controls.OfType<Control>());
+            toolTip.SetToolTip(btnCustomizeThisContentType, "tooltipCustomizeThisContentType");
         }
 
         private void cmbTheme_SelectedIndexChanged(object sender, EventArgs e)

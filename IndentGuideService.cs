@@ -133,11 +133,8 @@ namespace IndentGuide
 
         public event EventHandler ThemesChanged;
 
-        #endregion
-
-        #region IIndentGuide Members
-
         private const string SUBKEY_NAME = "IndentGuide";
+
 
         public void Save()
         {
