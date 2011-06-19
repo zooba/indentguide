@@ -46,9 +46,6 @@ namespace IndentGuide
             }
         }
 
-        public void Cancel()
-        { }
-
         public void Update(IndentTheme active, IndentTheme previous)
         {
             if (active == null)
@@ -102,9 +99,9 @@ namespace IndentGuide
                     lineOverridePreview.Style = oi.Format.LineStyle;
 
                     chkLineOverrideIndex.Enabled = true;
-                    chkLineOverrideText.Enabled = false;// true; NOT IMPLEMENTED
+                    chkLineOverrideText.Enabled = false;// true; // NOT IMPLEMENTED
                     txtLineFormatIndex.Enabled = true;
-                    txtLineFormatText.Enabled = false;// true; NOT IMPLEMENTED
+                    txtLineFormatText.Enabled = false;// true; // NOT IMPLEMENTED
 
                     btnRemoveOverride.Enabled = true;
 

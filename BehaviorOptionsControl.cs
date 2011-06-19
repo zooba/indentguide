@@ -24,9 +24,6 @@ namespace IndentGuide
         public void Apply()
         { }
 
-        public void Cancel()
-        { }
-
         public void Update(IndentTheme active, IndentTheme previous)
         {
             if (active == null)

@@ -26,7 +26,6 @@ namespace IndentGuide
 
         void Activate();
         void Apply();
-        void Cancel();
 
         void Update(IndentTheme active, IndentTheme previous);
 

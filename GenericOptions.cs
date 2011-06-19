@@ -26,7 +26,7 @@ namespace IndentGuide
             {
                 if (_Control == null)
                     System.Threading.Interlocked.CompareExchange(ref _Control, new T(), null);
-                
+
                 return _Control;
             }
         }
@@ -38,7 +38,7 @@ namespace IndentGuide
             {
                 if (_Wrapper == null)
                     System.Threading.Interlocked.CompareExchange(ref _Wrapper, new ThemeOptionsControl(Control), null);
-                
+
                 return _Wrapper;
             }
         }
@@ -83,6 +83,12 @@ namespace IndentGuide
         {
             Wrapper.Apply();
             base.OnApply(e);
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            Wrapper.Close();
+            base.OnClosed(e);
         }
     }
 }

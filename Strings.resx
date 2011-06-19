@@ -160,7 +160,7 @@
     <value>at indent number</value>
   </data>
   <data name="chkLineOverrideText" xml:space="preserve">
-    <value>where the code matches</value>
+    <value>at code matching</value>
   </data>
   <data name="DefaultThemeName" xml:space="preserve">
     <value>(Default)</value>
@@ -232,7 +232,7 @@
     <value>Line Style</value>
   </data>
   <data name="lineTextPreview" xml:space="preserve">
-    <value>try {\n        if (a == 0) {\n            return a;\n\n        } else {\n            while(a &gt; 0) {\n                a -= 1;\n            }\n        }\n    }</value>
+    <value>try\n{\n    if (a == 0)\n    {\n        return Calc(a,\n                    10);\n\n    }\n    else\n    {\n        while(a &gt; 0)\n            a -= 1;\n\n    }\n}</value>
   </data>
   <data name="ThemeNameDescription" xml:space="preserve">
     <value>The name of this theme. Themes are automatically loaded if the name matches the content type of the open document.</value>
@@ -254,5 +254,11 @@
   </data>
   <data name="tooltipCustomizeThisContentType" xml:space="preserve">
     <value>Customize this content type.</value>
+  </data>
+  <data name="txtLineFormatText" xml:space="preserve">
+    <value />
+  </data>
+  <data name="tooltipNextRelease" xml:space="preserve">
+    <value>Planned for a later release</value>
   </data>
 </root>

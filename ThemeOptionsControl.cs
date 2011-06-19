@@ -12,6 +12,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.ComponentModelHost;
 using System.Diagnostics;
 using Microsoft.VisualStudio.Text.Editor;
+using System.Threading;
 
 namespace IndentGuide
 {
@@ -21,8 +22,8 @@ namespace IndentGuide
         private readonly IVsTextManager TextManagerService;
         private readonly IVsEditorAdaptersFactoryService EditorAdapters;
 
-        private readonly List<IndentTheme> ChangedThemes;
-        private readonly List<IndentTheme> DeletedThemes;
+        private static readonly List<IndentTheme> ChangedThemes = new List<IndentTheme>();
+        private static readonly List<IndentTheme> DeletedThemes = new List<IndentTheme>();
 
         private readonly IThemeAwareDialog Child;
 
@@ -50,9 +51,6 @@ namespace IndentGuide
             var componentModel = (IComponentModel)provider.GetService(typeof(SComponentModel));
             EditorAdapters = (IVsEditorAdaptersFactoryService)componentModel
                 .GetService<IVsEditorAdaptersFactoryService>();
-
-            ChangedThemes = new List<IndentTheme>();
-            DeletedThemes = new List<IndentTheme>();
         }
 
         void Child_ThemeChanged(object sender, ThemeEventArgs e)
@@ -60,10 +58,19 @@ namespace IndentGuide
             if (!ChangedThemes.Contains(e.Theme)) ChangedThemes.Add(e.Theme);
         }
 
+        static int ActivationCount = 0;
+        bool IsActive = false;
         internal void Activate()
         {
-            LocalThemes = Service.Themes.Values.Select(t => t.Clone()).ToList();
-            LocalThemes.Sort();
+            if (!IsActive)
+            {
+                IsActive = true;
+                if (Interlocked.Increment(ref ActivationCount) == 1)
+                {
+                    LocalThemes = Service.Themes.Values.Select(t => t.Clone()).ToList();
+                    LocalThemes.Sort();
+                }
+            }
             UpdateThemeList();
 
             try
@@ -71,15 +78,22 @@ namespace IndentGuide
                 IVsTextView view = null;
                 IWpfTextView wpfView = null;
                 TextManagerService.GetActiveView(0, null, out view);
-                wpfView = EditorAdapters.GetWpfTextView(view);
-                CurrentContentType = wpfView.TextDataModel.ContentType.DisplayName;
+                if (view == null)
+                    CurrentContentType = null;
+                else
+                {
+                    wpfView = EditorAdapters.GetWpfTextView(view);
+                    CurrentContentType = wpfView.TextDataModel.ContentType.DisplayName;
+                }
             }
             catch
             {
                 CurrentContentType = null;
             }
 
+            Child.ActiveTheme = ActiveTheme;
             Child.Activate();
+            Child.Update(ActiveTheme, null);
         }
 
         internal void Apply()
@@ -110,12 +124,18 @@ namespace IndentGuide
             }
         }
 
-        internal void Cancel()
+        internal void Close()
         {
-            Child.Cancel();
+            if (Interlocked.Decrement(ref ActivationCount) == 0)
+            {
+                LocalThemes.Clear();
+                ChangedThemes.Clear();
+                DeletedThemes.Clear();
+            }
+            IsActive = false;
         }
 
-        private IndentTheme _ActiveTheme;
+        private static IndentTheme _ActiveTheme;
         protected IndentTheme ActiveTheme
         {
             get { return _ActiveTheme; }
@@ -135,7 +155,7 @@ namespace IndentGuide
             }
         }
 
-        private List<IndentTheme> _LocalThemes;
+        private static List<IndentTheme> _LocalThemes = new List<IndentTheme>();
         internal List<IndentTheme> LocalThemes
         {
             get
@@ -144,7 +164,8 @@ namespace IndentGuide
             }
             set
             {
-                _LocalThemes = value;
+                _LocalThemes.Clear();
+                _LocalThemes.AddRange(value);
                 try
                 {
                     ChangedThemes.Clear();
@@ -208,7 +229,12 @@ namespace IndentGuide
                 {
                     cmbTheme.Items.Add(theme);
                 }
-                if (cmbTheme.Items.Count > 0) cmbTheme.SelectedIndex = 0;
+                int i = ActiveTheme == null ? -1 : cmbTheme.Items.IndexOf(ActiveTheme);
+                if (i >= 0)
+                    cmbTheme.SelectedIndex = i;
+                else if (cmbTheme.Items.Count > 0)
+                    cmbTheme.SelectedIndex = 0;
+                
                 btnThemeDelete.Enabled = false;
                 btnThemeSaveAs.Enabled = false;
             }
@@ -267,7 +293,7 @@ namespace IndentGuide
         private void ThemeOptionsControl_Load(object sender, EventArgs e)
         {
             LoadControlStrings(Controls.OfType<Control>());
-            toolTip.SetToolTip(btnCustomizeThisContentType, "tooltipCustomizeThisContentType");
+            toolTip.SetToolTip(btnCustomizeThisContentType, ResourceLoader.LoadString("tooltipCustomizeThisContentType"));
         }
 
         private void cmbTheme_SelectedIndexChanged(object sender, EventArgs e)
