@@ -9,7 +9,17 @@ namespace IndentGuide
 {
     internal static class ExtensionMethods
     {
-        public static bool IsEmpty(this IWpfTextViewLine line)
+        public static bool IsEmpty(this ITextSnapshotLine line)
+        {
+            if (line.Length == 0) return true;
+
+            var span = new SnapshotSpan(line.Start, line.End);
+            var text = span.Snapshot.GetText(span.Span);
+
+            return string.IsNullOrWhiteSpace(text);
+        }
+
+        public static bool IsEmpty(this ITextViewLine line)
         {
             if (line.Length == 0) return true;
 

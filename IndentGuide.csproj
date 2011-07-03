@@ -153,6 +153,7 @@
     <Compile Include="DisplayOptionsControl.Designer.cs">
       <DependentUpon>DisplayOptionsControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="DocumentAnalyzer.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="GenericOptions.cs">
       <SubType>Component</SubType>

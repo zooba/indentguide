@@ -21,25 +21,7 @@ namespace IndentGuide
         IndentTheme Theme;
         bool GlobalVisible;
 
-        struct GuidePositions
-        {
-            public GuidePositions(bool original, List<int> tabs)
-            {
-                Original = original;
-                Tabs = tabs;
-                DependantLines = new List<int>();
-            }
-
-            public GuidePositions Clone(int line)
-            {
-                DependantLines.Add(line);
-                return new GuidePositions(false, Tabs);
-            }
-            public bool Original;
-            public List<int> Tabs;
-            public List<int> DependantLines;
-        }
-        Dictionary<int, GuidePositions> ActiveLines;
+        DocumentAnalyzer Analysis;
         Dictionary<int, double> CachedLefts;
 
         /// <summary>
@@ -49,7 +31,6 @@ namespace IndentGuide
         /// <param name="service">The Indent Guide service.</param>
         public IndentGuideView(IWpfTextView view, IIndentGuide service)
         {
-            ActiveLines = new Dictionary<int, GuidePositions>();
             CachedLefts = new Dictionary<int, double>();
             GuideBrushCache = new Dictionary<System.Drawing.Color, Brush>();
             
@@ -62,6 +43,10 @@ namespace IndentGuide
                 Theme = service.DefaultTheme;
             Debug.Assert(Theme != null, "No themes loaded");
             service.ThemesChanged += new EventHandler(Service_ThemesChanged);
+
+            Analysis = new DocumentAnalyzer(view.TextSnapshot, Theme.EmptyLineMode, 
+                View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId));
+            Analysis.Reset();
 
             GlobalVisible = service.Visible;
             service.VisibleChanged += new EventHandler(Service_VisibleChanged);
@@ -85,7 +70,9 @@ namespace IndentGuide
             var service = (IIndentGuide)sender;
             if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme))
                 Theme = service.DefaultTheme;
-
+            
+            Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme.EmptyLineMode,
+                View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
             GuideBrushCache.Clear();
 
             InvalidateLines();
@@ -97,10 +84,7 @@ namespace IndentGuide
         /// </summary>
         void View_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
         {
-            foreach (var line in e.NewOrReformattedLines)
-                InvalidateLine(line);
-            foreach (var line in e.TranslatedLines)
-                InvalidateLine(line);
+            Analysis.Update();
             UpdateAdornments();
         }
 
@@ -110,41 +94,9 @@ namespace IndentGuide
         void InvalidateLines()
         {
             if (Layer != null) Layer.RemoveAllAdornments();
-            ActiveLines.Clear();
-                CachedLefts.Clear();
+            Analysis.Reset();
+            CachedLefts.Clear();
         }
-
-        /// <summary>
-        /// Removes the specified line from the line cache. Any empty
-        /// lines that are dependant upon this line are also removed.
-        /// </summary>
-        /// <param name="line">
-        /// The line to remove. If not <c>null</c>, the line number is
-        /// obtained from this object and invalidated.
-        /// </param>
-        /// <param name="lineNumber">
-        /// The line number to invalidate. Only required if
-        /// <paramref name="line"/> is <c>null</c>.
-        /// </param>
-        void InvalidateLine(ITextViewLine line, int lineNumber = -1)
-        {
-            if (line != null)
-                lineNumber = line.Snapshot.GetLineNumberFromPosition(line.Start.Position);
-
-            GuidePositions gp;
-            if (ActiveLines.TryGetValue(lineNumber, out gp))
-            {
-                foreach (var i in gp.DependantLines) InvalidateLine(null, i);
-                ActiveLines.Remove(lineNumber);
-            }
-        }
-
-        /// <summary>
-        /// Raised by <see cref="GetIndentLocations"/> if the left
-        /// coordinate cache is detected to be invalid.
-        /// </summary>
-        private class InvalidCacheException : Exception
-        { }
 
         /// <summary>
         /// Recreates all adornments.
@@ -162,157 +114,55 @@ namespace IndentGuide
                 return;
             }
 
-            int tabSize = View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
-            var lines = View.TextViewLines.Cast<IWpfTextViewLine>().ToList();
-            var emptyLines = new List<int>();
-            var newLines = new List<int>();
+            var lines = View.TextViewLines;
 
-            bool succeeded = false;
-
-            while (!succeeded)
+            Layer.RemoveAllAdornments();
+            int firstLineNumber = View.TextSnapshot.GetLineNumberFromPosition(View.TextViewLines.First().Start.Position);
+            int lastLineNumber = View.TextSnapshot.GetLineNumberFromPosition(View.TextViewLines.Last().Start.Position);
+            foreach (var line in Analysis.Lines)
             {
-                emptyLines.Clear();
-                newLines.Clear();
+                if (line.Type == LineSpanType.AtText && !Theme.VisibleAtText)
+                    continue;
+                if (line.Type == LineSpanType.EmptyLineAtText && 
+                    !Theme.VisibleAtText &&
+                    (Theme.EmptyLineMode == EmptyLineMode.SameAsLineAboveActual ||
+                     Theme.EmptyLineMode == EmptyLineMode.SameAsLineBelowActual))
+                    continue;
 
-                try
-                {
-                    foreach (var line in lines)
-                    {
-                        int lineNumber = line.Snapshot.GetLineNumberFromPosition(line.Start.Position);
-                        if (ActiveLines.ContainsKey(lineNumber)) continue;
 
-                        if (line.IsEmpty())
-                        {
-                            emptyLines.Add(lineNumber);
-                        }
-                        else
-                        {
-                            newLines.Add(lineNumber);
-                            ActiveLines[lineNumber] = new GuidePositions(true, GetIndentLocations(tabSize, line));
-                        }
-                    }
-                    succeeded = true;
-                }
-                catch (InvalidCacheException)
-                {
-                    InvalidateLines();
-                    succeeded = false;
-                }
+                IWpfTextViewLine first = null, last = null;
+                if (line.First > firstLineNumber && line.First <= lastLineNumber)
+                    first = View.TextViewLines[line.First - firstLineNumber];
+                else if (line.First <= firstLineNumber)
+                    first = View.TextViewLines[0];
+
+                if (line.Last >= firstLineNumber && line.Last < lastLineNumber)
+                    last = View.TextViewLines[line.Last - firstLineNumber];
+                else if (line.Last >= lastLineNumber)
+                    last = View.TextViewLines[View.TextViewLines.Count - 1];
+
+                if(first != null && last != null)
+                    AddGuide(first, last, line.Indent, line.Indent / Analysis.IndentSize, line);
             }
-
-            if (Theme.EmptyLineMode != EmptyLineMode.NoGuides)
-            {
-                foreach (var line_i in emptyLines)
-                {
-                    int source_i = line_i;
-                    if (Theme.EmptyLineMode == EmptyLineMode.SameAsLineAboveActual ||
-                        Theme.EmptyLineMode == EmptyLineMode.SameAsLineAboveLogical)
-                    {
-                        while (!ActiveLines.ContainsKey(source_i) && source_i > 0)
-                            source_i -= 1;
-                    }
-                    else
-                    {
-                        while (!ActiveLines.ContainsKey(source_i) && source_i < View.TextSnapshot.LineCount)
-                            source_i += 1;
-                    }
-
-                    if (ActiveLines.ContainsKey(source_i))
-                    {
-                        ActiveLines[line_i] = ActiveLines[source_i].Clone(line_i);
-                        newLines.Add(line_i);
-                    }
-                }
-            }
-
-            foreach (var line_i in newLines)
-            {
-                Layer.RemoveAdornmentsByTag(line_i);
-                var gp = ActiveLines[line_i];
-                if (!gp.Tabs.Any()) continue;
-
-                var pos = View.TextSnapshot.GetLineFromLineNumber(line_i).Start;
-                var line = View.TextViewLines.GetTextViewLineContainingBufferPosition(pos);
-                var tabsRepeat = new List<int>(gp.Tabs);
-
-                if (!Theme.VisibleAtText && (gp.Original ||
-                    Theme.EmptyLineMode == EmptyLineMode.SameAsLineAboveActual ||
-                    Theme.EmptyLineMode == EmptyLineMode.SameAsLineBelowActual))
-                {
-                    tabsRepeat.Remove(gp.Tabs.Max());
-                }
-
-                while (tabsRepeat.Any())
-                {
-                    foreach (var tab in tabsRepeat.ToList())
-                    {
-                        AddGuide(line, tab, tab / tabSize, line_i);
-                        tabsRepeat.Remove(tab);
-                    }
-                }
-            }
-        }
-
-        int CacheRetestTime = 0;
-        private List<int> GetIndentLocations(int tabSize, IWpfTextViewLine line)
-        {
-            var locations = new List<int>();
-            var snapshot = line.Snapshot;
-            int actualPos = 0;
-            int spaceCount = tabSize;
-            int end = line.End;
-            for (int i = line.Start; i <= end; ++i)
-            {
-                char c = i == end ? ' ' : snapshot[i];
-
-                if (actualPos > 0 && (actualPos % tabSize) == 0 &&
-                    snapshot.Length > i)
-                {
-                    if (!CachedLefts.ContainsKey(actualPos) || --CacheRetestTime < 0)
-                    {
-                        var endOfLine = new SnapshotPoint(snapshot, i);
-                        var span = new SnapshotSpan(endOfLine.GetContainingLine().Start, endOfLine);
-                        double left = Math.Round(View.TextViewLines.GetMarkerGeometry(span).Bounds.Right);
-                        if (CacheRetestTime < 0)
-                        {
-                            CacheRetestTime = 128;
-                            if (CachedLefts[actualPos] != left)
-                                throw new InvalidCacheException();
-                        }
-                        else
-                        {
-                            CachedLefts[actualPos] = left;
-                        }
-                    }
-                    locations.Add(actualPos);
-                }
-
-                if (c == '\t')
-                    actualPos = ((actualPos / tabSize) + 1) * tabSize;
-                else if (c == ' ')
-                    actualPos += 1;
-                else
-                    break;
-            }
-
-            if (actualPos > 0 && (actualPos % tabSize) != 0) locations.Add(actualPos);
-
-            return locations;
         }
 
         /// <summary>
         /// Adds a guideline at the specified location.
         /// </summary>
-        /// <param name="line">The line to add the guide for.</param>
+        /// <param name="firstLine">The line to add the guide for.</param>
         /// <param name="indent">The indent number.</param>
         /// <param name="format">The format index for this guide.
         /// </param>
         /// <param name="tag">The tag to associate with the created
         /// adornment.</param>
-        private void AddGuide(ITextViewLine line, int indent, int formatIndex, object tag)
+        private void AddGuide(IWpfTextViewLine firstLine, IWpfTextViewLine lastLine, int indent, int formatIndex, object tag)
         {
             double left;
-            if (!CachedLefts.TryGetValue(indent, out left)) return;
+            if (!CachedLefts.TryGetValue(indent, out left))
+            {
+                left = firstLine.GetCharacterBounds(new VirtualSnapshotPoint(firstLine.Start.GetContainingLine(), indent)).Left;
+                CachedLefts[indent] = left;
+            }
 
             if (left == 0 || left > View.ViewportWidth) return;
 
@@ -333,12 +183,12 @@ namespace IndentGuide
             var guide = new Line()
             {
                 X1 = left,
-                Y1 = line.Top,
+                Y1 = firstLine.Top,
                 X2 = left,
-                Y2 = line.Bottom,
+                Y2 = lastLine.Bottom,
                 Stroke = brush,
                 StrokeThickness = 1.0,
-                StrokeDashOffset = line.Top,
+                StrokeDashOffset = firstLine.Top,
                 SnapsToDevicePixels = true
             };
 
@@ -350,9 +200,9 @@ namespace IndentGuide
                 guide.StrokeDashArray = new DoubleCollection { 3.0, 3.0 };
 
             SnapshotSpan span;
-            span = new SnapshotSpan(line.Start, line.End);
+            span = new SnapshotSpan(firstLine.Start, lastLine.End);
 
-            Layer.AddAdornment(span, tag, guide);
+            Layer.AddAdornment(span, null, guide);
         }
     }
 }
