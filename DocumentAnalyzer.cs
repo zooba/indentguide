@@ -10,45 +10,31 @@ namespace IndentGuide
     [Flags]
     enum LineSpanType
     {
-        Normal = 0,
-        AtText = 1,
-        EmptyLine = 2,
+        None = 0,
+        Normal = 1,
+        AtText = 2,
+        EmptyLine = 4,
         EmptyLineAtText = EmptyLine | AtText
     }
 
-    [DebuggerDisplay("Indent {Indent} lines {First}-{Last}, {Type}")]
+    [DebuggerDisplay("Indent {Indent} lines {FirstLine}-{LastLine}, {Type}")]
     class LineSpan
     {
-        public int First;
-        public int Last;
+        public int FirstLine;
+        public int LastLine;
         public int Indent;
         public LineSpanType Type;
-        public int FirstPosition;
-        public int LastPosition;
+        public bool Changed;
+        public object Adornment;
 
-        public LineSpan(int first, int firstPos, int indent, LineSpanType type)
+        public LineSpan(int first, int last, int indent, LineSpanType type)
         {
-            First = first;
-            FirstPosition = firstPos;
-            Last = first;
-            LastPosition = firstPos;
+            FirstLine = first;
+            LastLine = last;
             Indent = indent;
             Type = type;
-        }
-
-        public bool Extend(LineSpanType type, int indent, int last, int lastPos)
-        {
-            if(Type != type || Indent != indent)
-                return false;
-
-            if (Last + 1 == last)
-            {
-                Last = last;
-                LastPosition = lastPos;
-                return true;
-            }
-
-            return false;
+            Changed = true;
+            Adornment = null;
         }
     }
 
@@ -56,7 +42,7 @@ namespace IndentGuide
     {
         private List<LineSpan> _Lines;
         public List<LineSpan> Lines
-        { 
+        {
             get
             {
                 if (_Lines == null) Reset();
@@ -83,128 +69,134 @@ namespace IndentGuide
 
         public void Reset()
         {
-            var active = new List<LineSpan>();
-            var result = new List<LineSpan>();
-            var emptyLines = new List<int>();
-            
+            Snapshot = Snapshot.TextBuffer.CurrentSnapshot;
+
+            var lineInfo = new List<List<LineSpanType>>(Snapshot.LineCount);
+
             foreach (var line in Snapshot.Lines)
             {
                 int lineNumber = line.LineNumber;
+                while (lineInfo.Count <= lineNumber) lineInfo.Add(null);
 
-                if (!line.IsEmpty())
+                if (line.IsEmpty())
+                    continue;
+
+                var indents = new List<LineSpanType>();
+                lineInfo[lineNumber] = indents;
+
+                int actualPos = 0;
+                int spaceCount = IndentSize;
+                int end = line.End;
+                for (int i = line.Start; i <= end; ++i)
                 {
-                    int actualPos = 0;
-                    int spaceCount = IndentSize;
-                    int end = line.End;
-                    for (int i = line.Start; i <= end; ++i)
+                    char c = i == end ? ' ' : Snapshot[i];
+
+                    if (actualPos > 0 && (actualPos % IndentSize) == 0 && Snapshot.Length > i)
                     {
-                        char c = i == end ? ' ' : Snapshot[i];
-
-                        if (actualPos > 0 && (actualPos % IndentSize) == 0 && Snapshot.Length > i)
-                        {
-                            var type = (c == ' ' || c == '\t') ? LineSpanType.Normal : LineSpanType.AtText;
-                            if (!active.Any(s => s.Extend(type, actualPos, lineNumber, i)))
-                            {
-                                var ls = new LineSpan(lineNumber, i, actualPos, type);
-                                active.Add(ls);
-                                result.Add(ls);
-                            }
-                        }
-
-                        if (c == '\t')
-                            actualPos = ((actualPos / IndentSize) + 1) * IndentSize;
-                        else if (c == ' ')
-                            actualPos += 1;
-                        else
-                            break;
+                        var type = (c == ' ' || c == '\t') ? LineSpanType.Normal : LineSpanType.AtText;
+                        indents.Add(type);
                     }
 
-                    if (actualPos > 0 && (actualPos % IndentSize) != 0)
-                    {
-                        if (!active.Any(s => s.Extend(LineSpanType.AtText, actualPos, lineNumber, end)))
-                        {
-                            var ls = new LineSpan(lineNumber, end, actualPos, LineSpanType.AtText);
-                            active.Add(ls);
-                            result.Add(ls);
-                        }
-                    }
+                    if (c == '\t')
+                        actualPos = ((actualPos / IndentSize) + 1) * IndentSize;
+                    else if (c == ' ')
+                        actualPos += 1;
+                    else
+                        break;
+                }
 
-                    active.RemoveAll(s => s.Last != lineNumber);
-                }
-                else
-                {
-                    emptyLines.Add(lineNumber);
-                }
+                if (actualPos > 0 && (actualPos % IndentSize) != 0)
+                    indents.Add(LineSpanType.AtText);
             }
 
-            active.Clear();
-            
-            FillEmptyLines(result, emptyLines);
+            FillEmptyLines(lineInfo);
+
+            // TODO: Rewrite the loop below to avoid the need to transpose.
+            var indentInfo = Transpose(lineInfo);
+
+            var result = new List<LineSpan>();
+
+            for (int indent = 0; indent < indentInfo.Count; indent += 1)
+            {
+                var lines = indentInfo[indent];
+                if (lines.Length == 0) continue;
+
+                int first = 0;
+                var previous = lines[0];
+                for (int i = 1; i < lines.Length; i += 1)
+                {
+                    if (lines[i] == previous)
+                        continue;
+
+                    if (previous != LineSpanType.None)
+                        result.Add(new LineSpan(first, i - 1, indent, previous));
+                    first = i;
+                    previous = lines[i];
+                }
+            }
 
             Lines = result;
         }
 
-        private void FillEmptyLines(List<LineSpan> result, List<int> emptyLines)
+        private List<LineSpanType[]> Transpose(List<List<LineSpanType>> source)
+        {
+            var result = new List<LineSpanType[]>();
+
+            int i = 0;
+            bool anyLeft = true;
+            while (anyLeft)
+            {
+                anyLeft = false;
+                var lines = new LineSpanType[source.Count];
+                result.Add(lines);
+                for (int j = 0; j < source.Count; ++j)
+                {
+                    var li = source[j];
+                    if (li != null && i < li.Count) lines[j] = li[i];
+                    anyLeft |= li != null && (i + 1) < li.Count;
+                }
+
+                i += 1;
+            }
+
+            return result;
+        }
+
+        private void FillEmptyLines(List<List<LineSpanType>> lineInfo)
         {
             if (Mode == EmptyLineMode.NoGuides)
                 return;
 
-            foreach (int i in emptyLines)
+            for (int i = 0; i < lineInfo.Count; ++i)
             {
-                IList<LineSpan> matches;
-                try
-                {
-                    if (Mode == EmptyLineMode.SameAsLineAboveActual || Mode == EmptyLineMode.SameAsLineAboveLogical)
-                    {
-                        int source = result.Where(s => s.Last < i).Max(s => s.Last);
-                        matches = result.Where(s => s.Last == source).ToList();
-                    }
-                    else if (Mode == EmptyLineMode.SameAsLineBelowActual || Mode == EmptyLineMode.SameAsLineBelowLogical)
-                    {
-                        int source = result.Where(s => s.First > i).Max(s => s.First);
-                        matches = result.Where(s => s.First == source).ToList();
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                catch (InvalidOperationException)
-                {
-                    continue;
-                }
+                if (lineInfo[i] != null) continue;
 
-                int pos = Snapshot.GetLineFromLineNumber(i).Start.Position;
-                foreach (var s in matches)
+                var indents = new List<LineSpanType>();
+                lineInfo[i] = indents;
+
+                if (Mode == EmptyLineMode.SameAsLineAboveActual || Mode == EmptyLineMode.SameAsLineAboveLogical)
                 {
-                    if (!s.Extend(s.Type | LineSpanType.EmptyLine, s.Indent, i, pos))
-                    {
-                        result.Add(new LineSpan(i, pos, s.Indent, s.Type | LineSpanType.EmptyLine));
-                    }
+                    int source = i - 1;
+                    while (source >= 0 && lineInfo[source] == null) --source;
+                    if (source < 0) continue;
+
+                    indents.AddRange(lineInfo[source]);
+                }
+                else if (Mode == EmptyLineMode.SameAsLineBelowActual || Mode == EmptyLineMode.SameAsLineBelowLogical)
+                {
+                    int source = i + 1;
+                    while (source < lineInfo.Count && lineInfo[source] == null) ++source;
+                    if (source >= lineInfo.Count) continue;
+
+                    indents.AddRange(lineInfo[source]);
                 }
             }
         }
 
         public bool Update()
         {
-            if (Lines == null)
-            {
-                Reset();
-                return true;
-            }
-
-            var changes = Snapshot.Version.Changes;
-
-            if (changes == null || !changes.Any())
-                return false;
-
-            foreach (var change in changes)
-            {
-                
-            }
-
-
-            Reset();    // TODO: Properly handle the changes
+            // HACK: Removed incremental updates for now
+            Reset();
             return true;
         }
     }

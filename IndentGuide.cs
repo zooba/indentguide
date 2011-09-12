@@ -33,7 +33,7 @@ namespace IndentGuide
         {
             CachedLefts = new Dictionary<int, double>();
             GuideBrushCache = new Dictionary<System.Drawing.Color, Brush>();
-            
+
             View = view;
             View.LayoutChanged += View_LayoutChanged;
 
@@ -44,7 +44,7 @@ namespace IndentGuide
             Debug.Assert(Theme != null, "No themes loaded");
             service.ThemesChanged += new EventHandler(Service_ThemesChanged);
 
-            Analysis = new DocumentAnalyzer(view.TextSnapshot, Theme.EmptyLineMode, 
+            Analysis = new DocumentAnalyzer(view.TextSnapshot, Theme.EmptyLineMode,
                 View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId));
             Analysis.Reset();
 
@@ -70,7 +70,7 @@ namespace IndentGuide
             var service = (IIndentGuide)sender;
             if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme))
                 Theme = service.DefaultTheme;
-            
+
             Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme.EmptyLineMode,
                 View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
             GuideBrushCache.Clear();
@@ -108,70 +108,53 @@ namespace IndentGuide
             Debug.Assert(View.TextViewLines != null);
             if (View == null || Layer == null || View.TextViewLines == null) return;
 
-            if (!GlobalVisible)
-            {
-                Layer.RemoveAllAdornments();
-                return;
-            }
-
-            var lines = View.TextViewLines;
-
             Layer.RemoveAllAdornments();
-            int firstLineNumber = View.TextSnapshot.GetLineNumberFromPosition(View.TextViewLines.First().Start.Position);
-            int lastLineNumber = View.TextSnapshot.GetLineNumberFromPosition(View.TextViewLines.Last().Start.Position);
+
+            if (!GlobalVisible)
+                return;
+
+            double charWidth = 30.0;
+            double charHeight = View.LineHeight;
+
             foreach (var line in Analysis.Lines)
             {
                 if (line.Type == LineSpanType.AtText && !Theme.VisibleAtText)
                     continue;
-                if (line.Type == LineSpanType.EmptyLineAtText && 
+                if (line.Type == LineSpanType.EmptyLineAtText &&
                     !Theme.VisibleAtText &&
                     (Theme.EmptyLineMode == EmptyLineMode.SameAsLineAboveActual ||
                      Theme.EmptyLineMode == EmptyLineMode.SameAsLineBelowActual))
                     continue;
 
+                var guide = AddGuide(line.FirstLine * charHeight, (line.LastLine + 1) * charHeight,
+                    (line.Indent + 1) * charWidth,
+                    line.Indent);
 
-                IWpfTextViewLine first = null, last = null;
-                if (line.First > firstLineNumber && line.First <= lastLineNumber)
-                    first = View.TextViewLines[line.First - firstLineNumber];
-                else if (line.First <= firstLineNumber)
-                    first = View.TextViewLines[0];
-
-                if (line.Last >= firstLineNumber && line.Last < lastLineNumber)
-                    last = View.TextViewLines[line.Last - firstLineNumber];
-                else if (line.Last >= lastLineNumber)
-                    last = View.TextViewLines[View.TextViewLines.Count - 1];
-
-                if(first != null && last != null)
-                    AddGuide(first, last, line.Indent, line.Indent / Analysis.IndentSize, line);
+                line.Adornment = guide;
+                if (guide != null)
+                    Layer.AddAdornment(AdornmentPositioningBehavior.OwnerControlled, null, line, guide, null);
             }
         }
 
         /// <summary>
         /// Adds a guideline at the specified location.
         /// </summary>
-        /// <param name="firstLine">The line to add the guide for.</param>
+        /// <param name="firstLine">The line to start the guide at.</param>
+        /// <param name="lastLine">The line to end the guide at.</param>
         /// <param name="indent">The indent number.</param>
-        /// <param name="format">The format index for this guide.
+        /// <param name="formatIndex">The format index for this guide.
         /// </param>
-        /// <param name="tag">The tag to associate with the created
-        /// adornment.</param>
-        private void AddGuide(IWpfTextViewLine firstLine, IWpfTextViewLine lastLine, int indent, int formatIndex, object tag)
+        /// <returns>The added line.</returns>
+        private Line AddGuide(double top, double bottom, double left, int formatIndex)
         {
-            double left;
-            if (!CachedLefts.TryGetValue(indent, out left))
-            {
-                left = firstLine.GetCharacterBounds(new VirtualSnapshotPoint(firstLine.Start.GetContainingLine(), indent)).Left;
-                CachedLefts[indent] = left;
-            }
-
-            if (left == 0 || left > View.ViewportWidth) return;
+            if (left == 0 || left > View.ViewportWidth) return null;
 
             LineFormat format;
             Brush brush;
-            if (!Theme.NumberedOverride.TryGetValue(formatIndex, out format))
+            if (!Theme.NumberedOverride.TryGetValue(formatIndex + 1, out format))
                 format = Theme.DefaultLineFormat;
 
-            if (!format.Visible) return;
+            if (!format.Visible) return null;
 
             if (!GuideBrushCache.TryGetValue(format.LineColor, out brush))
             {
@@ -183,12 +166,12 @@ namespace IndentGuide
             var guide = new Line()
             {
                 X1 = left,
-                Y1 = firstLine.Top,
+                Y1 = top,
                 X2 = left,
-                Y2 = lastLine.Bottom,
+                Y2 = bottom,
                 Stroke = brush,
                 StrokeThickness = 1.0,
-                StrokeDashOffset = firstLine.Top,
+                StrokeDashOffset = top,
                 SnapsToDevicePixels = true
             };
 
@@ -199,10 +182,7 @@ namespace IndentGuide
             else if (format.LineStyle == LineStyle.Dashed)
                 guide.StrokeDashArray = new DoubleCollection { 3.0, 3.0 };
 
-            SnapshotSpan span;
-            span = new SnapshotSpan(firstLine.Start, lastLine.End);
-
-            Layer.AddAdornment(span, null, guide);
+            return guide;
         }
     }
 }
