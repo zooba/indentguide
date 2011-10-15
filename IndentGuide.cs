@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Formatting;
 
 namespace IndentGuide
 {
@@ -113,7 +110,15 @@ namespace IndentGuide
             if (!GlobalVisible)
                 return;
 
-            double charWidth = 30.0;
+            double indentWidth = 0.0;
+            {
+                var props = View.FormattedLineSource.DefaultTextProperties;
+                GlyphTypeface gtf;
+                if(props.Typeface.TryGetGlyphTypeface(out gtf))
+                    indentWidth = gtf.AdvanceWidths[gtf.CharacterToGlyphMap[' ']] * props.FontRenderingEmSize * Analysis.IndentSize;
+            }
+            if (indentWidth <= 0.0) return;
+
             double charHeight = View.LineHeight;
 
             foreach (var line in Analysis.Lines)
@@ -127,7 +132,7 @@ namespace IndentGuide
                     continue;
 
                 var guide = AddGuide(line.FirstLine * charHeight, (line.LastLine + 1) * charHeight,
-                    (line.Indent + 1) * charWidth,
+                    (line.Indent + 1) * indentWidth,
                     line.Indent);
 
                 line.Adornment = guide;
