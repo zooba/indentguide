@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Formatting;
 
 namespace IndentGuide
 {
@@ -131,13 +133,33 @@ namespace IndentGuide
                      Theme.EmptyLineMode == EmptyLineMode.SameAsLineBelowActual))
                     continue;
 
-                var guide = AddGuide(line.FirstLine * charHeight, (line.LastLine + 1) * charHeight,
-                    (line.Indent + 1) * indentWidth,
-                    line.Indent);
+                int linePos = (line.Indent + 1) * Analysis.IndentSize;
+                var first = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine).Start + linePos;
+                var last = View.TextSnapshot.GetLineFromLineNumber(line.LastLine).End + linePos;
+                if (first > View.TextViewLines.LastVisibleLine.Start) continue;
+                if (last < View.TextViewLines.FirstVisibleLine.Start) continue;
+                var firstView = View.GetTextViewLineContainingBufferPosition(first);
+                var lastView = View.GetTextViewLineContainingBufferPosition(last);
 
+                double top = (firstView.VisibilityState == VisibilityState.FullyVisible) ?
+                    firstView.Top :
+                    View.TextViewLines.FirstVisibleLine.Top;
+                double bottom = (lastView.VisibilityState == VisibilityState.FullyVisible) ?
+                    lastView.Top :
+                    View.TextViewLines.LastVisibleLine.Bottom;
+                double left = (line.Indent + 1) * indentWidth +
+                    ((firstView.VisibilityState == VisibilityState.FullyVisible) ?
+                    firstView.TextLeft :
+                    View.TextViewLines.FirstVisibleLine.TextLeft);
+
+                var guide = AddGuide(top, bottom, left, line.Indent);
                 line.Adornment = guide;
+
                 if (guide != null)
-                    Layer.AddAdornment(AdornmentPositioningBehavior.OwnerControlled, null, line, guide, null);
+                {
+                    Layer.AddAdornment(AdornmentPositioningBehavior.TextRelative,
+                        new SnapshotSpan(first, last), line, guide, null);
+                }
             }
         }
 
