@@ -104,9 +104,6 @@ namespace IndentGuide
                     else
                         break;
                 }
-
-                if (actualPos > 0 && (actualPos % IndentSize) != 0)
-                    indents.Add(LineSpanType.AtText);
             }
 
             FillEmptyLines(lineInfo);

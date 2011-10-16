@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Microsoft.VisualStudio.Text.Editor;
@@ -114,14 +115,15 @@ namespace IndentGuide
 
             double indentWidth = 0.0;
             {
-                var props = View.FormattedLineSource.DefaultTextProperties;
-                GlyphTypeface gtf;
-                if(props.Typeface.TryGetGlyphTypeface(out gtf))
-                    indentWidth = gtf.AdvanceWidths[gtf.CharacterToGlyphMap[' ']] * props.FontRenderingEmSize * Analysis.IndentSize;
+                var suitable = View.TextViewLines.FirstOrDefault(l => 
+                    View.TextSnapshot.GetLineFromPosition(l.Start.Position).GetText().StartsWith(" "));
+                if (suitable != null)
+                {
+                    indentWidth = View.TextViewLines.GetMarkerGeometry(new SnapshotSpan(suitable.Start, 1))
+                        .Bounds.Width * Analysis.IndentSize;
+                }
             }
             if (indentWidth <= 0.0) return;
-
-            double charHeight = View.LineHeight;
 
             foreach (var line in Analysis.Lines)
             {
@@ -134,8 +136,10 @@ namespace IndentGuide
                     continue;
 
                 int linePos = (line.Indent + 1) * Analysis.IndentSize;
-                var first = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine).Start + linePos;
-                var last = View.TextSnapshot.GetLineFromLineNumber(line.LastLine).End + linePos;
+                var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
+                var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
+                var first = firstLine.Start + (firstLine.Length >= linePos ? linePos : 0);
+                var last = lastLine.Start + (lastLine.Length >= linePos ? linePos : 0);
                 if (first > View.TextViewLines.LastVisibleLine.Start) continue;
                 if (last < View.TextViewLines.FirstVisibleLine.Start) continue;
                 var firstView = View.GetTextViewLineContainingBufferPosition(first);
@@ -145,12 +149,11 @@ namespace IndentGuide
                     firstView.Top :
                     View.TextViewLines.FirstVisibleLine.Top;
                 double bottom = (lastView.VisibilityState == VisibilityState.FullyVisible) ?
-                    lastView.Top :
+                    lastView.Bottom :
                     View.TextViewLines.LastVisibleLine.Bottom;
-                double left = (line.Indent + 1) * indentWidth +
+                double left = (line.Indent + 1) * indentWidth + 
                     ((firstView.VisibilityState == VisibilityState.FullyVisible) ?
-                    firstView.TextLeft :
-                    View.TextViewLines.FirstVisibleLine.TextLeft);
+                    firstView.TextLeft : View.TextViewLines.FirstVisibleLine.TextLeft);
 
                 var guide = AddGuide(top, bottom, left, line.Indent);
                 line.Adornment = guide;
