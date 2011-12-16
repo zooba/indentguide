@@ -71,64 +71,49 @@ namespace IndentGuide
         {
             Snapshot = Snapshot.TextBuffer.CurrentSnapshot;
 
-            var lineInfo = new List<List<LineSpanType>>(Snapshot.LineCount);
+            var lineInfo = new List<int?>(Snapshot.LineCount);
 
             foreach (var line in Snapshot.Lines)
             {
                 int lineNumber = line.LineNumber;
                 while (lineInfo.Count <= lineNumber) lineInfo.Add(null);
 
-                if (line.IsEmpty())
+                var text = line.GetText();
+                if (string.IsNullOrWhiteSpace(text))
                     continue;
 
-                var indents = new List<LineSpanType>();
-                lineInfo[lineNumber] = indents;
-
-                int actualPos = 0;
-                int spaceCount = IndentSize;
-                int end = line.End;
-                for (int i = line.Start; i <= end; ++i)
-                {
-                    char c = i == end ? ' ' : Snapshot[i];
-
-                    if (actualPos > 0 && (actualPos % IndentSize) == 0 && Snapshot.Length > i)
-                    {
-                        var type = (c == ' ' || c == '\t') ? LineSpanType.Normal : LineSpanType.AtText;
-                        indents.Add(type);
-                    }
-
-                    if (c == '\t')
-                        actualPos = ((actualPos / IndentSize) + 1) * IndentSize;
-                    else if (c == ' ')
-                        actualPos += 1;
-                    else
-                        break;
-                }
+                lineInfo[lineNumber] = text.LeadingWhitespace(IndentSize);
             }
+            lineInfo.Add(0);
 
-            FillEmptyLines(lineInfo);
-
-            // TODO: Rewrite the loop below to avoid the need to transpose.
-            var indentInfo = Transpose(lineInfo);
-
+            var indentInfo = new Dictionary<int, int>();
             var result = new List<LineSpan>();
 
-            for (int indent = 0; indent < indentInfo.Count; indent += 1)
+            for (int line = 0; line < lineInfo.Count; ++line)
             {
-                var lines = indentInfo[indent];
-                if (lines.Length == 0) continue;
-
-                int first = 0;
-                var previous = lines[0];
-                for (int i = 1; i < lines.Length; i += 1)
+                if (lineInfo[line].HasValue)
                 {
-                    if (lines[i] == previous)
-                        continue;
+                    int indent = lineInfo[line].Value;
 
-                    if (previous != LineSpanType.None)
-                        result.Add(new LineSpan(first, i - 1, indent, previous));
-                    first = i;
-                    previous = lines[i];
+                    if (indent == 0)
+                    {
+                        foreach (var kv in indentInfo)
+                        {
+                            if (kv.Value < line)
+                                result.Add(new LineSpan(kv.Value, line - 1, kv.Key, LineSpanType.Normal));
+                        }
+                        indentInfo.Clear();
+                    }
+                    else
+                    {
+                        foreach (var kv in indentInfo.Where(kv => kv.Key >= indent).ToList())
+                        {
+                            if (kv.Value < line)
+                                result.Add(new LineSpan(kv.Value, line - 1, kv.Key, LineSpanType.Normal));
+                            indentInfo.Remove(kv.Key);
+                        }
+                        indentInfo[indent] = line + 1;
+                    }
                 }
             }
 
@@ -157,37 +142,6 @@ namespace IndentGuide
             }
 
             return result;
-        }
-
-        private void FillEmptyLines(List<List<LineSpanType>> lineInfo)
-        {
-            if (Mode == EmptyLineMode.NoGuides)
-                return;
-
-            for (int i = 0; i < lineInfo.Count; ++i)
-            {
-                if (lineInfo[i] != null) continue;
-
-                var indents = new List<LineSpanType>();
-                lineInfo[i] = indents;
-
-                if (Mode == EmptyLineMode.SameAsLineAboveActual || Mode == EmptyLineMode.SameAsLineAboveLogical)
-                {
-                    int source = i - 1;
-                    while (source >= 0 && lineInfo[source] == null) --source;
-                    if (source < 0) continue;
-
-                    indents.AddRange(lineInfo[source]);
-                }
-                else if (Mode == EmptyLineMode.SameAsLineBelowActual || Mode == EmptyLineMode.SameAsLineBelowLogical)
-                {
-                    int source = i + 1;
-                    while (source < lineInfo.Count && lineInfo[source] == null) ++source;
-                    if (source >= lineInfo.Count) continue;
-
-                    indents.AddRange(lineInfo[source]);
-                }
-            }
         }
 
         public bool Update()

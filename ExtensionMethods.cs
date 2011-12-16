@@ -9,26 +9,20 @@ namespace IndentGuide
 {
     internal static class ExtensionMethods
     {
-        public static bool IsEmpty(this ITextSnapshotLine line)
+        public static int LeadingWhitespace(this string source, int indentSize)
         {
-            if (line.Length == 0) return true;
-
-            var span = new SnapshotSpan(line.Start, line.End);
-            var text = span.Snapshot.GetText(span.Span);
-
-            return string.IsNullOrWhiteSpace(text);
+            int count = 0;
+            foreach (var c in source)
+            {
+                if (c == ' ')
+                    count += 1;
+                else if (c == '\t')
+                    count += indentSize - (count % indentSize);
+                else
+                    break;
+            }
+            return count;
         }
-
-        public static bool IsEmpty(this ITextViewLine line)
-        {
-            if (line.Length == 0) return true;
-
-            var span = new SnapshotSpan(line.Start, line.End);
-            var text = span.Snapshot.GetText(span.Span);
-
-            return string.IsNullOrWhiteSpace(text);
-        }
-
 
         public static System.Drawing.Color ToSDC(this System.Windows.Media.Color source)
         {

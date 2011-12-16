@@ -113,17 +113,16 @@ namespace IndentGuide
             if (!GlobalVisible)
                 return;
 
-            double indentWidth = 0.0;
+            double spaceWidth = 0.0;
             {
                 var suitable = View.TextViewLines.FirstOrDefault(l => 
                     View.TextSnapshot.GetLineFromPosition(l.Start.Position).GetText().StartsWith(" "));
                 if (suitable != null)
                 {
-                    indentWidth = View.TextViewLines.GetMarkerGeometry(new SnapshotSpan(suitable.Start, 1))
-                        .Bounds.Width * Analysis.IndentSize;
+                    spaceWidth = View.TextViewLines.GetMarkerGeometry(new SnapshotSpan(suitable.Start, 1)).Bounds.Width;
                 }
             }
-            if (indentWidth <= 0.0) return;
+            if (spaceWidth <= 0.0) return;
 
             foreach (var line in Analysis.Lines)
             {
@@ -135,7 +134,7 @@ namespace IndentGuide
                      Theme.EmptyLineMode == EmptyLineMode.SameAsLineBelowActual))
                     continue;
 
-                int linePos = (line.Indent + 1) * Analysis.IndentSize;
+                int linePos = line.Indent;
                 var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
                 var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
                 var first = firstLine.Start + (firstLine.Length >= linePos ? linePos : 0);
@@ -145,13 +144,13 @@ namespace IndentGuide
                 var firstView = View.GetTextViewLineContainingBufferPosition(first);
                 var lastView = View.GetTextViewLineContainingBufferPosition(last);
 
-                double top = (firstView.VisibilityState == VisibilityState.FullyVisible) ?
+                double top = (firstView.VisibilityState != VisibilityState.Unattached) ?
                     firstView.Top :
                     View.TextViewLines.FirstVisibleLine.Top;
-                double bottom = (lastView.VisibilityState == VisibilityState.FullyVisible) ?
+                double bottom = (lastView.VisibilityState != VisibilityState.Unattached) ?
                     lastView.Bottom :
                     View.TextViewLines.LastVisibleLine.Bottom;
-                double left = (line.Indent + 1) * indentWidth + 
+                double left = line.Indent * spaceWidth + 
                     ((firstView.VisibilityState == VisibilityState.FullyVisible) ?
                     firstView.TextLeft : View.TextViewLines.FirstVisibleLine.TextLeft);
 
