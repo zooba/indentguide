@@ -88,32 +88,87 @@ namespace IndentGuide
 
             var indentInfo = new Dictionary<int, int>();
             var result = new List<LineSpan>();
-
-            for (int line = 0; line < lineInfo.Count; ++line)
+            bool reverse = (Mode == EmptyLineMode.SameAsLineBelowActual || Mode == EmptyLineMode.SameAsLineBelowLogical);
+            bool atAllIndents = true;
+            int lineStart = !reverse ? 0 : (lineInfo.Count - 1);
+            int lineStep = !reverse ? 1 : -1;
+            
+            for (int line = lineStart; 0 <= line && line < lineInfo.Count; line += lineStep)
             {
+                int lineNext = line + lineStep;
+                int linePrev = line - lineStep;
+
                 if (lineInfo[line].HasValue)
                 {
                     int indent = lineInfo[line].Value;
 
-                    if (indent == 0)
+                    if (atAllIndents)
                     {
-                        foreach (var kv in indentInfo)
+                        for (int i = IndentSize; i < indent; i += IndentSize)
                         {
-                            if (kv.Value < line)
-                                result.Add(new LineSpan(kv.Value, line - 1, kv.Key, LineSpanType.Normal));
+                            if (!indentInfo.ContainsKey(i))
+                                indentInfo[i] = line;
                         }
-                        indentInfo.Clear();
                     }
-                    else
+
+                    var last = result.LastOrDefault();
+                    if (last != null && last.Type.HasFlag(LineSpanType.AtText) &&
+                        last.Indent == indent && last.LastLine == linePrev)
+                    {
+                        last.LastLine = line;
+                        indentInfo[indent] = lineNext;
+                        continue;
+                    }
+
+                    if (indent > 0)
                     {
                         foreach (var kv in indentInfo.Where(kv => kv.Key >= indent).ToList())
                         {
-                            if (kv.Value < line)
-                                result.Add(new LineSpan(kv.Value, line - 1, kv.Key, LineSpanType.Normal));
+                            if ((kv.Value < line && !reverse) || (kv.Value > line && reverse))
+                                result.Add(new LineSpan(kv.Value, linePrev, kv.Key, LineSpanType.Normal));
                             indentInfo.Remove(kv.Key);
                         }
-                        indentInfo[indent] = line + 1;
+                        indentInfo[indent] = lineNext;
+                        result.Add(new LineSpan(line, line, indent, LineSpanType.AtText));
                     }
+                    else
+                    {
+                        foreach (var kv in indentInfo)
+                        {
+                            if ((kv.Value < line && !reverse) || (kv.Value > line && reverse))
+                                result.Add(new LineSpan(kv.Value, linePrev, kv.Key, LineSpanType.Normal));
+                        }
+                        indentInfo.Clear();
+                    }
+                }
+                else if (Mode == EmptyLineMode.NoGuides)
+                {
+                    foreach (var key in indentInfo.Keys.ToList())
+                    {
+                        if ((indentInfo[key] < line && !reverse) || (indentInfo[key] > line && reverse))
+                            result.Add(new LineSpan(indentInfo[key], linePrev, key, LineSpanType.Normal));
+                        indentInfo[key] = lineNext;
+                    }
+                }
+                else if (Mode == EmptyLineMode.SameAsLineAboveActual || Mode == EmptyLineMode.SameAsLineBelowActual)
+                {
+                    if (indentInfo.Any())
+                    {
+                        int key = indentInfo.Keys.Max();
+                        if ((indentInfo[key] < line && !reverse) || (indentInfo[key] > line && reverse))
+                            result.Add(new LineSpan(indentInfo[key], linePrev, key, LineSpanType.Normal));
+                        indentInfo[key] = lineNext;
+                    }
+                }
+            }
+
+            if (reverse)
+            {
+                foreach (var ls in result)
+                {
+                    int temp = ls.LastLine;
+                    ls.LastLine = ls.FirstLine;
+                    ls.FirstLine = temp;
                 }
             }
 

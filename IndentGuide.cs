@@ -154,7 +154,11 @@ namespace IndentGuide
                     ((firstView.VisibilityState == VisibilityState.FullyVisible) ?
                     firstView.TextLeft : View.TextViewLines.FirstVisibleLine.TextLeft);
 
-                var guide = AddGuide(top, bottom, left, line.Indent);
+                int formatIndex = line.Indent / Analysis.IndentSize;
+                if (line.Indent % Analysis.IndentSize != 0)
+                    formatIndex = 0;
+
+                var guide = AddGuide(top, bottom, left, formatIndex);
                 line.Adornment = guide;
 
                 if (guide != null)
@@ -180,9 +184,9 @@ namespace IndentGuide
 
             LineFormat format;
             Brush brush;
-            if (!Theme.NumberedOverride.TryGetValue(formatIndex + 1, out format))
+            if (!Theme.NumberedOverride.TryGetValue(formatIndex, out format))
                 format = Theme.DefaultLineFormat;
-
+            
             if (!format.Visible) return null;
 
             if (!GuideBrushCache.TryGetValue(format.LineColor, out brush))

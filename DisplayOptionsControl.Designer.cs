@@ -32,6 +32,7 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.grpLineStyle = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.linePreview = new IndentGuide.LinePreview();
             this.gridLineStyle = new System.Windows.Forms.PropertyGrid();
             this.grpLineOverrides = new System.Windows.Forms.GroupBox();
             this.panelLineOverrides = new System.Windows.Forms.TableLayoutPanel();
@@ -39,16 +40,16 @@
             this.panelLineOverrideFormat = new System.Windows.Forms.TableLayoutPanel();
             this.gridLineOverride = new System.Windows.Forms.PropertyGrid();
             this.panelLineOverrideIndex = new System.Windows.Forms.TableLayoutPanel();
+            this.chkLineOverrideUnaligned = new System.Windows.Forms.RadioButton();
             this.txtLineFormatText = new System.Windows.Forms.ComboBox();
             this.chkLineOverrideText = new System.Windows.Forms.RadioButton();
             this.chkLineOverrideIndex = new System.Windows.Forms.RadioButton();
             this.txtLineFormatIndex = new System.Windows.Forms.NumericUpDown();
+            this.lineOverridePreview = new IndentGuide.LinePreview();
             this.tableLineOverrideAddRemove = new System.Windows.Forms.TableLayoutPanel();
             this.btnAddOverride = new System.Windows.Forms.Button();
             this.btnRemoveOverride = new System.Windows.Forms.Button();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-            this.linePreview = new IndentGuide.LinePreview();
-            this.lineOverridePreview = new IndentGuide.LinePreview();
             this.tableLayoutPanel1.SuspendLayout();
             this.grpLineStyle.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -109,6 +110,16 @@
             this.tableLayoutPanel2.Size = new System.Drawing.Size(580, 81);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
+            // linePreview
+            // 
+            this.linePreview.BackColor = System.Drawing.SystemColors.Window;
+            this.linePreview.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.linePreview.Location = new System.Drawing.Point(47, 3);
+            this.linePreview.Name = "linePreview";
+            this.linePreview.Size = new System.Drawing.Size(75, 75);
+            this.linePreview.Style = IndentGuide.LineStyle.Solid;
+            this.linePreview.TabIndex = 0;
+            // 
             // gridLineStyle
             // 
             this.gridLineStyle.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -132,7 +143,7 @@
             this.grpLineOverrides.Controls.Add(this.panelLineOverrides);
             this.grpLineOverrides.Location = new System.Drawing.Point(3, 109);
             this.grpLineOverrides.Name = "grpLineOverrides";
-            this.grpLineOverrides.Size = new System.Drawing.Size(586, 153);
+            this.grpLineOverrides.Size = new System.Drawing.Size(586, 176);
             this.grpLineOverrides.TabIndex = 5;
             this.grpLineOverrides.TabStop = false;
             this.grpLineOverrides.Text = "grpLineOverrides";
@@ -154,7 +165,7 @@
             this.panelLineOverrides.RowCount = 2;
             this.panelLineOverrides.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.panelLineOverrides.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.panelLineOverrides.Size = new System.Drawing.Size(580, 134);
+            this.panelLineOverrides.Size = new System.Drawing.Size(580, 157);
             this.panelLineOverrides.TabIndex = 0;
             // 
             // lstOverrides
@@ -164,7 +175,7 @@
             this.lstOverrides.IntegralHeight = false;
             this.lstOverrides.Location = new System.Drawing.Point(3, 3);
             this.lstOverrides.Name = "lstOverrides";
-            this.lstOverrides.Size = new System.Drawing.Size(187, 99);
+            this.lstOverrides.Size = new System.Drawing.Size(187, 122);
             this.lstOverrides.Sorted = true;
             this.lstOverrides.TabIndex = 0;
             this.lstOverrides.SelectedIndexChanged += new System.EventHandler(this.lstOverrides_SelectedIndexChanged);
@@ -189,7 +200,7 @@
             this.panelLineOverrides.SetRowSpan(this.panelLineOverrideFormat, 2);
             this.panelLineOverrideFormat.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.panelLineOverrideFormat.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.panelLineOverrideFormat.Size = new System.Drawing.Size(387, 134);
+            this.panelLineOverrideFormat.Size = new System.Drawing.Size(387, 157);
             this.panelLineOverrideFormat.TabIndex = 3;
             // 
             // gridLineOverride
@@ -215,6 +226,7 @@
             this.panelLineOverrideIndex.ColumnCount = 2;
             this.panelLineOverrideIndex.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.panelLineOverrideIndex.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.panelLineOverrideIndex.Controls.Add(this.chkLineOverrideUnaligned, 0, 2);
             this.panelLineOverrideIndex.Controls.Add(this.txtLineFormatText, 1, 1);
             this.panelLineOverrideIndex.Controls.Add(this.chkLineOverrideText, 0, 1);
             this.panelLineOverrideIndex.Controls.Add(this.chkLineOverrideIndex, 0, 0);
@@ -222,11 +234,26 @@
             this.panelLineOverrideIndex.Location = new System.Drawing.Point(81, 81);
             this.panelLineOverrideIndex.Margin = new System.Windows.Forms.Padding(0);
             this.panelLineOverrideIndex.Name = "panelLineOverrideIndex";
-            this.panelLineOverrideIndex.RowCount = 2;
+            this.panelLineOverrideIndex.RowCount = 3;
             this.panelLineOverrideIndex.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.panelLineOverrideIndex.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.panelLineOverrideIndex.Size = new System.Drawing.Size(306, 53);
+            this.panelLineOverrideIndex.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.panelLineOverrideIndex.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.panelLineOverrideIndex.Size = new System.Drawing.Size(306, 76);
             this.panelLineOverrideIndex.TabIndex = 5;
+            // 
+            // chkLineOverrideUnaligned
+            // 
+            this.chkLineOverrideUnaligned.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.chkLineOverrideUnaligned.AutoSize = true;
+            this.chkLineOverrideUnaligned.Location = new System.Drawing.Point(16, 56);
+            this.chkLineOverrideUnaligned.Name = "chkLineOverrideUnaligned";
+            this.chkLineOverrideUnaligned.Size = new System.Drawing.Size(151, 17);
+            this.chkLineOverrideUnaligned.TabIndex = 3;
+            this.chkLineOverrideUnaligned.TabStop = true;
+            this.chkLineOverrideUnaligned.Text = "chkLineOverrideUnaligned";
+            this.chkLineOverrideUnaligned.UseVisualStyleBackColor = true;
+            this.chkLineOverrideUnaligned.CheckedChanged += new System.EventHandler(this.chkLineOverride_CheckedChanged);
             // 
             // txtLineFormatText
             // 
@@ -263,6 +290,7 @@
             this.chkLineOverrideIndex.TabStop = true;
             this.chkLineOverrideIndex.Text = "chkLineOverrideIndex";
             this.chkLineOverrideIndex.UseVisualStyleBackColor = true;
+            this.chkLineOverrideIndex.CheckedChanged += new System.EventHandler(this.chkLineOverride_CheckedChanged);
             // 
             // txtLineFormatIndex
             // 
@@ -284,6 +312,17 @@
             0});
             this.txtLineFormatIndex.ValueChanged += new System.EventHandler(this.txtLineFormatIndex_ValueChanged);
             // 
+            // lineOverridePreview
+            // 
+            this.lineOverridePreview.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.lineOverridePreview.BackColor = System.Drawing.SystemColors.Window;
+            this.lineOverridePreview.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lineOverridePreview.Location = new System.Drawing.Point(3, 3);
+            this.lineOverridePreview.Name = "lineOverridePreview";
+            this.lineOverridePreview.Size = new System.Drawing.Size(75, 75);
+            this.lineOverridePreview.Style = IndentGuide.LineStyle.Solid;
+            this.lineOverridePreview.TabIndex = 4;
+            // 
             // tableLineOverrideAddRemove
             // 
             this.tableLineOverrideAddRemove.Anchor = System.Windows.Forms.AnchorStyles.None;
@@ -294,7 +333,7 @@
             this.tableLineOverrideAddRemove.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLineOverrideAddRemove.Controls.Add(this.btnAddOverride, 0, 0);
             this.tableLineOverrideAddRemove.Controls.Add(this.btnRemoveOverride, 1, 0);
-            this.tableLineOverrideAddRemove.Location = new System.Drawing.Point(0, 105);
+            this.tableLineOverrideAddRemove.Location = new System.Drawing.Point(0, 128);
             this.tableLineOverrideAddRemove.Margin = new System.Windows.Forms.Padding(0);
             this.tableLineOverrideAddRemove.Name = "tableLineOverrideAddRemove";
             this.tableLineOverrideAddRemove.RowCount = 1;
@@ -328,27 +367,6 @@
             this.btnRemoveOverride.Text = "btnRemoveOverride";
             this.btnRemoveOverride.UseVisualStyleBackColor = true;
             this.btnRemoveOverride.Click += new System.EventHandler(this.btnRemoveOverride_Click);
-            // 
-            // linePreview
-            // 
-            this.linePreview.BackColor = System.Drawing.SystemColors.Window;
-            this.linePreview.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.linePreview.Location = new System.Drawing.Point(47, 3);
-            this.linePreview.Name = "linePreview";
-            this.linePreview.Size = new System.Drawing.Size(75, 75);
-            this.linePreview.Style = IndentGuide.LineStyle.Solid;
-            this.linePreview.TabIndex = 0;
-            // 
-            // lineOverridePreview
-            // 
-            this.lineOverridePreview.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.lineOverridePreview.BackColor = System.Drawing.SystemColors.Window;
-            this.lineOverridePreview.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lineOverridePreview.Location = new System.Drawing.Point(3, 3);
-            this.lineOverridePreview.Name = "lineOverridePreview";
-            this.lineOverridePreview.Size = new System.Drawing.Size(75, 75);
-            this.lineOverridePreview.Style = IndentGuide.LineStyle.Solid;
-            this.lineOverridePreview.TabIndex = 4;
             // 
             // DisplayOptionsControl
             // 
@@ -398,5 +416,6 @@
         private LinePreview lineOverridePreview;
         private System.Windows.Forms.TableLayoutPanel tableLineOverrideAddRemove;
         private System.Windows.Forms.ToolTip toolTip;
+        private System.Windows.Forms.RadioButton chkLineOverrideUnaligned;
     }
 }

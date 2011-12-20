@@ -261,4 +261,10 @@
   <data name="tooltipNextRelease" xml:space="preserve">
     <value>Planned for a later release</value>
   </data>
+  <data name="chkLineOverrideUnaligned" xml:space="preserve">
+    <value>at unaligned indents</value>
+  </data>
+  <data name="UnalignedThemeName" xml:space="preserve">
+    <value>Unaligned</value>
+  </data>
 </root>

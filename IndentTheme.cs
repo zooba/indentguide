@@ -228,7 +228,7 @@ namespace IndentGuide
         [ResourceDescription("VisibleAtTextDescription")]
         [DefaultValue(false)]
         public bool VisibleAtText { get; set; }
-        
+
         public static IndentTheme Load(RegistryKey reg, string themeKey)
         {
             var theme = new IndentTheme();

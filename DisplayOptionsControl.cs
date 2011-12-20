@@ -39,10 +39,7 @@ namespace IndentGuide
             ActiveTheme.NumberedOverride.Clear();
             foreach (var oi in lstOverrides.Items.OfType<OverrideInfo>())
             {
-                if (oi.Index > 0)
-                {
-                    ActiveTheme.NumberedOverride[oi.Index] = oi.Format;
-                }
+                ActiveTheme.NumberedOverride[oi.Index] = oi.Format;
             }
         }
 
@@ -66,10 +63,13 @@ namespace IndentGuide
                     lstOverrides.Items.Clear();
                     foreach (var kv in active.NumberedOverride)
                     {
+                        var name = string.Format(CultureInfo.CurrentCulture, "#{0}", kv.Key);
+                        if (kv.Key == 0)
+                            name = ResourceLoader.LoadString("UnalignedThemeName");
                         lstOverrides.Items.Add(new OverrideInfo
                         {
                             Index = kv.Key,
-                            Text = string.Format(CultureInfo.CurrentCulture, "#{0}", kv.Key),
+                            Text = name,
                             Format = kv.Value
                         });
                     }
@@ -100,6 +100,7 @@ namespace IndentGuide
 
                     chkLineOverrideIndex.Enabled = true;
                     chkLineOverrideText.Enabled = false;// true; // NOT IMPLEMENTED
+                    chkLineOverrideUnaligned.Enabled = true;
                     txtLineFormatIndex.Enabled = true;
                     txtLineFormatText.Enabled = false;// true; // NOT IMPLEMENTED
 
@@ -109,6 +110,10 @@ namespace IndentGuide
                     {
                         chkLineOverrideIndex.Checked = true;
                         txtLineFormatIndex.Value = oi.Index;
+                    }
+                    else if (oi.Pattern == null)
+                    {
+                        chkLineOverrideUnaligned.Checked = true;
                     }
                     else
                     {
@@ -156,6 +161,23 @@ namespace IndentGuide
             if (oi == null) return;
 
             oi.Index = (int)txtLineFormatIndex.Value;
+        }
+
+        private void chkLineOverride_CheckedChanged(object sender, EventArgs e)
+        {
+            var oi = lstOverrides.SelectedItem as OverrideInfo;
+            if (oi == null) return;
+            
+            if (chkLineOverrideUnaligned.Checked)
+            {
+                oi.Index = (int)0;
+                oi.Text = ResourceLoader.LoadString("UnalignedThemeName");
+            }
+            else if (chkLineOverrideIndex.Checked)
+            {
+                oi.Index = (int)txtLineFormatIndex.Value;
+                oi.Text = string.Format(CultureInfo.CurrentCulture, "#{0}", oi.Index);
+            }
         }
 
         private void lstOverrides_SelectedIndexChanged(object sender, EventArgs e)
