@@ -7,7 +7,7 @@ using System.Resources;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Indent Guides")]
-[assembly: AssemblyDescription("Indent Guides for Visual Studio 2010")]
+[assembly: AssemblyDescription("Indent Guides for Visual Studio")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Steve Dower")]
 [assembly: AssemblyProduct("Indent Guides")]

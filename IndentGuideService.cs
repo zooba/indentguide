@@ -48,11 +48,6 @@ namespace IndentGuide
         void Reset();
 
         /// <summary>
-        /// Upgrade from a previous installation.
-        /// </summary>
-        void Upgrade();
-
-        /// <summary>
         /// Whether guides are shown or not.
         /// </summary>
         bool Visible { get; set; }
