@@ -91,7 +91,6 @@ namespace IndentGuide
         {
             _Package = package;
             _Themes = new Dictionary<string, IndentTheme>();
-            Upgrade();
             Load();
         }
 
@@ -253,54 +252,6 @@ namespace IndentGuide
                 root.DeleteSubKeyTree(SUBKEY_NAME, false);
 
             Load();
-        }
-
-        public void Upgrade()
-        {
-            const string SettingsRegistryPath = @"DialogPage\IndentGuide.DisplayOptions";
-
-            try
-            {
-                using (var root = Package.UserRegistryRoot)
-                {
-                    using (var destKey = root.OpenSubKey(SUBKEY_NAME))
-                        if (destKey != null) return;
-
-                    using (var srcKey = root.OpenSubKey(SettingsRegistryPath))
-                    {
-                        if (srcKey == null) return;
-
-                        var theme = new IndentTheme(true);
-                        string temp;
-
-                        theme.Name = (string)srcKey.GetValue("Name", IndentTheme.DefaultThemeName);
-
-                        if((temp = srcKey.GetValue("EmptyLineMode", null) as string) != null)
-                            theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
-                                .ConvertFromInvariantString(temp);
-
-                        var tempFormat = LineFormat.FromInvariantStrings(
-                            srcKey.GetValue("LineStyle", "Dotted") as string,
-                            srcKey.GetValue("LineColor", "Teal") as string,
-                            "");
-                        theme.DefaultLineFormat.LineStyle = tempFormat.LineStyle;
-                        theme.DefaultLineFormat.LineColor = tempFormat.LineColor;
-                        theme.DefaultLineFormat.Visible = true;
-                        
-                        if((temp = srcKey.GetValue("Visible", null) as string) != null)
-                            Visible = bool.Parse(temp);
-
-                        using (var destKey = root.CreateSubKey(SUBKEY_NAME))
-                            theme.Save(destKey);
-                    }
-
-                    root.DeleteSubKeyTree(SettingsRegistryPath, false);
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine(string.Format("IndentGuide::Upgrade: {0}", ex));
-            }
         }
 
         #endregion
