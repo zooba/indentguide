@@ -22,6 +22,7 @@ namespace IndentGuide
         private readonly IVsTextManager TextManagerService;
         private readonly IVsEditorAdaptersFactoryService EditorAdapters;
 
+        private static readonly List<IndentTheme> LocalThemes = new List<IndentTheme>();
         private static readonly List<IndentTheme> ChangedThemes = new List<IndentTheme>();
         private static readonly List<IndentTheme> DeletedThemes = new List<IndentTheme>();
 
@@ -67,8 +68,23 @@ namespace IndentGuide
                 IsActive = true;
                 if (Interlocked.Increment(ref ActivationCount) == 1)
                 {
-                    LocalThemes = Service.Themes.Values.Select(t => t.Clone()).ToList();
-                    LocalThemes.Sort();
+                    try
+                    {
+                        LocalThemes.Clear();
+                        ChangedThemes.Clear();
+                        DeletedThemes.Clear();
+
+                        ActiveTheme = Service.DefaultTheme.Clone();
+                        LocalThemes.Add(ActiveTheme);
+                        LocalThemes.AddRange(Service.Themes.Values
+                            .Select(t => t.Clone())
+                            .OrderBy(t => t.ContentType));
+                        UpdateThemeList();
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine(string.Format("IndentGuide::Activate: {0}", ex));
+                    }
                 }
             }
             UpdateThemeList();
@@ -99,29 +115,34 @@ namespace IndentGuide
         internal void Apply()
         {
             Child.Apply();
+            bool needsRefresh = false;
             
-            if (btnThemeSaveAs.Enabled) btnThemeSaveAs.PerformClick();
-
             if (ChangedThemes.Any())
             {
                 foreach (var theme in ChangedThemes)
                 {
                     theme.Apply();
-                    Service.Themes[theme.Name] = theme;
-                    if (theme.IsDefault) Service.DefaultTheme = theme;
+                    if (theme.IsDefault)
+                        Service.DefaultTheme = theme;
+                    else
+                        Service.Themes[theme.ContentType] = theme;
                 }
-                if (!DeletedThemes.Any()) Service.OnThemesChanged();
+                needsRefresh = true;
                 ChangedThemes.Clear();
             }
             if (DeletedThemes.Any())
             {
                 foreach (var theme in DeletedThemes)
                 {
-                    Service.Themes.Remove(theme.Name);
+                    if (!theme.IsDefault)
+                        Service.Themes.Remove(theme.ContentType);
                 }
-                Service.OnThemesChanged();
+                needsRefresh = true;
                 DeletedThemes.Clear();
             }
+
+            if (needsRefresh)
+                Service.OnThemesChanged();
         }
 
         internal void Close()
@@ -155,37 +176,6 @@ namespace IndentGuide
             }
         }
 
-        private static List<IndentTheme> _LocalThemes = new List<IndentTheme>();
-        internal List<IndentTheme> LocalThemes
-        {
-            get
-            {
-                return _LocalThemes;
-            }
-            set
-            {
-                _LocalThemes.Clear();
-                _LocalThemes.AddRange(value);
-                try
-                {
-                    ChangedThemes.Clear();
-                    DeletedThemes.Clear();
-                    if (_LocalThemes.Count == 0)
-                    {
-                        var defaultTheme = new IndentTheme(true);
-                        _LocalThemes.Add(defaultTheme);
-                        ChangedThemes.Add(defaultTheme);
-                    }
-
-                    Invoke((Action)UpdateThemeList);
-                }
-                catch (Exception ex)
-                {
-                    Trace.WriteLine(string.Format("IndentGuide::get_LocalThemes: {0}", ex));
-                }
-            }
-        }
-
         private string _CurrentContentType;
         internal string CurrentContentType
         {
@@ -202,17 +192,20 @@ namespace IndentGuide
         {
             try
             {
-                var theme = LocalThemes.FirstOrDefault(t => t.Name.Equals(CurrentContentType,
-                    StringComparison.InvariantCultureIgnoreCase));
+                var theme = LocalThemes.FirstOrDefault(t => t.ContentType != null &&
+                    t.ContentType.Equals(CurrentContentType, StringComparison.InvariantCultureIgnoreCase));
                 if (theme == null)
                 {
-                    cmbTheme.Text = CurrentContentType;
-                    btnThemeSaveAs.PerformClick();
+                    if (ActiveTheme == null)
+                        theme = new IndentTheme();
+                    else
+                        theme = ActiveTheme.Clone();
+                    theme.ContentType = CurrentContentType;
+                    LocalThemes.Add(theme);
+                    ChangedThemes.Add(theme);
+                    UpdateThemeList();
                 }
-                else
-                {
-                    cmbTheme.SelectedItem = theme;
-                }
+                cmbTheme.SelectedItem = theme;
             }
             catch (Exception ex)
             {
@@ -229,14 +222,10 @@ namespace IndentGuide
                 {
                     cmbTheme.Items.Add(theme);
                 }
-                int i = ActiveTheme == null ? -1 : cmbTheme.Items.IndexOf(ActiveTheme);
-                if (i >= 0)
-                    cmbTheme.SelectedIndex = i;
-                else if (cmbTheme.Items.Count > 0)
-                    cmbTheme.SelectedIndex = 0;
+
+                cmbTheme.SelectedItem = ActiveTheme;
                 
                 btnThemeDelete.Enabled = false;
-                btnThemeSaveAs.Enabled = false;
             }
             catch (Exception ex)
             {
@@ -272,7 +261,7 @@ namespace IndentGuide
         {
             try
             {
-                e.Value = ((IndentTheme)e.ListItem).Name;
+                e.Value = ((IndentTheme)e.ListItem).ContentType ?? IndentTheme.DefaultThemeName;
             }
             catch
             {
@@ -300,48 +289,9 @@ namespace IndentGuide
         {
             ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
 
-            btnThemeSaveAs.Enabled = false;
             btnThemeDelete.Enabled = (ActiveTheme != null) && !ActiveTheme.IsDefault;
 
             UpdateDisplay();
-        }
-
-        private void cmbTheme_TextChanged(object sender, EventArgs e)
-        {
-            var match = LocalThemes.FirstOrDefault(t => t.Name.Equals(cmbTheme.Text, StringComparison.CurrentCultureIgnoreCase));
-            if (match == null)
-            {
-                if (LocalThemes.Contains(ActiveTheme)) ActiveTheme = ActiveTheme.Clone(true);
-                btnThemeSaveAs.Enabled = true;
-                btnThemeDelete.Enabled = false;
-            }
-            else
-            {
-                ActiveTheme = match;
-                btnThemeSaveAs.Enabled = false;
-                btnThemeDelete.Enabled = !ActiveTheme.IsDefault;
-            }
-            UpdateDisplay();
-        }
-
-        private void btnThemeSaveAs_Click(object sender, EventArgs e)
-        {
-            if (ActiveTheme == null) return;
-
-            try
-            {
-                var newTheme = ActiveTheme;
-                newTheme.Name = cmbTheme.Text;
-                ChangedThemes.Add(newTheme);
-                LocalThemes.Add(newTheme);
-                LocalThemes.Sort();
-                UpdateThemeList();
-                cmbTheme.SelectedItem = newTheme;
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine(string.Format("IndentGuide::btnThemeSaveAs_Click: {0}", ex));
-            }
         }
 
         private void btnThemeDelete_Click(object sender, EventArgs e)
@@ -357,8 +307,8 @@ namespace IndentGuide
                 cmbTheme.Items.Remove(ActiveTheme);
                 if (i < cmbTheme.Items.Count) cmbTheme.SelectedIndex = i;
                 else cmbTheme.SelectedIndex = cmbTheme.Items.Count - 1;
-                ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
-                UpdateDisplay();
+                //ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
+                //UpdateDisplay();
             }
             catch (Exception ex)
             {

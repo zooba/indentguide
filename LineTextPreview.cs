@@ -18,13 +18,22 @@ namespace IndentGuide
 
             InitializeComponent();
 
-            ShowAtText = false;
-            TabSize = 4;
+            IndentSize = 4;
+            TopToBottom = true;
+            VisibleAligned = true;
+            VisibleUnaligned = false;
+            VisibleAtTextEnd = false;
+            VisibleEmpty = true;
+            VisibleEmptyAtEnd = true;
         }
 
-        public bool ShowAtText { get; set; }
-        public int TabSize { get; set; }
-        public EmptyLineMode EmptyLineMode { get; set; }
+        public int IndentSize { get; set; }
+        public bool TopToBottom { get; set; }
+        public bool VisibleAligned { get; set; }
+        public bool VisibleUnaligned { get; set; }
+        public bool VisibleAtTextEnd { get; set; }
+        public bool VisibleEmpty { get; set; }
+        public bool VisibleEmptyAtEnd { get; set; }
 
         [Browsable(true)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
@@ -122,10 +131,10 @@ namespace IndentGuide
                     positions.Add(poss);
                     foreach (char c in line)
                     {
-                        if (pos % TabSize == 0)
+                        if (pos % IndentSize == 0)
                         {
                             poss.Add(pos);
-                            if (ShowAtText || char.IsWhiteSpace(c))
+                            if (VisibleAtTextEnd || char.IsWhiteSpace(c))
                             {
                                 sf.SetMeasurableCharacterRanges(new[] { new CharacterRange(0, pos) });
                                 var rgns = e.Graphics.MeasureCharacterRanges(line, Font, rect, sf);
@@ -136,7 +145,7 @@ namespace IndentGuide
                         }
 
                         if (c == '\t')
-                            pos = ((pos / TabSize) + 1) * TabSize;
+                            pos = ((pos / IndentSize) + 1) * IndentSize;
                         else if (c == ' ')
                             pos += 1;
                         else
@@ -147,7 +156,7 @@ namespace IndentGuide
                 }
 
                 textY = 0.0f;
-                for (int i = 0; i < lines.Length; ++i, textY += Font.Height)
+                /*for (int i = 0; i < lines.Length; ++i, textY += Font.Height)
                 {
                     float y1 = textY, y2 = textY + Font.Height;
                     var line = lines[i];
@@ -189,7 +198,7 @@ namespace IndentGuide
                         if (x > 0.0f)
                             e.Graphics.DrawLine(LinePen, x, y1, x, y2);
                     }
-                }
+                }*/
             }
             catch (Exception ex)
             {

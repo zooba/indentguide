@@ -33,7 +33,6 @@
             this.tableTheme = new System.Windows.Forms.TableLayoutPanel();
             this.cmbTheme = new System.Windows.Forms.ComboBox();
             this.lblContentType = new System.Windows.Forms.Label();
-            this.btnThemeSaveAs = new System.Windows.Forms.Button();
             this.btnThemeDelete = new System.Windows.Forms.Button();
             this.btnCustomizeThisContentType = new System.Windows.Forms.Button();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
@@ -60,16 +59,15 @@
             this.tableTheme.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tableTheme.AutoSize = true;
             this.tableTheme.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableTheme.ColumnCount = 5;
+            this.tableTheme.ColumnCount = 4;
             this.tableTheme.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableTheme.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableTheme.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableTheme.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableTheme.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableTheme.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableTheme.Controls.Add(this.cmbTheme, 0, 0);
             this.tableTheme.Controls.Add(this.lblContentType, 0, 0);
-            this.tableTheme.Controls.Add(this.btnThemeSaveAs, 3, 0);
-            this.tableTheme.Controls.Add(this.btnThemeDelete, 4, 0);
+            this.tableTheme.Controls.Add(this.btnThemeDelete, 3, 0);
             this.tableTheme.Controls.Add(this.btnCustomizeThisContentType, 2, 0);
             this.tableTheme.Location = new System.Drawing.Point(0, 0);
             this.tableTheme.Margin = new System.Windows.Forms.Padding(0);
@@ -82,14 +80,14 @@
             // cmbTheme
             // 
             this.cmbTheme.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.cmbTheme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbTheme.FormattingEnabled = true;
             this.cmbTheme.Location = new System.Drawing.Point(87, 4);
             this.cmbTheme.Name = "cmbTheme";
-            this.cmbTheme.Size = new System.Drawing.Size(125, 21);
+            this.cmbTheme.Size = new System.Drawing.Size(233, 21);
             this.cmbTheme.TabIndex = 1;
             this.cmbTheme.SelectedIndexChanged += new System.EventHandler(this.cmbTheme_SelectedIndexChanged);
             this.cmbTheme.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.cmbTheme_Format);
-            this.cmbTheme.TextChanged += new System.EventHandler(this.cmbTheme_TextChanged);
             // 
             // lblContentType
             // 
@@ -100,19 +98,6 @@
             this.lblContentType.Size = new System.Drawing.Size(78, 13);
             this.lblContentType.TabIndex = 0;
             this.lblContentType.Text = "lblContentType";
-            // 
-            // btnThemeSaveAs
-            // 
-            this.btnThemeSaveAs.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnThemeSaveAs.AutoSize = true;
-            this.btnThemeSaveAs.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btnThemeSaveAs.Location = new System.Drawing.Point(385, 3);
-            this.btnThemeSaveAs.Name = "btnThemeSaveAs";
-            this.btnThemeSaveAs.Size = new System.Drawing.Size(102, 23);
-            this.btnThemeSaveAs.TabIndex = 3;
-            this.btnThemeSaveAs.Text = "btnThemeSaveAs";
-            this.btnThemeSaveAs.UseVisualStyleBackColor = true;
-            this.btnThemeSaveAs.Click += new System.EventHandler(this.btnThemeSaveAs_Click);
             // 
             // btnThemeDelete
             // 
@@ -131,7 +116,7 @@
             // 
             this.btnCustomizeThisContentType.AutoSize = true;
             this.btnCustomizeThisContentType.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btnCustomizeThisContentType.Location = new System.Drawing.Point(218, 3);
+            this.btnCustomizeThisContentType.Location = new System.Drawing.Point(326, 3);
             this.btnCustomizeThisContentType.Name = "btnCustomizeThisContentType";
             this.btnCustomizeThisContentType.Size = new System.Drawing.Size(161, 23);
             this.btnCustomizeThisContentType.TabIndex = 2;
@@ -162,7 +147,6 @@
         private System.Windows.Forms.ComboBox cmbTheme;
         private System.Windows.Forms.Button btnThemeDelete;
         private System.Windows.Forms.Label lblContentType;
-        private System.Windows.Forms.Button btnThemeSaveAs;
         private System.Windows.Forms.Button btnCustomizeThisContentType;
         private System.Windows.Forms.ToolTip toolTip;
     }

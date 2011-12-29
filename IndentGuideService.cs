@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -86,6 +87,7 @@ namespace IndentGuide
         {
             _Package = package;
             _Themes = new Dictionary<string, IndentTheme>();
+            Upgrade();
             Load();
         }
 
@@ -138,10 +140,14 @@ namespace IndentGuide
                 using (var root = Package.UserRegistryRoot)
                     reg = root.CreateSubKey(SUBKEY_NAME);
 
+                reg.SetValue("Version", CURRENT_VERSION);
                 reg.SetValue("Visible", Visible ? 1 : 0);
 
                 foreach (var key in reg.GetSubKeyNames())
                     reg.DeleteSubKeyTree(key);
+
+                if (DefaultTheme != null)
+                    DefaultTheme.Save(reg);
 
                 foreach (var theme in Themes.Values)
                     theme.Save(reg);
@@ -159,11 +165,19 @@ namespace IndentGuide
         public void Save(IVsSettingsWriter writer)
         {
             var sb = new StringBuilder();
+            if (DefaultTheme != null)
+            {
+                sb.Append(DefaultTheme.Save(writer));
+                sb.Append(";");
+            }
+
             foreach (var theme in Themes.Values)
             {
                 sb.Append(theme.Save(writer));
                 sb.Append(";");
             }
+
+            writer.WriteSettingLong("Version", CURRENT_VERSION);
             writer.WriteSettingString("Themes", sb.ToString());
             writer.WriteSettingLong("Visible", Visible ? 1 : 0);
         }
@@ -182,8 +196,10 @@ namespace IndentGuide
                     foreach (var themeName in reg.GetSubKeyNames())
                     {
                         var theme = IndentTheme.Load(reg, themeName);
-                        if (theme.IsDefault) DefaultTheme = theme;
-                        Themes[theme.Name] = theme;
+                        if (theme.IsDefault)
+                            DefaultTheme = theme;
+                        else
+                            Themes[theme.ContentType] = theme;
                     }
 
                     Visible = (int)reg.GetValue("Visible", 1) != 0;
@@ -194,12 +210,7 @@ namespace IndentGuide
                 }
 
                 if (DefaultTheme == null)
-                {
-                    DefaultTheme = new IndentTheme(true);
-                    using (var root = Package.UserRegistryRoot)
-                        reg = root.CreateSubKey(SUBKEY_NAME);
-                    Themes[DefaultTheme.Name] = DefaultTheme;
-                }
+                    DefaultTheme = new IndentTheme();
             }
             catch (Exception ex)
             {
@@ -225,8 +236,10 @@ namespace IndentGuide
                 try
                 {
                     var theme = IndentTheme.Load(reader, key);
-                    Themes[theme.Name] = theme;
-                    if (theme.IsDefault) DefaultTheme = theme;
+                    if (theme.IsDefault)
+                        DefaultTheme = theme;
+                    else
+                        Themes[theme.ContentType] = theme;
                 }
                 catch (Exception ex)
                 {
@@ -250,5 +263,49 @@ namespace IndentGuide
         }
 
         #endregion
+
+        // Default version is 10.9.0.0, also known as 11 (beta 1).
+        // This was the version prior to the version field being added.
+        private const int DEFAULT_VERSION = 0x000A0900;
+
+        private static readonly int CURRENT_VERSION = GetCurrentVersion();
+
+        private static int GetCurrentVersion()
+        {
+            var assembly = typeof(IndentGuideService).Assembly;
+            var attribs = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyFileVersionAttribute), false);
+            if (attribs.Length == 0) return DEFAULT_VERSION;
+
+            var attrib = (System.Reflection.AssemblyFileVersionAttribute)attribs[0];
+
+            try
+            {
+                return attrib.Version.Split('.')
+                    .Select(p => int.Parse(p))
+                    .Take(3)
+                    .Aggregate(0, (acc, i) => acc << 8 | i);
+            }
+            catch(Exception ex)
+            {
+                Trace.WriteLine(string.Format("IndentGuide::GetCurrentVersion: {0}", ex));
+                return DEFAULT_VERSION;
+            }
+        }
+
+        private void Upgrade()
+        {
+            using (var root = Package.UserRegistryRoot)
+            {
+                int version;
+                using (var reg = root.OpenSubKey(SUBKEY_NAME, false))
+                    version = (int)reg.GetValue("Version", 0x000A0900);
+
+                if (version > CURRENT_VERSION)
+                    return;
+
+                // TODO: Proper upgrade
+                root.DeleteSubKeyTree(SUBKEY_NAME, false);
+            }
+        }
     }
 }

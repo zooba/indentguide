@@ -34,12 +34,22 @@ namespace IndentGuide
 
         public void Apply()
         {
-            if (ActiveTheme == null) return;
+            var theme = ActiveTheme;
+            if (theme == null) return;
 
-            ActiveTheme.NumberedOverride.Clear();
-            foreach (var oi in lstOverrides.Items.OfType<OverrideInfo>())
+            var overrides = lstOverrides.Items.OfType<OverrideInfo>().ToDictionary(oi => oi.Index);
+            
+            OverrideInfo defOI;
+            if (!overrides.TryGetValue(int.MinValue, out defOI))
+                defOI = new OverrideInfo { Format = new LineFormat() };
+            theme.DefaultLineFormat = defOI.Format;
+
+
+            theme.NumberedOverride.Clear();
+            foreach (var oi in overrides.Values)
             {
-                ActiveTheme.NumberedOverride[oi.Index] = oi.Format;
+                if (oi.Index > 0 && oi.Format != null && oi.Format != theme.DefaultLineFormat)
+                    theme.NumberedOverride[oi.Index] = oi.Format;
             }
         }
 
@@ -47,13 +57,10 @@ namespace IndentGuide
         {
             if (active == null)
             {
-                gridLineStyle.SelectedObject = null;
-                linePreview.ForeColor = Color.Teal;
-                linePreview.Style = LineStyle.Solid;
+                lstOverrides.Items.Clear();
             }
             else
             {
-                gridLineStyle.SelectedObject = active.DefaultLineFormat;
                 linePreview.ForeColor = active.DefaultLineFormat.LineColor;
                 linePreview.Style = active.DefaultLineFormat.LineStyle;
 
@@ -61,65 +68,24 @@ namespace IndentGuide
                 {
                     lstOverrides.BeginUpdate();
                     lstOverrides.Items.Clear();
-                    foreach (var kv in active.NumberedOverride)
+                    lstOverrides.Items.Add(new OverrideInfo {
+                        Index = int.MinValue,
+                        Text = ResourceLoader.LoadString("DefaultOverrideName"),
+                        Format = active.DefaultLineFormat
+                    });
+                    for (int key = 1; key <= 30; ++key)
                     {
-                        var name = string.Format(CultureInfo.CurrentCulture, "#{0}", kv.Key);
-                        if (kv.Key == 0)
-                            name = ResourceLoader.LoadString("UnalignedThemeName");
-                        lstOverrides.Items.Add(new OverrideInfo
-                        {
-                            Index = kv.Key,
+                        LineFormat format;
+                        var name = string.Format(CultureInfo.CurrentCulture, "#{0}", key);
+                        lstOverrides.Items.Add(new OverrideInfo {
+                            Index = key,
                             Text = name,
-                            Format = kv.Value
+                            Format = active.NumberedOverride.TryGetValue(key, out format) ? format : null
                         });
                     }
                     lstOverrides.EndUpdate();
                     if (lstOverrides.Items.Count > 0)
                         lstOverrides.SelectedIndex = 0;
-                }
-
-                var oi = lstOverrides.SelectedItem as OverrideInfo;
-                if (oi == null)
-                {
-                    gridLineOverride.SelectedObject = null;
-                    lineOverridePreview.ForeColor = linePreview.ForeColor;
-                    lineOverridePreview.Style = linePreview.Style;
-
-                    chkLineOverrideIndex.Enabled = false;
-                    chkLineOverrideText.Enabled = false;
-                    txtLineFormatIndex.Enabled = false;
-                    txtLineFormatText.Enabled = false;
-
-                    btnRemoveOverride.Enabled = false;
-                }
-                else
-                {
-                    gridLineOverride.SelectedObject = oi.Format;
-                    lineOverridePreview.ForeColor = oi.Format.LineColor;
-                    lineOverridePreview.Style = oi.Format.LineStyle;
-
-                    chkLineOverrideIndex.Enabled = true;
-                    chkLineOverrideText.Enabled = false;// true; // NOT IMPLEMENTED
-                    chkLineOverrideUnaligned.Enabled = true;
-                    txtLineFormatIndex.Enabled = true;
-                    txtLineFormatText.Enabled = false;// true; // NOT IMPLEMENTED
-
-                    btnRemoveOverride.Enabled = true;
-
-                    if (oi.Index > 0)
-                    {
-                        chkLineOverrideIndex.Checked = true;
-                        txtLineFormatIndex.Value = oi.Index;
-                    }
-                    else if (oi.Pattern == null)
-                    {
-                        chkLineOverrideUnaligned.Checked = true;
-                    }
-                    else
-                    {
-                        chkLineOverrideText.Checked = true;
-                        txtLineFormatText.Text = oi.Pattern;
-                    }
                 }
             }
         }
@@ -140,76 +106,32 @@ namespace IndentGuide
             Update(ActiveTheme, ActiveTheme);
         }
 
-        class OverrideInfo : IComparable
+        class OverrideInfo
         {
             public string Text;
             public int Index;
             public string Pattern;
             public LineFormat Format;
-
-            public int CompareTo(object obj)
-            {
-                var oi = obj as OverrideInfo;
-                if (oi == null) return -1;
-                return Text.CompareTo(oi.Text);
-            }
-        }
-
-        private void txtLineFormatIndex_ValueChanged(object sender, EventArgs e)
-        {
-            var oi = lstOverrides.SelectedItem as OverrideInfo;
-            if (oi == null) return;
-
-            oi.Index = (int)txtLineFormatIndex.Value;
-        }
-
-        private void chkLineOverride_CheckedChanged(object sender, EventArgs e)
-        {
-            var oi = lstOverrides.SelectedItem as OverrideInfo;
-            if (oi == null) return;
-            
-            if (chkLineOverrideUnaligned.Checked)
-            {
-                oi.Index = (int)0;
-                oi.Text = ResourceLoader.LoadString("UnalignedThemeName");
-            }
-            else if (chkLineOverrideIndex.Checked)
-            {
-                oi.Index = (int)txtLineFormatIndex.Value;
-                oi.Text = string.Format(CultureInfo.CurrentCulture, "#{0}", oi.Index);
-            }
         }
 
         private void lstOverrides_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Update(ActiveTheme, ActiveTheme);
-        }
-
-        private void btnAddOverride_Click(object sender, EventArgs e)
-        {
-            var newOi = new OverrideInfo();
-
-            newOi.Format = ActiveTheme.DefaultLineFormat.Clone();
-            newOi.Index = 1;
-            foreach (var oi in lstOverrides.Items.OfType<OverrideInfo>())
+            var oi = lstOverrides.SelectedItem as OverrideInfo;
+            if (oi == null)
             {
-                if (oi.Index >= newOi.Index) newOi.Index = oi.Index + 1;
+                gridLineStyle.SelectedObject = null;
+                linePreview.ForeColor = Color.Transparent;
+                linePreview.Style = LineStyle.Solid;
             }
-            newOi.Text = string.Format(CultureInfo.CurrentCulture, "#{0}", newOi.Index);
-            lstOverrides.Items.Add(newOi);
-            lstOverrides.SelectedItem = newOi;
+            else
+            {
+                if (oi.Format == null)
+                    oi.Format = ActiveTheme.DefaultLineFormat.Clone();
 
-            OnThemeChanged(ActiveTheme);
-            Update(ActiveTheme, ActiveTheme);
-        }
-
-        private void btnRemoveOverride_Click(object sender, EventArgs e)
-        {
-            if (lstOverrides.SelectedIndex >= 0)
-                lstOverrides.Items.RemoveAt(lstOverrides.SelectedIndex);
-
-            OnThemeChanged(ActiveTheme);
-            Update(ActiveTheme, ActiveTheme);
+                gridLineStyle.SelectedObject = oi.Format;
+                linePreview.ForeColor = oi.Format.LineColor;
+                linePreview.Style = oi.Format.LineStyle;
+            }
         }
 
         private void lstOverrides_Format(object sender, ListControlConvertEventArgs e)

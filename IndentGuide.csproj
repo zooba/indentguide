@@ -141,12 +141,6 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BehaviorOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="BehaviorOptionsControl.Designer.cs">
-      <DependentUpon>BehaviorOptionsControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="DisplayOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -208,9 +202,6 @@
     <None Include="Package.ico" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="BehaviorOptionsControl.resx">
-      <DependentUpon>BehaviorOptionsControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="DisplayOptionsControl.resx">
       <DependentUpon>DisplayOptionsControl.cs</DependentUpon>
     </EmbeddedResource>

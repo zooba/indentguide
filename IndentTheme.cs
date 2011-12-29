@@ -23,18 +23,6 @@ namespace IndentGuide
     }
 
     /// <summary>
-    /// The supported modes for handling empty lines.
-    /// </summary>
-    public enum EmptyLineMode
-    {
-        NoGuides,
-        SameAsLineAboveActual,
-        SameAsLineAboveLogical,
-        SameAsLineBelowActual,
-        SameAsLineBelowLogical
-    }
-
-    /// <summary>
     /// The format of a particular type of guideline.
     /// </summary>
     public class LineFormat : IEquatable<LineFormat>
@@ -78,7 +66,7 @@ namespace IndentGuide
         [TypeConverter(typeof(ColorConverter))]
         public Color LineColor { get; set; }
 
-        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, string visible)
+        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, int visible)
         {
             var inst = new LineFormat();
             try
@@ -105,7 +93,7 @@ namespace IndentGuide
 
             try
             {
-                inst.Visible = bool.Parse(visible);
+                inst.Visible = visible != 0;
             }
             catch (Exception ex)
             {
@@ -115,7 +103,7 @@ namespace IndentGuide
             return inst;
         }
 
-        public void ToInvariantStrings(out string lineStyle, out string lineColor, out string visible)
+        public void ToInvariantStrings(out string lineStyle, out string lineColor, out int visible)
         {
             try
             {
@@ -143,14 +131,36 @@ namespace IndentGuide
 
             try
             {
-                visible = Visible.ToString();
+                visible = Visible ? 1 : 0;
             }
             catch (Exception ex)
             {
                 Trace.WriteLine("IndentGuide::Error converting Visible into string");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
-                visible = true.ToString();
+                visible = 1;
             }
+        }
+
+        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, string visible)
+        {
+            int visibleInt = 1;
+            try
+            {
+                visibleInt = bool.Parse(visible) ? 1 : 0;
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("IndentGuide::Error converting Visible into bool");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
+            }
+            return FromInvariantStrings(lineStyle, lineColor, visibleInt);
+        }
+
+        public void ToInvariantStrings(out string lineStyle, out string lineColor, out string visible)
+        {
+            int visibleInt;
+            ToInvariantStrings(out lineStyle, out lineColor, out visibleInt);
+            visible = (visibleInt != 0).ToString();
         }
 
         #region IEquatable<LineFormat> Members
@@ -181,34 +191,38 @@ namespace IndentGuide
             if (evt != null) Updated(this, EventArgs.Empty);
         }
 
-        public IndentTheme(bool isDefaultTheme = false)
+        public IndentTheme()
         {
-            Name = DefaultThemeName;
+            ContentType = null;
             DefaultLineFormat = new LineFormat();
             NumberedOverride = new Dictionary<int, LineFormat>();
-            EmptyLineMode = IndentGuide.EmptyLineMode.SameAsLineAboveLogical;
-            VisibleAtText = false;
-            RegistryName = isDefaultTheme ? Guid.Empty : Guid.NewGuid();
+            TopToBottom = true;
+            VisibleAligned = true;
+            VisibleUnaligned = false;
+            VisibleAtTextEnd = false;
+            VisibleEmpty = true;
+            VisibleEmptyAtEnd = true;
         }
 
-        public IndentTheme Clone(bool newKey = false)
+        public IndentTheme Clone()
         {
             var inst = new IndentTheme();
-            if (!newKey) inst.RegistryName = RegistryName;
-            inst.Name = Name;
+            inst.ContentType = ContentType;
             inst.DefaultLineFormat = DefaultLineFormat.Clone();
             foreach (var item in NumberedOverride) inst.NumberedOverride[item.Key] = item.Value.Clone();
-            inst.EmptyLineMode = EmptyLineMode;
-            inst.VisibleAtText = VisibleAtText;
+            inst.VisibleAligned = VisibleAligned;
+            inst.VisibleUnaligned = VisibleUnaligned;
+            inst.VisibleAtTextEnd = VisibleAtTextEnd;
+            inst.VisibleEmpty = VisibleEmpty;
+            inst.VisibleEmptyAtEnd = VisibleEmptyAtEnd;
             return inst;
         }
 
-        [ResourceDisplayName("ThemeNameDisplayName")]
-        [ResourceDescription("ThemeNameDescription")]
-        public string Name { get; set; }
+        [ResourceDisplayName("ContentTypeDisplayName")]
+        [ResourceDescription("ContentTypeDescription")]
+        public string ContentType { get; set; }
 
-        private Guid RegistryName;
-        public bool IsDefault { get { return RegistryName.Equals(Guid.Empty); } }
+        public bool IsDefault { get { return ContentType == null; } }
 
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public LineFormat DefaultLineFormat { get; set; }
@@ -216,18 +230,49 @@ namespace IndentGuide
         [Browsable(false)]
         public IDictionary<int, LineFormat> NumberedOverride { get; private set; }
 
-        private class EmptyLineModeTypeConverter : EnumResourceTypeConverter<EmptyLineMode>
-        { }
+        /// <summary>
+        /// True to scan from top to bottom; false to scan from bottom to top.
+        /// </summary>
+        [ResourceDisplayName("TopToBottomDisplayName")]
+        [ResourceDescription("TopToBottomDescription")]
+        public bool TopToBottom { get; set; }
 
-        [ResourceDisplayName("EmptyLineModeDisplayName")]
-        [ResourceDescription("EmptyLineModeDescription")]
-        [TypeConverter(typeof(EmptyLineModeTypeConverter))]
-        public EmptyLineMode EmptyLineMode { get; set; }
+        /// <summary>
+        /// True to copy guidelines from the previous non-empty line into empty
+        /// lines.
+        /// </summary>
+        [ResourceDisplayName("VisibleEmptyDisplayName")]
+        [ResourceDescription("VisibleEmptyDescription")]
+        public bool VisibleEmpty { get; set; }
 
-        [ResourceDisplayName("VisibleAtTextDisplayName")]
-        [ResourceDescription("VisibleAtTextDescription")]
-        [DefaultValue(false)]
-        public bool VisibleAtText { get; set; }
+        /// <summary>
+        /// True to copy 'at end' guidelines from the previous non-empty line
+        /// into empty lines.
+        /// </summary>
+        [ResourceDisplayName("VisibleEmptyAtEndDisplayName")]
+        [ResourceDescription("VisibleEmptyAtEndDescription")]
+        public bool VisibleEmptyAtEnd { get; set; }
+
+        /// <summary>
+        /// True to display guidelines at transitions from whitespace to text.
+        /// </summary>
+        [ResourceDisplayName("VisibleAtTextEndDisplayName")]
+        [ResourceDescription("VisibleAtTextEndDescription")]
+        public bool VisibleAtTextEnd { get; set; }
+
+        /// <summary>
+        /// True to always display guidelines at multiples of indent size.
+        /// </summary>
+        [ResourceDisplayName("VisibleAlignedDisplayName")]
+        [ResourceDescription("VisibleAlignedDescription")]
+        public bool VisibleAligned { get; set; }
+
+        /// <summary>
+        /// True to always display guidelines at textual indents.
+        /// </summary>
+        [ResourceDisplayName("VisibleUnalignedDisplayName")]
+        [ResourceDescription("VisibleUnalignedDescription")]
+        public bool VisibleUnaligned { get; set; }
 
         public static IndentTheme Load(RegistryKey reg, string themeKey)
         {
@@ -235,16 +280,18 @@ namespace IndentGuide
 
             using (var key = reg.OpenSubKey(themeKey))
             {
-                theme.RegistryName = Guid.Parse(themeKey);
-                theme.Name = (string)key.GetValue("Name", themeKey);
-                theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
-                    .ConvertFromInvariantString((string)key.GetValue("EmptyLineMode"));
-                theme.VisibleAtText = bool.Parse((string)key.GetValue("VisibleAtText", "false"));
+                theme.ContentType = (themeKey == DefaultThemeName) ? null : themeKey;
+                theme.TopToBottom = (int)key.GetValue("TopToBottom", 1) != 0;
+                theme.VisibleAligned = (int)key.GetValue("VisibleAligned", 1) != 0;
+                theme.VisibleUnaligned = (int)key.GetValue("VisibleUnaligned", 0) != 0;
+                theme.VisibleAtTextEnd = (int)key.GetValue("VisibleAtTextEnd", 0) != 0;
+                theme.VisibleEmpty = (int)key.GetValue("VisibleEmpty", 1) != 0;
+                theme.VisibleEmptyAtEnd = (int)key.GetValue("VisibleEmptyAtEnd", 1) != 0;
 
                 theme.DefaultLineFormat = LineFormat.FromInvariantStrings(
                     (string)key.GetValue("LineStyle"),
                     (string)key.GetValue("LineColor"),
-                    (string)key.GetValue("Visible"));
+                    (int)key.GetValue("Visible", 1));
 
                 foreach (var subkeyName in key.GetSubKeyNames())
                 {
@@ -254,9 +301,9 @@ namespace IndentGuide
                         format = LineFormat.FromInvariantStrings(
                             (string)subkey.GetValue("LineStyle"),
                             (string)subkey.GetValue("LineColor"),
-                            (string)subkey.GetValue("Visible"));
+                            (int)subkey.GetValue("Visible", 1));
                     }
-                    
+
                     int i;
                     if (int.TryParse(subkeyName, out i))
                     {
@@ -277,16 +324,20 @@ namespace IndentGuide
             var theme = new IndentTheme();
             string temp;
 
-            theme.RegistryName = Guid.Parse(key);
+            theme.ContentType = (key == DefaultThemeName) ? null : key;
 
-            reader.ReadSettingString(key, out temp);
-            theme.Name = temp;
-
-            reader.ReadSettingAttribute(key, "EmptyLineMode", out temp);
-            theme.EmptyLineMode = (EmptyLineMode)TypeDescriptor.GetConverter(typeof(EmptyLineMode))
-                .ConvertFromInvariantString(temp);
-            reader.ReadSettingAttribute(key, "VisibleAtText", out temp);
-            theme.VisibleAtText = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "TopToBottom", out temp);
+            theme.TopToBottom = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "VisibleAligned", out temp);
+            theme.VisibleAligned = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "VisibleUnaligned", out temp);
+            theme.VisibleUnaligned = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "VisibleAtTextEnd", out temp);
+            theme.VisibleAtTextEnd = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "VisibleEmpty", out temp);
+            theme.VisibleEmpty = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "VisibleEmptyAtEnd", out temp);
+            theme.VisibleEmptyAtEnd = bool.Parse(temp);
 
             string lineStyle, lineColor, visible;
             reader.ReadSettingAttribute(key, "LineStyle", out lineStyle);
@@ -327,14 +378,17 @@ namespace IndentGuide
 
         public string Save(RegistryKey reg)
         {
-            using (var key = reg.CreateSubKey(RegistryName.ToString("B")))
+            using (var key = reg.CreateSubKey(ContentType ?? DefaultThemeName))
             {
-                key.SetValue("Name", Name);
-                key.SetValue("EmptyLineMode", TypeDescriptor.GetConverter(typeof(EmptyLineMode))
-                    .ConvertToInvariantString(EmptyLineMode));
-                key.SetValue("VisibleAtText", VisibleAtText.ToString());
+                key.SetValue("TopToBottom", TopToBottom ? 1 : 0);
+                key.SetValue("VisibleAligned", VisibleAligned ? 1 : 0);
+                key.SetValue("VisibleUnaligned", VisibleUnaligned ? 1 : 0);
+                key.SetValue("VisibleAtTextEnd", VisibleAtTextEnd ? 1 : 0);
+                key.SetValue("VisibleEmpty", VisibleEmpty ? 1 : 0);
+                key.SetValue("VisibleEmptyAtEnd", VisibleEmptyAtEnd ? 1 : 0);
 
-                string lineStyle, lineColor, visible;
+                string lineStyle, lineColor;
+                int visible;
                 DefaultLineFormat.ToInvariantStrings(out lineStyle, out lineColor, out visible);
                 key.SetValue("LineStyle", lineStyle);
                 key.SetValue("LineColor", lineColor);
@@ -356,16 +410,18 @@ namespace IndentGuide
                     }
                 }
             }
-            return RegistryName.ToString("B");
+            return ContentType;
         }
 
         public string Save(IVsSettingsWriter writer)
         {
-            var key = RegistryName.ToString();
-            writer.WriteSettingString(key, Name);
-            writer.WriteSettingAttribute(key, "EmptyLineMode", TypeDescriptor.GetConverter(typeof(EmptyLineMode))
-                .ConvertToInvariantString(EmptyLineMode));
-            writer.WriteSettingAttribute(key, "VisibleAtText", VisibleAtText.ToString());
+            var key = ContentType ?? DefaultThemeName;
+            writer.WriteSettingAttribute(key, "TopToBottom", TopToBottom.ToString());
+            writer.WriteSettingAttribute(key, "VisibleAligned", VisibleAligned.ToString());
+            writer.WriteSettingAttribute(key, "VisibleUnaligned", VisibleUnaligned.ToString());
+            writer.WriteSettingAttribute(key, "VisibleAtTextEnd", VisibleAtTextEnd.ToString());
+            writer.WriteSettingAttribute(key, "VisibleEmpty", VisibleEmpty.ToString());
+            writer.WriteSettingAttribute(key, "VisibleEmptyAtEnd", VisibleEmptyAtEnd.ToString());
 
             string lineStyle, lineColor, visible;
             DefaultLineFormat.ToInvariantStrings(out lineStyle, out lineColor, out visible);
@@ -400,7 +456,7 @@ namespace IndentGuide
 
         public void Delete(RegistryKey reg)
         {
-            reg.DeleteSubKeyTree(RegistryName.ToString("B"));
+            reg.DeleteSubKeyTree(ContentType);
         }
 
         public int CompareTo(IndentTheme other)
@@ -409,7 +465,7 @@ namespace IndentGuide
             if (IsDefault && other.IsDefault) return 0;
             if (IsDefault) return -1;
             if (other.IsDefault) return 1;
-            return Name.CompareTo(other.Name);
+            return ContentType.CompareTo(other.ContentType);
         }
 
         internal void Apply()

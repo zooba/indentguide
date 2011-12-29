@@ -44,7 +44,7 @@ namespace IndentGuide
             Debug.Assert(Theme != null, "No themes loaded");
             service.ThemesChanged += new EventHandler(Service_ThemesChanged);
 
-            Analysis = new DocumentAnalyzer(view.TextSnapshot, Theme.EmptyLineMode,
+            Analysis = new DocumentAnalyzer(view.TextSnapshot, Theme,
                 View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId));
             Analysis.Reset();
 
@@ -71,7 +71,7 @@ namespace IndentGuide
             if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme))
                 Theme = service.DefaultTheme;
 
-            Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme.EmptyLineMode,
+            Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme,
                 View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
             GuideBrushCache.Clear();
 
@@ -126,15 +126,9 @@ namespace IndentGuide
 
             foreach (var line in Analysis.Lines)
             {
-                if (line.Type == LineSpanType.AtText && !Theme.VisibleAtText)
-                    continue;
-                if (line.Type == LineSpanType.EmptyLineAtText &&
-                    !Theme.VisibleAtText &&
-                    (Theme.EmptyLineMode == EmptyLineMode.SameAsLineAboveActual ||
-                     Theme.EmptyLineMode == EmptyLineMode.SameAsLineBelowActual))
-                    continue;
-
                 int linePos = line.Indent;
+                if (!Theme.VisibleUnaligned && (linePos % Analysis.IndentSize) != 0)
+                    continue;
                 var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
                 var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
                 var first = firstLine.Start + (firstLine.Length >= linePos ? linePos : 0);

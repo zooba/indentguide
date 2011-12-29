@@ -56,14 +56,14 @@ namespace IndentGuide
 
         public ITextSnapshot Snapshot { get; private set; }
 
-        public readonly EmptyLineMode Mode;
+        public readonly IndentTheme Theme;
         public readonly int IndentSize;
 
-        public DocumentAnalyzer(ITextSnapshot snapshot, EmptyLineMode mode, int indentSize)
+        public DocumentAnalyzer(ITextSnapshot snapshot, IndentTheme theme, int indentSize)
         {
             Snapshot = snapshot;
             Lines = null;
-            Mode = mode;
+            Theme = theme;
             IndentSize = indentSize;
         }
 
@@ -88,10 +88,8 @@ namespace IndentGuide
 
             var indentInfo = new Dictionary<int, int>();
             var result = new List<LineSpan>();
-            bool reverse = (Mode == EmptyLineMode.SameAsLineBelowActual || Mode == EmptyLineMode.SameAsLineBelowLogical);
-            bool atAllIndents = true;
-            int lineStart = !reverse ? 0 : (lineInfo.Count - 1);
-            int lineStep = !reverse ? 1 : -1;
+            int lineStart = Theme.TopToBottom ? 0 : (lineInfo.Count - 1);
+            int lineStep = Theme.TopToBottom ? 1 : -1;
             
             for (int line = lineStart; 0 <= line && line < lineInfo.Count; line += lineStep)
             {
@@ -102,7 +100,7 @@ namespace IndentGuide
                 {
                     int indent = lineInfo[line].Value;
 
-                    if (atAllIndents)
+                    if (Theme.VisibleAligned)
                     {
                         for (int i = IndentSize; i < indent; i += IndentSize)
                         {
@@ -113,6 +111,7 @@ namespace IndentGuide
 
                     var last = result.LastOrDefault();
                     if (last != null && last.Type.HasFlag(LineSpanType.AtText) &&
+                        Theme.VisibleAtTextEnd &&
                         last.Indent == indent && last.LastLine == linePrev)
                     {
                         last.LastLine = line;
@@ -124,45 +123,46 @@ namespace IndentGuide
                     {
                         foreach (var kv in indentInfo.Where(kv => kv.Key >= indent).ToList())
                         {
-                            if ((kv.Value < line && !reverse) || (kv.Value > line && reverse))
+                            if ((kv.Value < line && Theme.TopToBottom) || (kv.Value > line && !Theme.TopToBottom))
                                 result.Add(new LineSpan(kv.Value, linePrev, kv.Key, LineSpanType.Normal));
                             indentInfo.Remove(kv.Key);
                         }
                         indentInfo[indent] = lineNext;
-                        result.Add(new LineSpan(line, line, indent, LineSpanType.AtText));
+                        if (Theme.VisibleAtTextEnd)
+                            result.Add(new LineSpan(line, line, indent, LineSpanType.AtText));
                     }
                     else
                     {
                         foreach (var kv in indentInfo)
                         {
-                            if ((kv.Value < line && !reverse) || (kv.Value > line && reverse))
+                            if ((kv.Value < line && Theme.TopToBottom) || (kv.Value > line && !Theme.TopToBottom))
                                 result.Add(new LineSpan(kv.Value, linePrev, kv.Key, LineSpanType.Normal));
                         }
                         indentInfo.Clear();
                     }
                 }
-                else if (Mode == EmptyLineMode.NoGuides)
+                else if (!Theme.VisibleEmpty)
                 {
                     foreach (var key in indentInfo.Keys.ToList())
                     {
-                        if ((indentInfo[key] < line && !reverse) || (indentInfo[key] > line && reverse))
+                        if ((indentInfo[key] < line && Theme.TopToBottom) || (indentInfo[key] > line && !Theme.TopToBottom))
                             result.Add(new LineSpan(indentInfo[key], linePrev, key, LineSpanType.Normal));
                         indentInfo[key] = lineNext;
                     }
                 }
-                else if (Mode == EmptyLineMode.SameAsLineAboveActual || Mode == EmptyLineMode.SameAsLineBelowActual)
+                else if (!Theme.VisibleEmptyAtEnd)
                 {
                     if (indentInfo.Any())
                     {
                         int key = indentInfo.Keys.Max();
-                        if ((indentInfo[key] < line && !reverse) || (indentInfo[key] > line && reverse))
+                        if ((indentInfo[key] < line && Theme.TopToBottom) || (indentInfo[key] > line && !Theme.TopToBottom))
                             result.Add(new LineSpan(indentInfo[key], linePrev, key, LineSpanType.Normal));
                         indentInfo[key] = lineNext;
                     }
                 }
             }
 
-            if (reverse)
+            if (!Theme.TopToBottom)
             {
                 foreach (var ls in result)
                 {
@@ -173,30 +173,6 @@ namespace IndentGuide
             }
 
             Lines = result;
-        }
-
-        private List<LineSpanType[]> Transpose(List<List<LineSpanType>> source)
-        {
-            var result = new List<LineSpanType[]>();
-
-            int i = 0;
-            bool anyLeft = true;
-            while (anyLeft)
-            {
-                anyLeft = false;
-                var lines = new LineSpanType[source.Count];
-                result.Add(lines);
-                for (int j = 0; j < source.Count; ++j)
-                {
-                    var li = source[j];
-                    if (li != null && i < li.Count) lines[j] = li[i];
-                    anyLeft |= li != null && (i + 1) < li.Count;
-                }
-
-                i += 1;
-            }
-
-            return result;
         }
 
         public bool Update()
