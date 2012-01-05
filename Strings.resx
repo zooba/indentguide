@@ -142,7 +142,7 @@
     <value>Content Type:</value>
   </data>
   <data name="LineColorDescription" xml:space="preserve">
-    <value>The color of the guide lines.</value>
+    <value>The color of the guide lines</value>
   </data>
   <data name="LineColorDisplayName" xml:space="preserve">
     <value>Line Color</value>
@@ -154,10 +154,10 @@
     <value>Line Style</value>
   </data>
   <data name="lineTextPreview" xml:space="preserve">
-    <value>try\n{\n    if (a == 0)\n    {\n        return Calc(a,\n                      10);\n\n    }\n    else\n    {\n        while(a &gt; 0)\n            a -= 1;\n\n    }\n}</value>
+    <value>try\n{\n    if (a == 0)\n    {\n        return foo(a,\n                   10);\n\n    }\n    else\n    {\n        while(a &gt; 0)\n            a -= 1;\n\n    }\n}</value>
   </data>
   <data name="ContentTypeDescription" xml:space="preserve">
-    <value>The content type this theme applies to.</value>
+    <value>The content type these settings apply to</value>
   </data>
   <data name="ContentTypeDisplayName" xml:space="preserve">
     <value>Content Type</value>
@@ -166,16 +166,16 @@
     <value>not available.</value>
   </data>
   <data name="VisibilityDescription" xml:space="preserve">
-    <value>True to display indentation guides in all text editors; otherwise, False.</value>
+    <value>Show indentation guides in all text editors</value>
   </data>
   <data name="VisibleAtTextEndDescription" xml:space="preserve">
-    <value>True to display indentation guides adjacent to text.</value>
+    <value>Show guides adjacent to text</value>
   </data>
   <data name="VisibleAtTextEndDisplayName" xml:space="preserve">
     <value>Visible at text</value>
   </data>
   <data name="tooltipCustomizeThisContentType" xml:space="preserve">
-    <value>Customize this content type.</value>
+    <value>Customize this content type</value>
   </data>
   <data name="tooltipNextRelease" xml:space="preserve">
     <value>Planned for a later release</value>
@@ -184,31 +184,31 @@
     <value>Unaligned</value>
   </data>
   <data name="TopToBottomDescription" xml:space="preserve">
-    <value>True to scan lines from top to bottom.</value>
+    <value>Scan lines from top to bottom</value>
   </data>
   <data name="TopToBottomDisplayName" xml:space="preserve">
     <value>Scan top to bottom</value>
   </data>
   <data name="VisibleAlignedDescription" xml:space="preserve">
-    <value>True to display guides at all multiples of the indent size.</value>
+    <value>Show guides at all multiples of the indent size, regardless of the surrounding text</value>
   </data>
   <data name="VisibleAlignedDisplayName" xml:space="preserve">
-    <value>Show at indents</value>
+    <value>Include multiples of indent size</value>
   </data>
   <data name="VisibleEmptyAtEndDescription" xml:space="preserve">
-    <value>True to display indentation guides on empty lines where the previous line transitioned from whitespace to text.</value>
+    <value>Show guides on empty lines where the guide on the previous line was adjacent to text</value>
   </data>
   <data name="VisibleEmptyAtEndDisplayName" xml:space="preserve">
     <value>Visible at the end of empty lines</value>
   </data>
   <data name="VisibleEmptyDescription" xml:space="preserve">
-    <value>True to display indentation guides on empty lines where one appeared on the previous line.</value>
+    <value>Show guides on empty lines when the same guide was shown on the previous line</value>
   </data>
   <data name="VisibleEmptyDisplayName" xml:space="preserve">
     <value>Visible on empty lines</value>
   </data>
   <data name="VisibleUnalignedDescription" xml:space="preserve">
-    <value>True to display guides at all transitions from whitespace to text.</value>
+    <value>Show guides for all indented text, regardless of the indent size setting</value>
   </data>
   <data name="VisibleUnalignedDisplayName" xml:space="preserve">
     <value>Show at unaligned indents</value>

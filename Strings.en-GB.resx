@@ -118,12 +118,12 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="LineColorDescription" xml:space="preserve">
-    <value>The colour of the guide lines.</value>
+    <value>The colour of the guide lines</value>
   </data>
   <data name="LineColorDisplayName" xml:space="preserve">
     <value>Line Colour</value>
   </data>
   <data name="tooltipCustomizeThisContentType" xml:space="preserve">
-    <value>Customise this content type.</value>
+    <value>Customise this content type</value>
   </data>
 </root>

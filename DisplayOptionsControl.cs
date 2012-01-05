@@ -10,23 +10,6 @@ namespace IndentGuide
 {
     public partial class DisplayOptionsControl : UserControl, IThemeAwareDialog
     {
-        class LinePreset
-        {
-            private readonly string Name;
-            public readonly LineBehavior Behavior;
-
-            public LinePreset(string name, LineBehavior behavior)
-            {
-                Name = ResourceLoader.LoadString(name, name);
-                Behavior = behavior;
-            }
-
-            public override string ToString()
-            {
-                return Name;
-            }
-        }
-
         class OverrideInfo
         {
             public string Text;
@@ -37,6 +20,8 @@ namespace IndentGuide
         public DisplayOptionsControl()
         {
             InitializeComponent();
+
+            gridLineMode.SelectableType = typeof(LineBehavior);
 
             lstOverrides.BeginUpdate();
             lstOverrides.Items.Clear();
@@ -53,43 +38,6 @@ namespace IndentGuide
                 });
             }
             lstOverrides.EndUpdate();
-
-
-            lstModePresets.Items.Add(new LinePreset("lstModePreset_Minimal",
-                new LineBehavior {
-                    VisibleAligned = false,
-                    VisibleUnaligned = false,
-                    VisibleAtTextEnd = false,
-                    VisibleEmpty = false,
-                    VisibleEmptyAtEnd = false,
-                    TopToBottom = true
-                }));
-            lstModePresets.Items.Add(new LinePreset("lstModePreset_IndentsDown",
-                new LineBehavior()));
-            lstModePresets.Items.Add(new LinePreset("lstModePreset_IndentsUp",
-                new LineBehavior { TopToBottom = false }));
-            lstModePresets.Items.Add(new LinePreset("lstModePreset_TextDown",
-                new LineBehavior {
-                    VisibleAligned = false,
-                    VisibleUnaligned = true,
-                    VisibleAtTextEnd = false,
-                    VisibleEmpty = true,
-                    VisibleEmptyAtEnd = true,
-                    TopToBottom = true
-                }));
-            lstModePresets.Items.Add(new LinePreset("lstModePreset_TextUp",
-                new LineBehavior {
-                    VisibleAligned = false,
-                    VisibleUnaligned = true,
-                    VisibleAtTextEnd = false,
-                    VisibleEmpty = true,
-                    VisibleEmptyAtEnd = true,
-                    TopToBottom = false
-                }));
-            lstModePresets.Items.Add(new LinePreset("lstModePreset_Custom", null));
-            lstModePresets.Tag = lstModePresets;
-            lstModePresets.SelectedIndex = 0;
-            lstModePresets.Tag = null;
         }
 
         #region IThemeAwareDialog Members
@@ -136,7 +84,7 @@ namespace IndentGuide
             Update(ActiveTheme, ActiveTheme);
         }
 
-        private void gridLineMode_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        private void gridLineMode_PropertyValueChanged(object s, EventArgs e)
         {
             lineTextPreview.Invalidate();
 
@@ -175,25 +123,6 @@ namespace IndentGuide
 
             e.Value = oi.Text;
         }
-
-        private void lstModePresets_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            // Tag is set to non-null to suppress updates
-            if (lstModePresets.Tag != null) return;
-
-            var preset = lstModePresets.SelectedItem as LinePreset;
-            Debug.Assert(preset != null);
-            if (preset == null) return;
-
-            if (preset.Behavior != null)
-                ActiveTheme.Behavior = preset.Behavior.Clone();
-            else
-                ActiveTheme.Behavior = new LineBehavior();
-            
-            OnThemeChanged(ActiveTheme);
-            Update(ActiveTheme, ActiveTheme);
-        }
-
     }
 
     [Guid("05491866-4ED1-44FE-BDFF-FB14246BDABB")]

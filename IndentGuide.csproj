@@ -141,6 +141,12 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CheckedPropertyGrid.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CheckedPropertyGrid.Designer.cs">
+      <DependentUpon>CheckedPropertyGrid.cs</DependentUpon>
+    </Compile>
     <Compile Include="DisplayOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -202,6 +208,9 @@
     <None Include="Package.ico" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CheckedPropertyGrid.resx">
+      <DependentUpon>CheckedPropertyGrid.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DisplayOptionsControl.resx">
       <DependentUpon>DisplayOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
