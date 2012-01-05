@@ -11,7 +11,7 @@ using System.Resources;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Steve Dower")]
 [assembly: AssemblyProduct("Indent Guides")]
-[assembly: AssemblyCopyright("© 2011 Steve Dower")]
+[assembly: AssemblyCopyright("© 2012 Steve Dower")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -30,6 +30,6 @@ using System.Resources;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("10.9.1.0")]
-[assembly: AssemblyFileVersion("10.9.1.0")]
+[assembly: AssemblyVersion("10.9.2.0")]
+[assembly: AssemblyFileVersion("10.9.2.0")]
 [assembly: NeutralResourcesLanguageAttribute("")]

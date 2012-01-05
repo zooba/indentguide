@@ -312,7 +312,8 @@ namespace IndentGuide
                 using (var reg = root.OpenSubKey(SUBKEY_NAME, false))
                     version = (int)reg.GetValue("Version", DEFAULT_VERSION);
 
-                if (version >= CURRENT_VERSION)
+                // v11 (beta 2) (10.9.1) and later don't require an upgrade
+                if (version >= 0x000A0901)
                     return;
 
                 // TODO: Proper upgrade
