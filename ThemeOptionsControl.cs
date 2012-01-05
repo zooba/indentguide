@@ -307,8 +307,6 @@ namespace IndentGuide
                 cmbTheme.Items.Remove(ActiveTheme);
                 if (i < cmbTheme.Items.Count) cmbTheme.SelectedIndex = i;
                 else cmbTheme.SelectedIndex = cmbTheme.Items.Count - 1;
-                //ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
-                //UpdateDisplay();
             }
             catch (Exception ex)
             {

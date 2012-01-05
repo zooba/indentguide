@@ -176,26 +176,10 @@ namespace IndentGuide
         #endregion
     }
 
-    /// <summary>
-    /// A theme for a particular language or document type.
-    /// </summary>
-    public class IndentTheme : IComparable<IndentTheme>
+    public class LineBehavior : IEquatable<LineBehavior>
     {
-        public static readonly string DefaultThemeName = ResourceLoader.LoadString("DefaultThemeName");
-
-        public event EventHandler Updated;
-
-        internal void OnUpdated()
+        public LineBehavior()
         {
-            var evt = Updated;
-            if (evt != null) Updated(this, EventArgs.Empty);
-        }
-
-        public IndentTheme()
-        {
-            ContentType = null;
-            DefaultLineFormat = new LineFormat();
-            NumberedOverride = new Dictionary<int, LineFormat>();
             TopToBottom = true;
             VisibleAligned = true;
             VisibleUnaligned = false;
@@ -204,31 +188,43 @@ namespace IndentGuide
             VisibleEmptyAtEnd = true;
         }
 
-        public IndentTheme Clone()
+        public LineBehavior Clone()
         {
-            var inst = new IndentTheme();
-            inst.ContentType = ContentType;
-            inst.DefaultLineFormat = DefaultLineFormat.Clone();
-            foreach (var item in NumberedOverride) inst.NumberedOverride[item.Key] = item.Value.Clone();
-            inst.VisibleAligned = VisibleAligned;
-            inst.VisibleUnaligned = VisibleUnaligned;
-            inst.VisibleAtTextEnd = VisibleAtTextEnd;
-            inst.VisibleEmpty = VisibleEmpty;
-            inst.VisibleEmptyAtEnd = VisibleEmptyAtEnd;
-            return inst;
+            return new LineBehavior {
+                TopToBottom = TopToBottom,
+                VisibleAligned = VisibleAligned,
+                VisibleUnaligned = VisibleUnaligned,
+                VisibleAtTextEnd = VisibleAtTextEnd,
+                VisibleEmpty = VisibleEmpty,
+                VisibleEmptyAtEnd = VisibleEmptyAtEnd,
+            };
         }
 
-        [ResourceDisplayName("ContentTypeDisplayName")]
-        [ResourceDescription("ContentTypeDescription")]
-        public string ContentType { get; set; }
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as LineBehavior);
+        }
 
-        public bool IsDefault { get { return ContentType == null; } }
+        public bool Equals(LineBehavior other)
+        {
+            return other != null && 
+                TopToBottom == other.TopToBottom &&
+                VisibleAligned == other.VisibleAligned &&
+                VisibleAtTextEnd == other.VisibleAtTextEnd &&
+                VisibleEmpty == other.VisibleEmpty &&
+                VisibleEmptyAtEnd == other.VisibleEmptyAtEnd &&
+                VisibleUnaligned == other.VisibleUnaligned;
+        }
 
-        [TypeConverter(typeof(ExpandableObjectConverter))]
-        public LineFormat DefaultLineFormat { get; set; }
-
-        [Browsable(false)]
-        public IDictionary<int, LineFormat> NumberedOverride { get; private set; }
+        public override int GetHashCode()
+        {
+            return (TopToBottom ? 1 : 0) |
+                (VisibleAligned ? 2 : 0) |
+                (VisibleAtTextEnd ? 4 : 0) |
+                (VisibleEmpty ? 8 : 0) |
+                (VisibleEmptyAtEnd ? 16 : 0) |
+                (VisibleUnaligned ? 32 : 0);
+        }
 
         /// <summary>
         /// True to scan from top to bottom; false to scan from bottom to top.
@@ -274,6 +270,116 @@ namespace IndentGuide
         [ResourceDescription("VisibleUnalignedDescription")]
         public bool VisibleUnaligned { get; set; }
 
+        internal void Load(RegistryKey key)
+        {
+            TopToBottom = (int)key.GetValue("TopToBottom", 1) != 0;
+            VisibleAligned = (int)key.GetValue("VisibleAligned", 1) != 0;
+            VisibleUnaligned = (int)key.GetValue("VisibleUnaligned", 0) != 0;
+            VisibleAtTextEnd = (int)key.GetValue("VisibleAtTextEnd", 0) != 0;
+            VisibleEmpty = (int)key.GetValue("VisibleEmpty", 1) != 0;
+            VisibleEmptyAtEnd = (int)key.GetValue("VisibleEmptyAtEnd", 1) != 0;
+        }
+
+        internal void Load(IVsSettingsReader reader, string key)
+        {
+            string temp;
+            reader.ReadSettingAttribute(key, "TopToBottom", out temp);
+            TopToBottom = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "VisibleAligned", out temp);
+            VisibleAligned = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "VisibleUnaligned", out temp);
+            VisibleUnaligned = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "VisibleAtTextEnd", out temp);
+            VisibleAtTextEnd = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "VisibleEmpty", out temp);
+            VisibleEmpty = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "VisibleEmptyAtEnd", out temp);
+            VisibleEmptyAtEnd = bool.Parse(temp);
+        }
+
+        internal void Save(RegistryKey key)
+        {
+            key.SetValue("TopToBottom", TopToBottom ? 1 : 0);
+            key.SetValue("VisibleAligned", VisibleAligned ? 1 : 0);
+            key.SetValue("VisibleUnaligned", VisibleUnaligned ? 1 : 0);
+            key.SetValue("VisibleAtTextEnd", VisibleAtTextEnd ? 1 : 0);
+            key.SetValue("VisibleEmpty", VisibleEmpty ? 1 : 0);
+            key.SetValue("VisibleEmptyAtEnd", VisibleEmptyAtEnd ? 1 : 0);
+        }
+
+        internal void Save(IVsSettingsWriter writer, string key)
+        {
+            writer.WriteSettingAttribute(key, "TopToBottom", TopToBottom.ToString());
+            writer.WriteSettingAttribute(key, "VisibleAligned", VisibleAligned.ToString());
+            writer.WriteSettingAttribute(key, "VisibleUnaligned", VisibleUnaligned.ToString());
+            writer.WriteSettingAttribute(key, "VisibleAtTextEnd", VisibleAtTextEnd.ToString());
+            writer.WriteSettingAttribute(key, "VisibleEmpty", VisibleEmpty.ToString());
+            writer.WriteSettingAttribute(key, "VisibleEmptyAtEnd", VisibleEmptyAtEnd.ToString());
+        }
+    }
+
+    /// <summary>
+    /// A theme for a particular language or document type.
+    /// </summary>
+    public class IndentTheme : IComparable<IndentTheme>
+    {
+        public static readonly string DefaultThemeName = ResourceLoader.LoadString("DefaultThemeName");
+
+        public event EventHandler Updated;
+
+        internal void OnUpdated()
+        {
+            var evt = Updated;
+            if (evt != null) Updated(this, EventArgs.Empty);
+        }
+
+        public IndentTheme()
+        {
+            ContentType = null;
+            LineFormats = new Dictionary<int, LineFormat>();
+            DefaultLineFormat = new LineFormat();
+            Behavior = new LineBehavior();
+        }
+
+        public IndentTheme Clone()
+        {
+            var inst = new IndentTheme();
+            inst.ContentType = ContentType;
+            foreach (var item in LineFormats)
+                inst.LineFormats[item.Key] = item.Value.Clone();
+            inst.Behavior = Behavior.Clone();
+            return inst;
+        }
+
+        [ResourceDisplayName("ContentTypeDisplayName")]
+        [ResourceDescription("ContentTypeDescription")]
+        public string ContentType { get; set; }
+
+        public bool IsDefault { get { return ContentType == null; } }
+
+        public const int DefaultFormatIndex = int.MinValue;
+        public const int UnalignedFormatIndex = -1;
+
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public LineFormat DefaultLineFormat
+        {
+            get 
+            {
+                LineFormat format;
+                if (LineFormats.TryGetValue(DefaultFormatIndex, out format))
+                    return format;
+                
+                return LineFormats[DefaultFormatIndex] = new LineFormat();
+            }
+            set { LineFormats[DefaultFormatIndex] = value; }
+        }
+
+        [Browsable(false)]
+        public IDictionary<int, LineFormat> LineFormats { get; private set; }
+
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public LineBehavior Behavior { get; set; }
+
         public static IndentTheme Load(RegistryKey reg, string themeKey)
         {
             var theme = new IndentTheme();
@@ -281,17 +387,7 @@ namespace IndentGuide
             using (var key = reg.OpenSubKey(themeKey))
             {
                 theme.ContentType = (themeKey == DefaultThemeName) ? null : themeKey;
-                theme.TopToBottom = (int)key.GetValue("TopToBottom", 1) != 0;
-                theme.VisibleAligned = (int)key.GetValue("VisibleAligned", 1) != 0;
-                theme.VisibleUnaligned = (int)key.GetValue("VisibleUnaligned", 0) != 0;
-                theme.VisibleAtTextEnd = (int)key.GetValue("VisibleAtTextEnd", 0) != 0;
-                theme.VisibleEmpty = (int)key.GetValue("VisibleEmpty", 1) != 0;
-                theme.VisibleEmptyAtEnd = (int)key.GetValue("VisibleEmptyAtEnd", 1) != 0;
-
-                theme.DefaultLineFormat = LineFormat.FromInvariantStrings(
-                    (string)key.GetValue("LineStyle"),
-                    (string)key.GetValue("LineColor"),
-                    (int)key.GetValue("Visible", 1));
+                theme.Behavior.Load(key);
 
                 foreach (var subkeyName in key.GetSubKeyNames())
                 {
@@ -307,7 +403,11 @@ namespace IndentGuide
                     int i;
                     if (int.TryParse(subkeyName, out i))
                     {
-                        theme.NumberedOverride[i] = format;
+                        theme.LineFormats[i] = format;
+                    }
+                    else if (subkeyName == "Default")
+                    {
+                        theme.DefaultLineFormat = format;
                     }
                     else
                     {
@@ -322,29 +422,11 @@ namespace IndentGuide
         public static IndentTheme Load(IVsSettingsReader reader, string key)
         {
             var theme = new IndentTheme();
-            string temp;
 
             theme.ContentType = (key == DefaultThemeName) ? null : key;
-
-            reader.ReadSettingAttribute(key, "TopToBottom", out temp);
-            theme.TopToBottom = bool.Parse(temp);
-            reader.ReadSettingAttribute(key, "VisibleAligned", out temp);
-            theme.VisibleAligned = bool.Parse(temp);
-            reader.ReadSettingAttribute(key, "VisibleUnaligned", out temp);
-            theme.VisibleUnaligned = bool.Parse(temp);
-            reader.ReadSettingAttribute(key, "VisibleAtTextEnd", out temp);
-            theme.VisibleAtTextEnd = bool.Parse(temp);
-            reader.ReadSettingAttribute(key, "VisibleEmpty", out temp);
-            theme.VisibleEmpty = bool.Parse(temp);
-            reader.ReadSettingAttribute(key, "VisibleEmptyAtEnd", out temp);
-            theme.VisibleEmptyAtEnd = bool.Parse(temp);
+            theme.Behavior.Load(reader, key);
 
             string lineStyle, lineColor, visible;
-            reader.ReadSettingAttribute(key, "LineStyle", out lineStyle);
-            reader.ReadSettingAttribute(key, "LineColor", out lineColor);
-            reader.ReadSettingAttribute(key, "Visible", out visible);
-            theme.DefaultLineFormat = LineFormat.FromInvariantStrings(lineStyle, lineColor, visible);
-
             string subkeys;
             reader.ReadSettingAttribute(key, "Subkeys", out subkeys);
             if (!string.IsNullOrEmpty(subkeys))
@@ -364,7 +446,11 @@ namespace IndentGuide
                     var keypart = subkey.Substring(i + 1);
                     if (int.TryParse(keypart, out i))
                     {
-                        theme.NumberedOverride[i] = format;
+                        theme.LineFormats[i] = format;
+                    }
+                    else if (keypart == "Default")
+                    {
+                        theme.DefaultLineFormat = format;
                     }
                     else
                     {
@@ -380,28 +466,23 @@ namespace IndentGuide
         {
             using (var key = reg.CreateSubKey(ContentType ?? DefaultThemeName))
             {
-                key.SetValue("TopToBottom", TopToBottom ? 1 : 0);
-                key.SetValue("VisibleAligned", VisibleAligned ? 1 : 0);
-                key.SetValue("VisibleUnaligned", VisibleUnaligned ? 1 : 0);
-                key.SetValue("VisibleAtTextEnd", VisibleAtTextEnd ? 1 : 0);
-                key.SetValue("VisibleEmpty", VisibleEmpty ? 1 : 0);
-                key.SetValue("VisibleEmptyAtEnd", VisibleEmptyAtEnd ? 1 : 0);
-
-                string lineStyle, lineColor;
-                int visible;
-                DefaultLineFormat.ToInvariantStrings(out lineStyle, out lineColor, out visible);
-                key.SetValue("LineStyle", lineStyle);
-                key.SetValue("LineColor", lineColor);
-                key.SetValue("Visible", visible);
+                Behavior.Save(key);
 
                 foreach (var subkey in key.GetSubKeyNames())
                 {
                     key.DeleteSubKeyTree(subkey, false);
                 }
 
-                foreach(var item in NumberedOverride)
+                string lineStyle, lineColor;
+                int visible;
+
+                foreach (var item in LineFormats)
                 {
-                    using (var subkey = key.CreateSubKey(item.Key.ToString(CultureInfo.InvariantCulture)))
+                    var subkeyName = item.Key.ToString(CultureInfo.InvariantCulture);
+                    if (item.Key == DefaultFormatIndex)
+                        subkeyName = "Default";
+
+                    using (var subkey = key.CreateSubKey(subkeyName))
                     {
                         item.Value.ToInvariantStrings(out lineStyle, out lineColor, out visible);
                         subkey.SetValue("LineStyle", lineStyle);
@@ -416,33 +497,26 @@ namespace IndentGuide
         public string Save(IVsSettingsWriter writer)
         {
             var key = ContentType ?? DefaultThemeName;
-            writer.WriteSettingAttribute(key, "TopToBottom", TopToBottom.ToString());
-            writer.WriteSettingAttribute(key, "VisibleAligned", VisibleAligned.ToString());
-            writer.WriteSettingAttribute(key, "VisibleUnaligned", VisibleUnaligned.ToString());
-            writer.WriteSettingAttribute(key, "VisibleAtTextEnd", VisibleAtTextEnd.ToString());
-            writer.WriteSettingAttribute(key, "VisibleEmpty", VisibleEmpty.ToString());
-            writer.WriteSettingAttribute(key, "VisibleEmptyAtEnd", VisibleEmptyAtEnd.ToString());
+            Behavior.Save(writer, key);
 
             string lineStyle, lineColor, visible;
-            DefaultLineFormat.ToInvariantStrings(out lineStyle, out lineColor, out visible);
-            writer.WriteSettingAttribute(key, "LineStyle", lineStyle);
-            writer.WriteSettingAttribute(key, "LineColor", lineColor);
-            writer.WriteSettingAttribute(key, "Visible", visible);
-
             var sb = new StringBuilder();
 
-            foreach (var item in NumberedOverride)
+            foreach (var item in LineFormats)
             {
-                var subkey = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", key, item.Key);
-                sb.Append(subkey);
+                var subkeyName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", key, item.Key);
+                if (item.Key == DefaultFormatIndex)
+                    subkeyName = key + ".Default";
+
+                sb.Append(subkeyName);
                 sb.Append(";");
 
-                writer.WriteSettingString(subkey, "");
+                writer.WriteSettingString(subkeyName, "");
                 
                 item.Value.ToInvariantStrings(out lineStyle, out lineColor, out visible);
-                writer.WriteSettingAttribute(subkey, "LineStyle", lineStyle);
-                writer.WriteSettingAttribute(subkey, "LineColor", lineColor);
-                writer.WriteSettingAttribute(subkey, "Visible", visible);
+                writer.WriteSettingAttribute(subkeyName, "LineStyle", lineStyle);
+                writer.WriteSettingAttribute(subkeyName, "LineColor", lineColor);
+                writer.WriteSettingAttribute(subkeyName, "Visible", visible);
             }
 
             if (sb.Length > 1)
@@ -470,13 +544,14 @@ namespace IndentGuide
 
         internal void Apply()
         {
-            var toRemove = NumberedOverride
-                .Where(kv => DefaultLineFormat.Equals(kv.Value))
+            var toRemove = LineFormats
+                .Where(kv => kv.Key != DefaultFormatIndex)
+                .Where(kv => DefaultLineFormat.Equals(kv.Value) || null == kv.Value)
                 .Select(kv => kv.Key)
                 .ToList();
             
             foreach (var key in toRemove)
-                NumberedOverride.Remove(key);
+                LineFormats.Remove(key);
         }
     }
 }

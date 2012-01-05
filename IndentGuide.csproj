@@ -211,7 +211,9 @@
     <EmbeddedResource Include="Strings.en-AU.resx" />
     <EmbeddedResource Include="Strings.en-GB.resx" />
     <EmbeddedResource Include="Strings.en.resx" />
-    <EmbeddedResource Include="Strings.resx" />
+    <EmbeddedResource Include="Strings.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="ThemeOptionsControl.resx">
       <DependentUpon>ThemeOptionsControl.cs</DependentUpon>
     </EmbeddedResource>

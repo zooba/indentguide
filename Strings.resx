@@ -120,80 +120,14 @@
   <data name="Appearance" xml:space="preserve">
     <value>Appearance</value>
   </data>
-  <data name="btnAddOverride" xml:space="preserve">
-    <value>&amp;Add</value>
-  </data>
   <data name="btnCustomizeThisContentType" xml:space="preserve">
     <value>&amp;Customize this content type</value>
   </data>
-  <data name="btnRemoveOverride" xml:space="preserve">
-    <value>&amp;Remove</value>
-  </data>
-  <data name="btnResetLineFormat" xml:space="preserve">
-    <value>&amp;Reset</value>
-  </data>
   <data name="btnThemeDelete" xml:space="preserve">
-    <value>&amp;Delete</value>
-  </data>
-  <data name="btnThemeSaveAs" xml:space="preserve">
-    <value>&amp;Save</value>
-  </data>
-  <data name="chkEndOfLineHidden" xml:space="preserve">
-    <value>&amp;Hidden</value>
-  </data>
-  <data name="chkEndOfLineVisible" xml:space="preserve">
-    <value>&amp;Visible</value>
-  </data>
-  <data name="chkLineAbove" xml:space="preserve">
-    <value>&amp;above</value>
-  </data>
-  <data name="chkLineActual" xml:space="preserve">
-    <value>where they appeared</value>
-  </data>
-  <data name="chkLineBelow" xml:space="preserve">
-    <value>&amp;below</value>
-  </data>
-  <data name="chkLineLogical" xml:space="preserve">
-    <value>for all indents</value>
-  </data>
-  <data name="chkLineOverrideIndex" xml:space="preserve">
-    <value>at indent number</value>
-  </data>
-  <data name="chkLineOverrideText" xml:space="preserve">
-    <value>at code matching</value>
+    <value>&amp;Reset</value>
   </data>
   <data name="DefaultThemeName" xml:space="preserve">
     <value>(Default)</value>
-  </data>
-  <data name="EmptyLineModeDescription" xml:space="preserve">
-    <value>The mode to use for empty lines. An empty line is either zero-length or contains only whitespace.</value>
-  </data>
-  <data name="EmptyLineModeDisplayName" xml:space="preserve">
-    <value>Empty Line Handling</value>
-  </data>
-  <data name="EmptyLineMode_NoGuides" xml:space="preserve">
-    <value>No lines</value>
-  </data>
-  <data name="EmptyLineMode_SameAsLineAboveActual" xml:space="preserve">
-    <value>Same as on the previous line</value>
-  </data>
-  <data name="EmptyLineMode_SameAsLineAboveLogical" xml:space="preserve">
-    <value>Same as indented on the previous line</value>
-  </data>
-  <data name="EmptyLineMode_SameAsLineBelowActual" xml:space="preserve">
-    <value>Same as on the following line</value>
-  </data>
-  <data name="EmptyLineMode_SameAsLineBelowLogical" xml:space="preserve">
-    <value>Same as indented on the following line</value>
-  </data>
-  <data name="grpCurrentContentType" xml:space="preserve">
-    <value>Active Content Type</value>
-  </data>
-  <data name="grpEndOfLineBehavior" xml:space="preserve">
-    <value>At First Character</value>
-  </data>
-  <data name="grpLineBehavior" xml:space="preserve">
-    <value>Empty Lines</value>
   </data>
   <data name="grpLineMode" xml:space="preserve">
     <value>Display Mode</value>
@@ -206,18 +140,6 @@
   </data>
   <data name="lblContentType" xml:space="preserve">
     <value>Content Type:</value>
-  </data>
-  <data name="lblCurrentContentTypeIs" xml:space="preserve">
-    <value>The current document's content type is</value>
-  </data>
-  <data name="lblLineFormatIndex" xml:space="preserve">
-    <value>Level:</value>
-  </data>
-  <data name="lblShowAboveBelow" xml:space="preserve">
-    <value>on the line</value>
-  </data>
-  <data name="lblShowActualLogical" xml:space="preserve">
-    <value>Show guide lines</value>
   </data>
   <data name="LineColorDescription" xml:space="preserve">
     <value>The color of the guide lines.</value>
@@ -232,7 +154,7 @@
     <value>Line Style</value>
   </data>
   <data name="lineTextPreview" xml:space="preserve">
-    <value>try\n{\n    if (a == 0)\n    {\n        return Calc(a,\n                    10);\n\n    }\n    else\n    {\n        while(a &gt; 0)\n            a -= 1;\n\n    }\n}</value>
+    <value>try\n{\n    if (a == 0)\n    {\n        return Calc(a,\n                      10);\n\n    }\n    else\n    {\n        while(a &gt; 0)\n            a -= 1;\n\n    }\n}</value>
   </data>
   <data name="ContentTypeDescription" xml:space="preserve">
     <value>The content type this theme applies to.</value>
@@ -255,14 +177,8 @@
   <data name="tooltipCustomizeThisContentType" xml:space="preserve">
     <value>Customize this content type.</value>
   </data>
-  <data name="txtLineFormatText" xml:space="preserve">
-    <value />
-  </data>
   <data name="tooltipNextRelease" xml:space="preserve">
     <value>Planned for a later release</value>
-  </data>
-  <data name="chkLineOverrideUnaligned" xml:space="preserve">
-    <value>at unaligned indents</value>
   </data>
   <data name="UnalignedThemeName" xml:space="preserve">
     <value>Unaligned</value>
@@ -299,5 +215,23 @@
   </data>
   <data name="DefaultOverrideName" xml:space="preserve">
     <value>Default</value>
+  </data>
+  <data name="lstModePreset_Custom" xml:space="preserve">
+    <value>(Custom)</value>
+  </data>
+  <data name="lstModePreset_IndentsDown" xml:space="preserve">
+    <value>At indents (default)</value>
+  </data>
+  <data name="lstModePreset_IndentsUp" xml:space="preserve">
+    <value>At indents (inverted)</value>
+  </data>
+  <data name="lstModePreset_Minimal" xml:space="preserve">
+    <value>Only at aligned text</value>
+  </data>
+  <data name="lstModePreset_TextDown" xml:space="preserve">
+    <value>Flow down from text</value>
+  </data>
+  <data name="lstModePreset_TextUp" xml:space="preserve">
+    <value>Flow up from text</value>
   </data>
 </root>

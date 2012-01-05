@@ -44,7 +44,7 @@ namespace IndentGuide
             Debug.Assert(Theme != null, "No themes loaded");
             service.ThemesChanged += new EventHandler(Service_ThemesChanged);
 
-            Analysis = new DocumentAnalyzer(view.TextSnapshot, Theme,
+            Analysis = new DocumentAnalyzer(view.TextSnapshot, Theme.Behavior,
                 View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId));
             Analysis.Reset();
 
@@ -71,7 +71,7 @@ namespace IndentGuide
             if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme))
                 Theme = service.DefaultTheme;
 
-            Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme,
+            Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme.Behavior,
                 View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
             GuideBrushCache.Clear();
 
@@ -127,7 +127,7 @@ namespace IndentGuide
             foreach (var line in Analysis.Lines)
             {
                 int linePos = line.Indent;
-                if (!Theme.VisibleUnaligned && (linePos % Analysis.IndentSize) != 0)
+                if (!Analysis.Behavior.VisibleUnaligned && (linePos % Analysis.IndentSize) != 0)
                     continue;
                 var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
                 var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
@@ -150,7 +150,7 @@ namespace IndentGuide
 
                 int formatIndex = line.Indent / Analysis.IndentSize;
                 if (line.Indent % Analysis.IndentSize != 0)
-                    formatIndex = 0;
+                    formatIndex = IndentTheme.UnalignedFormatIndex;
 
                 var guide = AddGuide(top, bottom, left, formatIndex);
                 line.Adornment = guide;
@@ -178,7 +178,7 @@ namespace IndentGuide
 
             LineFormat format;
             Brush brush;
-            if (!Theme.NumberedOverride.TryGetValue(formatIndex, out format))
+            if (!Theme.LineFormats.TryGetValue(formatIndex, out format))
                 format = Theme.DefaultLineFormat;
             
             if (!format.Visible) return null;

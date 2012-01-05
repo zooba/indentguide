@@ -61,7 +61,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(592, 317);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(455, 317);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // grpLineStyle
@@ -73,7 +73,7 @@
             this.grpLineStyle.Controls.Add(this.tableLayoutPanel2);
             this.grpLineStyle.Location = new System.Drawing.Point(3, 3);
             this.grpLineStyle.Name = "grpLineStyle";
-            this.grpLineStyle.Size = new System.Drawing.Size(586, 100);
+            this.grpLineStyle.Size = new System.Drawing.Size(449, 100);
             this.grpLineStyle.TabIndex = 4;
             this.grpLineStyle.TabStop = false;
             this.grpLineStyle.Text = "grpLineStyle";
@@ -94,7 +94,7 @@
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 1;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(580, 81);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(443, 81);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // lstOverrides
@@ -102,9 +102,9 @@
             this.lstOverrides.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lstOverrides.FormattingEnabled = true;
             this.lstOverrides.IntegralHeight = false;
-            this.lstOverrides.Location = new System.Drawing.Point(27, 3);
+            this.lstOverrides.Location = new System.Drawing.Point(21, 3);
             this.lstOverrides.Name = "lstOverrides";
-            this.lstOverrides.Size = new System.Drawing.Size(143, 75);
+            this.lstOverrides.Size = new System.Drawing.Size(102, 75);
             this.lstOverrides.TabIndex = 0;
             this.lstOverrides.SelectedIndexChanged += new System.EventHandler(this.lstOverrides_SelectedIndexChanged);
             this.lstOverrides.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.lstOverrides_Format);
@@ -113,7 +113,7 @@
             // 
             this.linePreview.BackColor = System.Drawing.SystemColors.Window;
             this.linePreview.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.linePreview.Location = new System.Drawing.Point(176, 3);
+            this.linePreview.Location = new System.Drawing.Point(129, 3);
             this.linePreview.Name = "linePreview";
             this.linePreview.Size = new System.Drawing.Size(75, 75);
             this.linePreview.Style = IndentGuide.LineStyle.Solid;
@@ -126,10 +126,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.gridLineStyle.CommandsVisibleIfAvailable = false;
             this.gridLineStyle.HelpVisible = false;
-            this.gridLineStyle.Location = new System.Drawing.Point(257, 3);
+            this.gridLineStyle.Location = new System.Drawing.Point(210, 3);
             this.gridLineStyle.Name = "gridLineStyle";
             this.gridLineStyle.PropertySort = System.Windows.Forms.PropertySort.Alphabetical;
-            this.gridLineStyle.Size = new System.Drawing.Size(293, 75);
+            this.gridLineStyle.Size = new System.Drawing.Size(211, 75);
             this.gridLineStyle.TabIndex = 4;
             this.gridLineStyle.ToolbarVisible = false;
             this.gridLineStyle.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.gridLineStyle_PropertyValueChanged);
@@ -141,7 +141,7 @@
             this.grpLineMode.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grpLineMode.Location = new System.Drawing.Point(3, 109);
             this.grpLineMode.Name = "grpLineMode";
-            this.grpLineMode.Size = new System.Drawing.Size(586, 205);
+            this.grpLineMode.Size = new System.Drawing.Size(449, 205);
             this.grpLineMode.TabIndex = 5;
             this.grpLineMode.TabStop = false;
             this.grpLineMode.Text = "grpLineMode";
@@ -150,8 +150,8 @@
             // 
             this.panelLineOverrides.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.panelLineOverrides.ColumnCount = 2;
-            this.panelLineOverrides.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.panelLineOverrides.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 66.66667F));
+            this.panelLineOverrides.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.panelLineOverrides.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.panelLineOverrides.Controls.Add(this.lineTextPreview, 1, 0);
             this.panelLineOverrides.Controls.Add(this.gridLineMode, 0, 1);
             this.panelLineOverrides.Controls.Add(this.lstModePresets, 0, 0);
@@ -161,30 +161,22 @@
             this.panelLineOverrides.RowCount = 2;
             this.panelLineOverrides.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.panelLineOverrides.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.panelLineOverrides.Size = new System.Drawing.Size(580, 186);
+            this.panelLineOverrides.Size = new System.Drawing.Size(443, 186);
             this.panelLineOverrides.TabIndex = 0;
             // 
             // lineTextPreview
             // 
             this.lineTextPreview.BackColor = System.Drawing.SystemColors.Window;
             this.lineTextPreview.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lineTextPreview.Font = new System.Drawing.Font("Consolas", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lineTextPreview.ForeColor = System.Drawing.Color.Teal;
+            this.lineTextPreview.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lineTextPreview.IndentSize = 4;
-            this.lineTextPreview.Location = new System.Drawing.Point(197, 4);
-            this.lineTextPreview.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.lineTextPreview.Location = new System.Drawing.Point(225, 4);
+            this.lineTextPreview.Margin = new System.Windows.Forms.Padding(4);
             this.lineTextPreview.Name = "lineTextPreview";
             this.panelLineOverrides.SetRowSpan(this.lineTextPreview, 2);
-            this.lineTextPreview.Size = new System.Drawing.Size(379, 178);
-            this.lineTextPreview.Style = IndentGuide.LineStyle.Dotted;
+            this.lineTextPreview.Size = new System.Drawing.Size(214, 178);
             this.lineTextPreview.TabIndex = 1;
             this.lineTextPreview.Text = "lineTextPreview";
-            this.lineTextPreview.TopToBottom = true;
-            this.lineTextPreview.VisibleAligned = true;
-            this.lineTextPreview.VisibleAtTextEnd = false;
-            this.lineTextPreview.VisibleEmpty = true;
-            this.lineTextPreview.VisibleEmptyAtEnd = true;
-            this.lineTextPreview.VisibleUnaligned = false;
             // 
             // gridLineMode
             // 
@@ -192,23 +184,24 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.gridLineMode.CommandsVisibleIfAvailable = false;
-            this.gridLineMode.HelpVisible = false;
             this.gridLineMode.Location = new System.Drawing.Point(3, 30);
             this.gridLineMode.Name = "gridLineMode";
             this.gridLineMode.PropertySort = System.Windows.Forms.PropertySort.Alphabetical;
-            this.gridLineMode.Size = new System.Drawing.Size(187, 153);
+            this.gridLineMode.Size = new System.Drawing.Size(215, 153);
             this.gridLineMode.TabIndex = 4;
             this.gridLineMode.ToolbarVisible = false;
-            this.gridLineMode.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.gridLineStyle_PropertyValueChanged);
+            this.gridLineMode.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.gridLineMode_PropertyValueChanged);
             // 
             // lstModePresets
             // 
             this.lstModePresets.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.lstModePresets.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.lstModePresets.FormattingEnabled = true;
             this.lstModePresets.Location = new System.Drawing.Point(3, 3);
             this.lstModePresets.Name = "lstModePresets";
-            this.lstModePresets.Size = new System.Drawing.Size(187, 21);
+            this.lstModePresets.Size = new System.Drawing.Size(215, 21);
             this.lstModePresets.TabIndex = 5;
+            this.lstModePresets.SelectedIndexChanged += new System.EventHandler(this.lstModePresets_SelectedIndexChanged);
             // 
             // DisplayOptionsControl
             // 
@@ -216,7 +209,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "DisplayOptionsControl";
-            this.Size = new System.Drawing.Size(592, 317);
+            this.Size = new System.Drawing.Size(455, 317);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.grpLineStyle.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);

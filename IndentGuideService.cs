@@ -19,6 +19,11 @@ namespace IndentGuide
     public interface IIndentGuide
     {
         /// <summary>
+        /// The version identifier for the service.
+        /// </summary>
+        int Version { get; }
+
+        /// <summary>
         /// The package that owns this service.
         /// </summary>
         IndentGuidePackage Package { get; }
@@ -123,6 +128,7 @@ namespace IndentGuide
 
         public void OnThemesChanged()
         {
+            Save();
             var evt = ThemesChanged;
             if (evt != null) evt(this, EventArgs.Empty);
         }
@@ -270,6 +276,8 @@ namespace IndentGuide
 
         private static readonly int CURRENT_VERSION = GetCurrentVersion();
 
+        public int Version { get { return CURRENT_VERSION; } }
+
         private static int GetCurrentVersion()
         {
             var assembly = typeof(IndentGuideService).Assembly;
@@ -280,10 +288,14 @@ namespace IndentGuide
 
             try
             {
-                return attrib.Version.Split('.')
+                int version = attrib.Version.Split('.')
                     .Select(p => int.Parse(p))
                     .Take(3)
                     .Aggregate(0, (acc, i) => acc << 8 | i);
+#if DEBUG
+                Trace.WriteLine(string.Format("IndentGuideService.CURRENT_VERSION == {0:X}", version));
+#endif
+                return version;
             }
             catch(Exception ex)
             {
@@ -298,9 +310,9 @@ namespace IndentGuide
             {
                 int version;
                 using (var reg = root.OpenSubKey(SUBKEY_NAME, false))
-                    version = (int)reg.GetValue("Version", 0x000A0900);
+                    version = (int)reg.GetValue("Version", DEFAULT_VERSION);
 
-                if (version > CURRENT_VERSION)
+                if (version >= CURRENT_VERSION)
                     return;
 
                 // TODO: Proper upgrade
