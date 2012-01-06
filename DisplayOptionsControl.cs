@@ -26,8 +26,16 @@ namespace IndentGuide
             lstOverrides.BeginUpdate();
             lstOverrides.Items.Clear();
             lstOverrides.Items.Add(new OverrideInfo {
-                Index = int.MinValue,
-                Text = ResourceLoader.LoadString("DefaultOverrideName")
+                Index = IndentTheme.DefaultFormatIndex,
+                Text = ResourceLoader.LoadString("DefaultFormatName")
+            });
+            lstOverrides.Items.Add(new OverrideInfo {
+                Index = IndentTheme.UnalignedFormatIndex,
+                Text = ResourceLoader.LoadString("UnalignedFormatName")
+            });
+            lstOverrides.Items.Add(new OverrideInfo {
+                Index = IndentTheme.CaretFormatIndex,
+                Text = ResourceLoader.LoadString("CaretFormatName")
             });
             for (int key = 1; key <= 30; ++key)
             {

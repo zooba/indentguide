@@ -26,6 +26,7 @@ namespace IndentGuide
         public LineSpanType Type;
         public bool Changed;
         public object Adornment;
+        public SnapshotSpan? Span;
 
         public LineSpan(int first, int last, int indent, LineSpanType type)
         {
@@ -35,6 +36,7 @@ namespace IndentGuide
             Type = type;
             Changed = true;
             Adornment = null;
+            Span = null;
         }
     }
 

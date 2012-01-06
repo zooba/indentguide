@@ -14,12 +14,15 @@ namespace IndentGuide
     /// <summary>
     /// The supported styles of guideline.
     /// </summary>
+    [Flags]
     public enum LineStyle
     {
-        Solid,
-        Thick,
-        Dotted,
-        Dashed
+        Solid = 1,
+        Thick = 2,
+        Dotted = 4,
+        Dashed = 8,
+        DottedThick = Dotted | Thick,
+        DashedThick = Dashed | Thick
     }
 
     /// <summary>
@@ -55,9 +58,12 @@ namespace IndentGuide
         [ResourceCategory("Appearance")]
         public bool Visible { get; set; }
 
+        class LineStyleConverter : EnumResourceTypeConverter<LineStyle> { }
+
         [ResourceDisplayName("LineStyleDisplayName")]
         [ResourceDescription("LineStyleDescription")]
         [ResourceCategory("Appearance")]
+        [TypeConverter(typeof(LineStyleConverter))]
         public LineStyle LineStyle { get; set; }
 
         [ResourceDisplayName("LineColorDisplayName")]
@@ -324,6 +330,18 @@ namespace IndentGuide
     public class IndentTheme : IComparable<IndentTheme>
     {
         public static readonly string DefaultThemeName = ResourceLoader.LoadString("DefaultThemeName");
+        public const int DefaultFormatIndex = int.MinValue;
+        public const int UnalignedFormatIndex = -1;
+        public const int CaretFormatIndex = -2;
+
+        public static LineFormat DefaultUnalignedFormat
+        {
+            get { return new LineFormat(); }
+        }
+        public static LineFormat DefaultCaretFormat
+        {
+            get { return new LineFormat { LineColor = Color.Red }; }
+        }
 
         public event EventHandler Updated;
 
@@ -338,6 +356,8 @@ namespace IndentGuide
             ContentType = null;
             LineFormats = new Dictionary<int, LineFormat>();
             DefaultLineFormat = new LineFormat();
+            LineFormats[UnalignedFormatIndex] = DefaultUnalignedFormat;
+            LineFormats[CaretFormatIndex] = DefaultCaretFormat;
             Behavior = new LineBehavior();
         }
 
@@ -351,14 +371,38 @@ namespace IndentGuide
             return inst;
         }
 
+        public static string FormatIndexToString(int formatIndex)
+        {
+            if (formatIndex == DefaultFormatIndex)
+                return "Default";
+            else if (formatIndex == UnalignedFormatIndex)
+                return "Unaligned";
+            else if (formatIndex == CaretFormatIndex)
+                return "Caret";
+            else
+                return formatIndex.ToString(CultureInfo.InvariantCulture);
+        }
+
+        public static int? FormatIndexFromString(string source)
+        {
+            int result;
+            if (source == "Default")
+                return DefaultFormatIndex;
+            else if (source == "Unaligned")
+                return UnalignedFormatIndex;
+            else if (source == "Caret")
+                return CaretFormatIndex;
+            else if (int.TryParse(source, out result))
+                return result;
+            else
+                return null;
+        }
+
         [ResourceDisplayName("ContentTypeDisplayName")]
         [ResourceDescription("ContentTypeDescription")]
         public string ContentType { get; set; }
 
         public bool IsDefault { get { return ContentType == null; } }
-
-        public const int DefaultFormatIndex = int.MinValue;
-        public const int UnalignedFormatIndex = -1;
 
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public LineFormat DefaultLineFormat
@@ -400,19 +444,11 @@ namespace IndentGuide
                             (int)subkey.GetValue("Visible", 1));
                     }
 
-                    int i;
-                    if (int.TryParse(subkeyName, out i))
-                    {
-                        theme.LineFormats[i] = format;
-                    }
-                    else if (subkeyName == "Default")
-                    {
-                        theme.DefaultLineFormat = format;
-                    }
+                    int? i = FormatIndexFromString(subkeyName);
+                    if (i.HasValue)
+                        theme.LineFormats[i.Value] = format;
                     else
-                    {
                         Trace.WriteLine(string.Format("IndentGuide::Unable to parse {0}", subkeyName));
-                    }
                 }
             }
 
@@ -444,18 +480,11 @@ namespace IndentGuide
                     var format = LineFormat.FromInvariantStrings(lineStyle, lineColor, visible);
 
                     var keypart = subkey.Substring(i + 1);
-                    if (int.TryParse(keypart, out i))
-                    {
-                        theme.LineFormats[i] = format;
-                    }
-                    else if (keypart == "Default")
-                    {
-                        theme.DefaultLineFormat = format;
-                    }
+                    int? formatIndex = FormatIndexFromString(keypart);
+                    if (formatIndex.HasValue)
+                        theme.LineFormats[formatIndex.Value] = format;
                     else
-                    {
                         Trace.WriteLine(string.Format("IndentGuide::Unable to parse {0}", keypart));
-                    }
                 }
             }
 
@@ -478,9 +507,7 @@ namespace IndentGuide
 
                 foreach (var item in LineFormats)
                 {
-                    var subkeyName = item.Key.ToString(CultureInfo.InvariantCulture);
-                    if (item.Key == DefaultFormatIndex)
-                        subkeyName = "Default";
+                    var subkeyName = FormatIndexToString(item.Key);
 
                     using (var subkey = key.CreateSubKey(subkeyName))
                     {
@@ -504,9 +531,7 @@ namespace IndentGuide
 
             foreach (var item in LineFormats)
             {
-                var subkeyName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", key, item.Key);
-                if (item.Key == DefaultFormatIndex)
-                    subkeyName = key + ".Default";
+                var subkeyName = key + "." + FormatIndexToString(item.Key);
 
                 sb.Append(subkeyName);
                 sb.Append(";");
@@ -545,7 +570,7 @@ namespace IndentGuide
         internal void Apply()
         {
             var toRemove = LineFormats
-                .Where(kv => kv.Key != DefaultFormatIndex)
+                .Where(kv => kv.Key >= 0)
                 .Where(kv => DefaultLineFormat.Equals(kv.Value) || null == kv.Value)
                 .Select(kv => kv.Key)
                 .ToList();

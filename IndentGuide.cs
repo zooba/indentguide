@@ -35,6 +35,7 @@ namespace IndentGuide
             GuideBrushCache = new Dictionary<System.Drawing.Color, Brush>();
 
             View = view;
+            View.Caret.PositionChanged += Caret_PositionChanged;
             View.LayoutChanged += View_LayoutChanged;
 
             Layer = view.GetAdornmentLayer("IndentGuide");
@@ -124,6 +125,10 @@ namespace IndentGuide
             }
             if (spaceWidth <= 0.0) return;
 
+            var caret = View.Caret.Position;
+            var caretLine = caret.BufferPosition.GetContainingLine();
+            var caretPos = caret.BufferPosition.Position - caretLine.Start.Position + View.Caret.Position.VirtualSpaces;
+            
             foreach (var line in Analysis.Lines)
             {
                 int linePos = line.Indent;
@@ -131,12 +136,10 @@ namespace IndentGuide
                     continue;
                 var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
                 var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
-                var first = firstLine.Start + (firstLine.Length >= linePos ? linePos : 0);
-                var last = lastLine.Start + (lastLine.Length >= linePos ? linePos : 0);
-                if (first > View.TextViewLines.LastVisibleLine.Start) continue;
-                if (last < View.TextViewLines.FirstVisibleLine.Start) continue;
-                var firstView = View.GetTextViewLineContainingBufferPosition(first);
-                var lastView = View.GetTextViewLineContainingBufferPosition(last);
+                if (firstLine.Start > View.TextViewLines.LastVisibleLine.Start) continue;
+                if (lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) continue;
+                var firstView = View.GetTextViewLineContainingBufferPosition(firstLine.Start);
+                var lastView = View.GetTextViewLineContainingBufferPosition(lastLine.End);
 
                 double top = (firstView.VisibilityState != VisibilityState.Unattached) ?
                     firstView.Top :
@@ -149,16 +152,22 @@ namespace IndentGuide
                     firstView.TextLeft : View.TextViewLines.FirstVisibleLine.TextLeft);
 
                 int formatIndex = line.Indent / Analysis.IndentSize;
+                
                 if (line.Indent % Analysis.IndentSize != 0)
                     formatIndex = IndentTheme.UnalignedFormatIndex;
 
+                if (firstLine.LineNumber <= caretLine.LineNumber &&
+                    caretLine.LineNumber <= lastLine.LineNumber &&
+                    caretPos == linePos)
+                    formatIndex = IndentTheme.CaretFormatIndex;
+
                 var guide = AddGuide(top, bottom, left, formatIndex);
                 line.Adornment = guide;
+                line.Span = new SnapshotSpan(firstLine.Start, lastLine.End);
 
                 if (guide != null)
                 {
-                    Layer.AddAdornment(AdornmentPositioningBehavior.TextRelative,
-                        new SnapshotSpan(first, last), line, guide, null);
+                    Layer.AddAdornment(AdornmentPositioningBehavior.TextRelative, line.Span, line, guide, null);
                 }
             }
         }
@@ -202,14 +211,64 @@ namespace IndentGuide
                 SnapsToDevicePixels = true
             };
 
-            if (format.LineStyle == LineStyle.Thick)
+            if (format.LineStyle.HasFlag(LineStyle.Thick))
                 guide.StrokeThickness = 3.0;
-            else if (format.LineStyle == LineStyle.Dotted)
+            
+            if (format.LineStyle.HasFlag(LineStyle.Dotted))
                 guide.StrokeDashArray = new DoubleCollection { 1.0, 2.0 };
-            else if (format.LineStyle == LineStyle.Dashed)
+            else if (format.LineStyle.HasFlag(LineStyle.Dashed))
                 guide.StrokeDashArray = new DoubleCollection { 3.0, 3.0 };
 
             return guide;
+        }
+
+        /// <summary>
+        /// Raised when the caret position changes.
+        /// </summary>
+        void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e)
+        {
+            var oldCaret = e.OldPosition.VirtualBufferPosition.Position;
+            var oldCaretLine = oldCaret.GetContainingLine();
+            var oldCaretPos = oldCaret.Position - oldCaretLine.Start.Position + e.OldPosition.VirtualSpaces;
+
+            var caret = e.NewPosition.VirtualBufferPosition.Position;
+            var caretLine = caret.GetContainingLine();
+            var caretPos = caret.Position - caretLine.Start.Position + e.NewPosition.VirtualSpaces;
+
+            foreach (var line in Analysis.Lines)
+            {
+                int linePos = line.Indent;
+                if (!Analysis.Behavior.VisibleUnaligned && (linePos % Analysis.IndentSize) != 0)
+                    continue;
+                var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
+                var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
+
+                int formatIndex = line.Indent / Analysis.IndentSize;
+
+                if (line.Indent % Analysis.IndentSize != 0)
+                    formatIndex = IndentTheme.UnalignedFormatIndex;
+
+                if (firstLine.LineNumber <= caretLine.LineNumber &&
+                    caretLine.LineNumber <= lastLine.LineNumber &&
+                    caretPos == linePos)
+                    formatIndex = IndentTheme.CaretFormatIndex;
+                else if (!(firstLine.LineNumber <= oldCaretLine.LineNumber &&
+                    oldCaretLine.LineNumber <= lastLine.LineNumber &&
+                    oldCaretPos == linePos))
+                    continue;
+
+                var oldGuide = line.Adornment as Line;
+                if (oldGuide == null) continue;
+                Layer.RemoveAdornmentsByTag(line);
+
+                var guide = AddGuide(oldGuide.Y1, oldGuide.Y2, oldGuide.X1, formatIndex);
+                line.Adornment = guide;
+                
+                if (guide != null)
+                {
+                    Layer.AddAdornment(AdornmentPositioningBehavior.TextRelative, line.Span, line, guide, null);
+                }
+            }
         }
     }
 }

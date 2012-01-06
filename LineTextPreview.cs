@@ -51,27 +51,24 @@ namespace IndentGuide
                 format = Theme.DefaultLineFormat;
             
             if (!format.Visible) return pen;
-            
-            if (format.LineStyle == LineStyle.Solid)
-            {
-                pen = new Pen(format.LineColor, 1.0f);
-                pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-            }
-            else if (format.LineStyle == LineStyle.Thick)
-            {
+
+            if (format.LineStyle.HasFlag(LineStyle.Thick))
                 pen = new Pen(format.LineColor, 3.0f);
+            else
+                pen = new Pen(format.LineColor, 1.0f);
+            
+            if (format.LineStyle.HasFlag(LineStyle.Solid))
+            {
                 pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
                 pen.StartCap = System.Drawing.Drawing2D.LineCap.Flat;
                 pen.EndCap = System.Drawing.Drawing2D.LineCap.Flat;
             }
-            else if (format.LineStyle == LineStyle.Dotted)
+            else if (format.LineStyle.HasFlag(LineStyle.Dotted))
             {
-                pen = new Pen(format.LineColor, 1.0f);
                 pen.DashPattern = new float[] { 1.0f, 2.0f, 1.0f, 2.0f };
             }
-            else if (format.LineStyle == LineStyle.Dashed)
+            else if (format.LineStyle.HasFlag(LineStyle.Dashed))
             {
-                pen = new Pen(format.LineColor, 1.0f);
                 pen.DashPattern = new float[] { 3.0f, 3.0f, 3.0f, 3.0f };
             }
             return pen;

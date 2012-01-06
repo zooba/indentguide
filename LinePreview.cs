@@ -31,6 +31,7 @@ namespace IndentGuide
                 if (_Style != value)
                 {
                     _Style = value;
+                    LinePen = null;
                     Invalidate();
                 }
             }
@@ -39,6 +40,7 @@ namespace IndentGuide
         protected override void OnForeColorChanged(EventArgs e)
         {
             base.OnForeColorChanged(e);
+            LinePen = null;
             Invalidate();
         }
 
@@ -51,30 +53,30 @@ namespace IndentGuide
             int y1 = ClientRectangle.Top;
             int y2 = ClientRectangle.Bottom;
 
-            if (LinePen == null || LinePen.Color != ForeColor)
-                LinePen = new Pen(ForeColor, 1.0f);
+            if (LinePen == null)
+            {
+                if (Style.HasFlag(LineStyle.Thick))
+                    LinePen = new Pen(ForeColor, 3.0f);
+                else
+                    LinePen = new Pen(ForeColor, 1.0f);
 
-            LinePen.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-            if (Style == LineStyle.Solid)
-            {
-                e.Graphics.DrawLine(LinePen, x, y1, x, y2);
+                if (Style.HasFlag(LineStyle.Solid))
+                {
+                    LinePen.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+                    LinePen.StartCap = System.Drawing.Drawing2D.LineCap.Flat;
+                    LinePen.EndCap = System.Drawing.Drawing2D.LineCap.Flat;
+                }
+                else if (Style.HasFlag(LineStyle.Dotted))
+                {
+                    LinePen.DashPattern = new float[] { 1.0f, 2.0f, 1.0f, 2.0f };
+                }
+                else if (Style.HasFlag(LineStyle.Dashed))
+                {
+                    LinePen.DashPattern = new float[] { 3.0f, 3.0f, 3.0f, 3.0f };
+                }
             }
-            else if (Style == LineStyle.Thick)
-            {
-                e.Graphics.DrawLine(LinePen, x - 1, y1, x - 1, y2);
-                e.Graphics.DrawLine(LinePen, x, y1, x, y2);
-                e.Graphics.DrawLine(LinePen, x + 1, y1, x + 1, y2);
-            }
-            else if (Style == LineStyle.Dotted)
-            {
-                LinePen.DashPattern = new float[] { 1.0f, 2.0f, 1.0f, 2.0f };
-                e.Graphics.DrawLine(LinePen, x, y1, x, y2);
-            }
-            else if (Style == LineStyle.Dashed)
-            {
-                LinePen.DashPattern = new float[] { 3.0f, 3.0f, 3.0f, 3.0f };
-                e.Graphics.DrawLine(LinePen, x, y1, x, y2);
-            }
+
+            e.Graphics.DrawLine(LinePen, x, y1, x, y2);
         }
     }
 }

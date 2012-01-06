@@ -213,7 +213,7 @@
   <data name="VisibleUnalignedDisplayName" xml:space="preserve">
     <value>Show at unaligned indents</value>
   </data>
-  <data name="DefaultOverrideName" xml:space="preserve">
+  <data name="DefaultFormatName" xml:space="preserve">
     <value>Default</value>
   </data>
   <data name="lstModePreset_Custom" xml:space="preserve">
@@ -233,5 +233,29 @@
   </data>
   <data name="lstModePreset_TextUp" xml:space="preserve">
     <value>Flow up from text</value>
+  </data>
+  <data name="CaretFormatName" xml:space="preserve">
+    <value>Highlighted</value>
+  </data>
+  <data name="LineStyle_Dashed" xml:space="preserve">
+    <value>Dashed</value>
+  </data>
+  <data name="LineStyle_DashedThick" xml:space="preserve">
+    <value>Dashed (thick)</value>
+  </data>
+  <data name="LineStyle_Dotted" xml:space="preserve">
+    <value>Dotted</value>
+  </data>
+  <data name="LineStyle_DottedThick" xml:space="preserve">
+    <value>Dotted (thick)</value>
+  </data>
+  <data name="LineStyle_Solid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="LineStyle_Thick" xml:space="preserve">
+    <value>Solid (thick)</value>
+  </data>
+  <data name="UnalignedFormatName" xml:space="preserve">
+    <value>Unaligned</value>
   </data>
 </root>
