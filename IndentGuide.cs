@@ -128,6 +128,7 @@ namespace IndentGuide
             var caret = View.Caret.Position;
             var caretLine = caret.BufferPosition.GetContainingLine();
             var caretPos = caret.BufferPosition.Position - caretLine.Start.Position + View.Caret.Position.VirtualSpaces;
+            LineSpan caretLineSpan = null;
             
             foreach (var line in Analysis.Lines)
             {
@@ -136,6 +137,19 @@ namespace IndentGuide
                     continue;
                 var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
                 var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
+
+                int formatIndex = line.Indent / Analysis.IndentSize;
+
+                if (line.Indent % Analysis.IndentSize != 0)
+                    formatIndex = IndentTheme.UnalignedFormatIndex;
+
+                if (firstLine.LineNumber <= caretLine.LineNumber &&
+                    caretLine.LineNumber <= lastLine.LineNumber &&
+                    firstLine.LineNumber != lastLine.LineNumber &&
+                    linePos <= caretPos &&
+                    (caretLineSpan == null || linePos > caretLineSpan.Indent))
+                    caretLineSpan = line;
+
                 if (firstLine.Start > View.TextViewLines.LastVisibleLine.Start) continue;
                 if (lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) continue;
                 var firstView = View.GetTextViewLineContainingBufferPosition(firstLine.Start);
@@ -151,16 +165,6 @@ namespace IndentGuide
                     ((firstView.VisibilityState == VisibilityState.FullyVisible) ?
                     firstView.TextLeft : View.TextViewLines.FirstVisibleLine.TextLeft);
 
-                int formatIndex = line.Indent / Analysis.IndentSize;
-                
-                if (line.Indent % Analysis.IndentSize != 0)
-                    formatIndex = IndentTheme.UnalignedFormatIndex;
-
-                if (firstLine.LineNumber <= caretLine.LineNumber &&
-                    caretLine.LineNumber <= lastLine.LineNumber &&
-                    caretPos == linePos)
-                    formatIndex = IndentTheme.CaretFormatIndex;
-
                 var guide = AddGuide(top, bottom, left, formatIndex);
                 line.Adornment = guide;
                 line.Span = new SnapshotSpan(firstLine.Start, lastLine.End);
@@ -169,6 +173,11 @@ namespace IndentGuide
                 {
                     Layer.AddAdornment(AdornmentPositioningBehavior.TextRelative, line.Span, line, guide, null);
                 }
+            }
+
+            if (caretLineSpan != null)
+            {
+                UpdateGuide(caretLineSpan.Adornment as Line, IndentTheme.CaretFormatIndex);
             }
         }
 
@@ -185,13 +194,42 @@ namespace IndentGuide
         {
             if (left == 0 || left > View.ViewportWidth) return null;
 
+            var guide = new Line() {
+                X1 = left,
+                Y1 = top,
+                X2 = left,
+                Y2 = bottom,
+                StrokeThickness = 1.0,
+                StrokeDashOffset = top,
+                SnapsToDevicePixels = true
+            };
+
+            UpdateGuide(guide, formatIndex);
+
+            return guide;
+        }
+
+        /// <summary>
+        /// Updates the line <paramref name="guide"/> with a new format.
+        /// </summary>
+        /// <param name="guide">The <see cref="Line"/> to update.</param>
+        /// <param name="formatIndex">The new format index.</param>
+        void UpdateGuide(Line guide, int formatIndex)
+        {
+            if (guide == null)
+                return;
+
             LineFormat format;
-            Brush brush;
             if (!Theme.LineFormats.TryGetValue(formatIndex, out format))
                 format = Theme.DefaultLineFormat;
-            
-            if (!format.Visible) return null;
 
+            if (!format.Visible)
+            {
+                guide.Visibility = System.Windows.Visibility.Hidden;
+                return;
+            }
+
+            Brush brush;
             if (!GuideBrushCache.TryGetValue(format.LineColor, out brush))
             {
                 brush = new SolidColorBrush(format.LineColor.ToSWMC());
@@ -199,27 +237,16 @@ namespace IndentGuide
                 GuideBrushCache[format.LineColor] = brush;
             }
 
-            var guide = new Line()
-            {
-                X1 = left,
-                Y1 = top,
-                X2 = left,
-                Y2 = bottom,
-                Stroke = brush,
-                StrokeThickness = 1.0,
-                StrokeDashOffset = top,
-                SnapsToDevicePixels = true
-            };
+            guide.Visibility = System.Windows.Visibility.Visible;
+            guide.Stroke = brush;
 
             if (format.LineStyle.HasFlag(LineStyle.Thick))
                 guide.StrokeThickness = 3.0;
-            
+
             if (format.LineStyle.HasFlag(LineStyle.Dotted))
                 guide.StrokeDashArray = new DoubleCollection { 1.0, 2.0 };
             else if (format.LineStyle.HasFlag(LineStyle.Dashed))
                 guide.StrokeDashArray = new DoubleCollection { 3.0, 3.0 };
-
-            return guide;
         }
 
         /// <summary>
@@ -230,10 +257,13 @@ namespace IndentGuide
             var oldCaret = e.OldPosition.VirtualBufferPosition.Position;
             var oldCaretLine = oldCaret.GetContainingLine();
             var oldCaretPos = oldCaret.Position - oldCaretLine.Start.Position + e.OldPosition.VirtualSpaces;
+            LineSpan oldCaretLineSpan = null;
+            int oldCaretFormatIndex = IndentTheme.DefaultFormatIndex;
 
             var caret = e.NewPosition.VirtualBufferPosition.Position;
             var caretLine = caret.GetContainingLine();
             var caretPos = caret.Position - caretLine.Start.Position + e.NewPosition.VirtualSpaces;
+            LineSpan caretLineSpan = null;
 
             foreach (var line in Analysis.Lines)
             {
@@ -244,31 +274,35 @@ namespace IndentGuide
                 var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
 
                 int formatIndex = line.Indent / Analysis.IndentSize;
-
+                
                 if (line.Indent % Analysis.IndentSize != 0)
                     formatIndex = IndentTheme.UnalignedFormatIndex;
 
                 if (firstLine.LineNumber <= caretLine.LineNumber &&
                     caretLine.LineNumber <= lastLine.LineNumber &&
-                    caretPos == linePos)
-                    formatIndex = IndentTheme.CaretFormatIndex;
-                else if (!(firstLine.LineNumber <= oldCaretLine.LineNumber &&
-                    oldCaretLine.LineNumber <= lastLine.LineNumber &&
-                    oldCaretPos == linePos))
-                    continue;
-
-                var oldGuide = line.Adornment as Line;
-                if (oldGuide == null) continue;
-                Layer.RemoveAdornmentsByTag(line);
-
-                var guide = AddGuide(oldGuide.Y1, oldGuide.Y2, oldGuide.X1, formatIndex);
-                line.Adornment = guide;
-                
-                if (guide != null)
+                    firstLine.LineNumber != lastLine.LineNumber &&
+                    linePos <= caretPos &&
+                    (caretLineSpan == null || linePos > caretLineSpan.Indent))
                 {
-                    Layer.AddAdornment(AdornmentPositioningBehavior.TextRelative, line.Span, line, guide, null);
+                    caretLineSpan = line;
+                }
+
+                if (firstLine.LineNumber <= oldCaretLine.LineNumber &&
+                    oldCaretLine.LineNumber <= lastLine.LineNumber &&
+                    firstLine.LineNumber != lastLine.LineNumber &&
+                    linePos <= oldCaretPos &&
+                    (oldCaretLineSpan == null || linePos > oldCaretLineSpan.Indent))
+                {
+                    oldCaretLineSpan = line;
+                    oldCaretFormatIndex = formatIndex;
                 }
             }
+
+            if (oldCaretLineSpan != null && oldCaretLineSpan != caretLineSpan)
+                UpdateGuide(oldCaretLineSpan.Adornment as Line, oldCaretFormatIndex);
+
+            if (caretLineSpan != null && caretLineSpan != oldCaretLineSpan)
+                UpdateGuide(caretLineSpan.Adornment as Line, IndentTheme.CaretFormatIndex);
         }
     }
 }
