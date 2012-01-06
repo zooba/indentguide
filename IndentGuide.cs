@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
 
 namespace IndentGuide
@@ -125,9 +125,9 @@ namespace IndentGuide
             }
             if (spaceWidth <= 0.0) return;
 
-            var caret = View.Caret.Position;
-            var caretLine = caret.BufferPosition.GetContainingLine();
-            var caretPos = caret.BufferPosition.Position - caretLine.Start.Position + View.Caret.Position.VirtualSpaces;
+            var caret = View.Caret.Position.VirtualBufferPosition.Position;
+            var caretLine = caret.GetContainingLine().LineNumber;
+            var caretPos = caret.Position - caret.GetContainingLine().Start.Position + View.Caret.Position.VirtualSpaces;
             LineSpan caretLineSpan = null;
             
             foreach (var line in Analysis.Lines)
@@ -143,12 +143,7 @@ namespace IndentGuide
                 if (line.Indent % Analysis.IndentSize != 0)
                     formatIndex = IndentTheme.UnalignedFormatIndex;
 
-                if (firstLine.LineNumber <= caretLine.LineNumber &&
-                    caretLine.LineNumber <= lastLine.LineNumber &&
-                    firstLine.LineNumber != lastLine.LineNumber &&
-                    linePos <= caretPos &&
-                    (caretLineSpan == null || linePos > caretLineSpan.Indent))
-                    caretLineSpan = line;
+                MaybeUpdateCaretLineSpan(ref caretLineSpan, line, caretLine, caretPos);
 
                 if (firstLine.Start > View.TextViewLines.LastVisibleLine.Start) continue;
                 if (lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) continue;
@@ -239,14 +234,8 @@ namespace IndentGuide
 
             guide.Visibility = System.Windows.Visibility.Visible;
             guide.Stroke = brush;
-
-            if (format.LineStyle.HasFlag(LineStyle.Thick))
-                guide.StrokeThickness = 3.0;
-
-            if (format.LineStyle.HasFlag(LineStyle.Dotted))
-                guide.StrokeDashArray = new DoubleCollection { 1.0, 2.0 };
-            else if (format.LineStyle.HasFlag(LineStyle.Dashed))
-                guide.StrokeDashArray = new DoubleCollection { 3.0, 3.0 };
+            guide.StrokeThickness = format.LineStyle.GetStrokeThickness();
+            guide.StrokeDashArray = format.LineStyle.GetStrokeDashArray();
         }
 
         /// <summary>
@@ -255,14 +244,14 @@ namespace IndentGuide
         void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e)
         {
             var oldCaret = e.OldPosition.VirtualBufferPosition.Position;
-            var oldCaretLine = oldCaret.GetContainingLine();
-            var oldCaretPos = oldCaret.Position - oldCaretLine.Start.Position + e.OldPosition.VirtualSpaces;
+            var oldCaretLine = oldCaret.GetContainingLine().LineNumber;
+            var oldCaretPos = oldCaret.Position - oldCaret.GetContainingLine().Start.Position + e.OldPosition.VirtualSpaces;
             LineSpan oldCaretLineSpan = null;
             int oldCaretFormatIndex = IndentTheme.DefaultFormatIndex;
 
             var caret = e.NewPosition.VirtualBufferPosition.Position;
-            var caretLine = caret.GetContainingLine();
-            var caretPos = caret.Position - caretLine.Start.Position + e.NewPosition.VirtualSpaces;
+            var caretLine = caret.GetContainingLine().LineNumber;
+            var caretPos = caret.Position - caret.GetContainingLine().Start.Position + e.NewPosition.VirtualSpaces;
             LineSpan caretLineSpan = null;
 
             foreach (var line in Analysis.Lines)
@@ -278,24 +267,9 @@ namespace IndentGuide
                 if (line.Indent % Analysis.IndentSize != 0)
                     formatIndex = IndentTheme.UnalignedFormatIndex;
 
-                if (firstLine.LineNumber <= caretLine.LineNumber &&
-                    caretLine.LineNumber <= lastLine.LineNumber &&
-                    firstLine.LineNumber != lastLine.LineNumber &&
-                    linePos <= caretPos &&
-                    (caretLineSpan == null || linePos > caretLineSpan.Indent))
-                {
-                    caretLineSpan = line;
-                }
-
-                if (firstLine.LineNumber <= oldCaretLine.LineNumber &&
-                    oldCaretLine.LineNumber <= lastLine.LineNumber &&
-                    firstLine.LineNumber != lastLine.LineNumber &&
-                    linePos <= oldCaretPos &&
-                    (oldCaretLineSpan == null || linePos > oldCaretLineSpan.Indent))
-                {
-                    oldCaretLineSpan = line;
+                MaybeUpdateCaretLineSpan(ref caretLineSpan, line, caretLine, caretPos);
+                if (MaybeUpdateCaretLineSpan(ref oldCaretLineSpan, line, oldCaretLine, oldCaretPos))
                     oldCaretFormatIndex = formatIndex;
-                }
             }
 
             if (oldCaretLineSpan != null && oldCaretLineSpan != caretLineSpan)
@@ -303,6 +277,21 @@ namespace IndentGuide
 
             if (caretLineSpan != null && caretLineSpan != oldCaretLineSpan)
                 UpdateGuide(caretLineSpan.Adornment as Line, IndentTheme.CaretFormatIndex);
+        }
+
+        private bool MaybeUpdateCaretLineSpan(ref LineSpan caretLineSpan, LineSpan line, int caretLine, int caretPos)
+        {
+            if (line.FirstLine <= caretLine &&
+                caretLine <= line.LastLine &&
+                line.FirstLine != line.LastLine &&
+                !line.Type.HasFlag(LineSpanType.AtText) &&
+                line.Indent <= caretPos &&
+                (caretLineSpan == null || line.Indent > caretLineSpan.Indent))
+            {
+                caretLineSpan = line;
+                return true;
+            }
+            return false;
         }
     }
 }

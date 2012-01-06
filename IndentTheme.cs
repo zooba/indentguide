@@ -1,13 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Globalization;
-using System.Text;
 
 namespace IndentGuide
 {
@@ -23,6 +23,40 @@ namespace IndentGuide
         Dashed = 8,
         DottedThick = Dotted | Thick,
         DashedThick = Dashed | Thick
+    }
+
+    public static class LineStyleExtensions
+    {
+        public static double GetStrokeThickness(this LineStyle style)
+        {
+            if (style.HasFlag(LineStyle.Thick))
+                return 3.0;
+            else
+                return 1.0;
+        }
+
+        public static System.Windows.Media.DoubleCollection GetStrokeDashArray(this LineStyle style)
+        {
+            if (style == LineStyle.Dotted)
+                return new System.Windows.Media.DoubleCollection { 1.0, 2.0, 1.0, 2.0 };
+            else if (style == LineStyle.DottedThick)
+                return new System.Windows.Media.DoubleCollection { 1.0, 2.0, 1.0, 2.0 };
+            else if (style == LineStyle.Dashed)
+                return new System.Windows.Media.DoubleCollection { 3.0, 3.0, 3.0, 3.0 };
+            else if (style == LineStyle.DashedThick)
+                return new System.Windows.Media.DoubleCollection { 3.0, 3.0, 3.0, 3.0 };
+            else
+                return null;
+        }
+
+        public static float[] GetDashPattern(this LineStyle style)
+        {
+            var dashArray = style.GetStrokeDashArray();
+            if (dashArray == null)
+                return null;
+            else
+                return dashArray.Select(i => (float)i).ToArray();
+        }
     }
 
     /// <summary>
@@ -237,6 +271,7 @@ namespace IndentGuide
         /// </summary>
         [ResourceDisplayName("TopToBottomDisplayName")]
         [ResourceDescription("TopToBottomDescription")]
+        [SortOrder(4)]
         public bool TopToBottom { get; set; }
 
         /// <summary>
@@ -245,6 +280,7 @@ namespace IndentGuide
         /// </summary>
         [ResourceDisplayName("VisibleEmptyDisplayName")]
         [ResourceDescription("VisibleEmptyDescription")]
+        [SortOrder(3)]
         public bool VisibleEmpty { get; set; }
 
         /// <summary>
@@ -253,6 +289,7 @@ namespace IndentGuide
         /// </summary>
         [ResourceDisplayName("VisibleEmptyAtEndDisplayName")]
         [ResourceDescription("VisibleEmptyAtEndDescription")]
+        [SortOrder(6)]
         public bool VisibleEmptyAtEnd { get; set; }
 
         /// <summary>
@@ -260,6 +297,7 @@ namespace IndentGuide
         /// </summary>
         [ResourceDisplayName("VisibleAtTextEndDisplayName")]
         [ResourceDescription("VisibleAtTextEndDescription")]
+        [SortOrder(5)]
         public bool VisibleAtTextEnd { get; set; }
 
         /// <summary>
@@ -267,6 +305,7 @@ namespace IndentGuide
         /// </summary>
         [ResourceDisplayName("VisibleAlignedDisplayName")]
         [ResourceDescription("VisibleAlignedDescription")]
+        [SortOrder(1)]
         public bool VisibleAligned { get; set; }
 
         /// <summary>
@@ -274,6 +313,7 @@ namespace IndentGuide
         /// </summary>
         [ResourceDisplayName("VisibleUnalignedDisplayName")]
         [ResourceDescription("VisibleUnalignedDescription")]
+        [SortOrder(2)]
         public bool VisibleUnaligned { get; set; }
 
         internal void Load(RegistryKey key)

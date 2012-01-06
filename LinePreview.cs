@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace IndentGuide
@@ -55,24 +50,18 @@ namespace IndentGuide
 
             if (LinePen == null)
             {
-                if (Style.HasFlag(LineStyle.Thick))
-                    LinePen = new Pen(ForeColor, 3.0f);
-                else
-                    LinePen = new Pen(ForeColor, 1.0f);
+                LinePen = new Pen(ForeColor, (float)Style.GetStrokeThickness());
 
-                if (Style.HasFlag(LineStyle.Solid))
+                var pattern = Style.GetDashPattern();
+                if (pattern == null)
                 {
                     LinePen.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
                     LinePen.StartCap = System.Drawing.Drawing2D.LineCap.Flat;
                     LinePen.EndCap = System.Drawing.Drawing2D.LineCap.Flat;
                 }
-                else if (Style.HasFlag(LineStyle.Dotted))
+                else
                 {
-                    LinePen.DashPattern = new float[] { 1.0f, 2.0f, 1.0f, 2.0f };
-                }
-                else if (Style.HasFlag(LineStyle.Dashed))
-                {
-                    LinePen.DashPattern = new float[] { 3.0f, 3.0f, 3.0f, 3.0f };
+                    LinePen.DashPattern = pattern;
                 }
             }
 

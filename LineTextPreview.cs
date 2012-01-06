@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace IndentGuide
@@ -45,31 +43,26 @@ namespace IndentGuide
         private Pen GetLinePen(int formatIndex)
         {
             LineFormat format;
-            Pen pen = null;
 
             if (!Theme.LineFormats.TryGetValue(formatIndex, out format))
                 format = Theme.DefaultLineFormat;
             
-            if (!format.Visible) return pen;
+            if (!format.Visible) return null;
 
-            if (format.LineStyle.HasFlag(LineStyle.Thick))
-                pen = new Pen(format.LineColor, 3.0f);
-            else
-                pen = new Pen(format.LineColor, 1.0f);
-            
-            if (format.LineStyle.HasFlag(LineStyle.Solid))
+            Pen pen = null;
+
+            pen = new Pen(format.LineColor, (float)format.LineStyle.GetStrokeThickness());
+
+            var pattern = format.LineStyle.GetDashPattern();
+            if (pattern == null)
             {
                 pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
                 pen.StartCap = System.Drawing.Drawing2D.LineCap.Flat;
                 pen.EndCap = System.Drawing.Drawing2D.LineCap.Flat;
             }
-            else if (format.LineStyle.HasFlag(LineStyle.Dotted))
+            else
             {
-                pen.DashPattern = new float[] { 1.0f, 2.0f, 1.0f, 2.0f };
-            }
-            else if (format.LineStyle.HasFlag(LineStyle.Dashed))
-            {
-                pen.DashPattern = new float[] { 3.0f, 3.0f, 3.0f, 3.0f };
+                pen.DashPattern = pattern;
             }
             return pen;
         }
@@ -252,6 +245,8 @@ namespace IndentGuide
             }
             catch (Exception ex)
             {
+                Trace.WriteLine("LineTextPreview::OnPaint Error");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
                 e.Graphics.DrawString(ex.ToString(), Font, Brushes.Black, 0.0f, 0.0f);
             }
         }

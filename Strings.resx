@@ -184,16 +184,16 @@
     <value>Unaligned</value>
   </data>
   <data name="TopToBottomDescription" xml:space="preserve">
-    <value>Scan lines from top to bottom</value>
+    <value>Copy guides onto empty lines from the line above; otherwise, from below</value>
   </data>
   <data name="TopToBottomDisplayName" xml:space="preserve">
-    <value>Scan top to bottom</value>
+    <value>Copy from above</value>
   </data>
   <data name="VisibleAlignedDescription" xml:space="preserve">
     <value>Show guides at all multiples of the indent size, regardless of the surrounding text</value>
   </data>
   <data name="VisibleAlignedDisplayName" xml:space="preserve">
-    <value>Include multiples of indent size</value>
+    <value>Show at all indent size multiples</value>
   </data>
   <data name="VisibleEmptyAtEndDescription" xml:space="preserve">
     <value>Show guides on empty lines where the guide on the previous line was adjacent to text</value>

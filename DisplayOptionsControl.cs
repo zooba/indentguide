@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Drawing;
-using System.Linq;
+using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Globalization;
-using System.Diagnostics;
 
 namespace IndentGuide
 {
@@ -60,7 +58,10 @@ namespace IndentGuide
             if (active != null)
             {
                 if (previous != active)
+                {
+                    lstOverrides.SelectedItem = null;    // ensure a change event occurs
                     lstOverrides.SelectedIndex = 0;
+                }
 
                 gridLineMode.SelectedObject = active.Behavior;
                 lineTextPreview.Theme = active;
@@ -102,10 +103,12 @@ namespace IndentGuide
 
         private void lstOverrides_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (lstOverrides.SelectedItem == null) return;
             var oi = lstOverrides.SelectedItem as OverrideInfo;
             Debug.Assert(oi != null);
             if (oi == null) return;
 
+            ActiveTheme.Apply();
             LineFormat format;
             if (oi.Pattern == null)
             {

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Text.Formatting;
-using Microsoft.VisualStudio.Text;
 
 namespace IndentGuide
 {
@@ -32,6 +29,11 @@ namespace IndentGuide
         public static System.Windows.Media.Color ToSWMC(this System.Drawing.Color source)
         {
             return System.Windows.Media.Color.FromArgb(source.A, source.R, source.G, source.B);
+        }
+
+        public static float[] ToFloatArray(this IEnumerable<double> source)
+        {
+            return source.Select(i => (float)i).ToArray();
         }
     }
 }
