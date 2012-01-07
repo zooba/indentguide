@@ -178,9 +178,12 @@ namespace IndentGuide
 
         public bool Update()
         {
-            // HACK: Removed incremental updates for now
-            Reset();
-            return true;
+            if (Snapshot != Snapshot.TextBuffer.CurrentSnapshot)
+            {
+                Reset();
+                return true;
+            }
+            return false;
         }
     }
 }

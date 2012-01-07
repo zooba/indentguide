@@ -90,7 +90,19 @@ namespace IndentGuide
         {
             _Package = package;
             _Themes = new Dictionary<string, IndentTheme>();
-            Upgrade();
+            try
+            {
+                Upgrade();
+            }
+            catch (Exception ex)
+            {
+#if DEBUG
+                Debug.Assert(false);
+#endif
+                Trace.WriteLine("Error upgrading previous settings.");
+                Trace.WriteLine(" - " + ex.ToString());
+                Reset();
+            }
             Load();
         }
 
@@ -308,14 +320,121 @@ namespace IndentGuide
             {
                 int version;
                 using (var reg = root.OpenSubKey(SUBKEY_NAME, false))
-                    version = (int)reg.GetValue("Version", DEFAULT_VERSION);
+                    version = (reg == null) ? 0 : (int)reg.GetValue("Version", DEFAULT_VERSION);
 
                 // v11 (beta 2) (10.9.1) and later don't require an upgrade
                 if (version >= 0x000A0901)
                     return;
 
-                // TODO: Proper upgrade
-                root.DeleteSubKeyTree(SUBKEY_NAME, false);
+                bool writeDefaults = true;
+                // v9 and later can be upgraded.
+                if (version == DEFAULT_VERSION)
+                {
+                    using (var reg = root.CreateSubKey(SUBKEY_NAME))
+                    {
+                        foreach (var keyName in reg.GetSubKeyNames())
+                        {
+                            if (keyName != IndentTheme.DefaultThemeName)
+                                writeDefaults = false;
+
+                            using (var key = reg.OpenSubKey(keyName))
+                            {
+                                if (key == null) continue;
+                                var name = key.GetValue("Name") as string;
+                                if (string.IsNullOrEmpty(name)) continue;
+
+                                using (var newKey = reg.CreateSubKey(name))
+                                {
+                                    newKey.SetValue("VisibleAligned", 1);
+                                    newKey.SetValue("VisibleUnaligned", 0);
+
+                                    // Upgrade the old EmptyLineMode enumeration
+                                    var elm = key.GetValue("EmptyLineMode") as string ?? "SameAsAboveLogical";
+                                    switch (elm)
+                                    {
+                                        case "NoGuides":
+                                            newKey.SetValue("TopToBottom", 1);
+                                            newKey.SetValue("VisibleEmpty", 0);
+                                            newKey.SetValue("VisibleEmptyAtEnd", 0);
+                                            break;
+                                        case "SameAsLineAboveActual":
+                                            newKey.SetValue("TopToBottom", 1);
+                                            newKey.SetValue("VisibleEmpty", 1);
+                                            newKey.SetValue("VisibleEmptyAtEnd", 0);
+                                            break;
+                                        case "SameAsLineAboveLogical":
+                                            newKey.SetValue("TopToBottom", 1);
+                                            newKey.SetValue("VisibleEmpty", 1);
+                                            newKey.SetValue("VisibleEmptyAtEnd", 1);
+                                            break;
+                                        case "SameAsLineBelowActual":
+                                            newKey.SetValue("TopToBottom", 0);
+                                            newKey.SetValue("VisibleEmpty", 1);
+                                            newKey.SetValue("VisibleEmptyAtEnd", 0);
+                                            break;
+                                        case "SameAsLineBelowLogical":
+                                            newKey.SetValue("TopToBottom", 0);
+                                            newKey.SetValue("VisibleEmpty", 1);
+                                            newKey.SetValue("VisibleEmptyAtEnd", 1);
+                                            break;
+                                    }
+
+                                    // Upgrade the old VisibleAtText setting (default to false)
+                                    var ate = string.Equals("True", key.GetValue("VisibleAtText") as string, StringComparison.InvariantCultureIgnoreCase);
+                                    newKey.SetValue("VisibleAtTextEnd", ate ? 1 : 0);
+
+                                    // Copy the default color/style to Default, Unaligned and Caret themes.
+                                    // Change the Caret theme color to Red, or Teal if it was already red.
+                                    using (var subKey1 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.DefaultFormatIndex)))
+                                    using (var subKey2 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.UnalignedFormatIndex)))
+                                    using (var subKey3 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.CaretFormatIndex)))
+                                    {
+                                        var visible = !string.Equals("False", key.GetValue("Visible") as string, StringComparison.InvariantCultureIgnoreCase);
+                                        var color = key.GetValue("LineColor") as string ?? "Teal";
+                                        var style = key.GetValue("LineStyle") as string ?? "Dotted";
+                                        subKey1.SetValue("Visible", visible ? 1 : 0);
+                                        subKey2.SetValue("Visible", visible ? 1 : 0);
+                                        subKey3.SetValue("Visible", visible ? 1 : 0);
+                                        subKey1.SetValue("LineColor", color);
+                                        subKey2.SetValue("LineColor", color);
+                                        subKey3.SetValue("LineColor", (color == "Red") ? "Teal" : "Red");
+                                        subKey1.SetValue("LineStyle", style);
+                                        subKey2.SetValue("LineStyle", style);
+                                        subKey3.SetValue("LineStyle", style);
+                                    }
+
+                                    // Copy the existing indent overrides.
+                                    foreach (var subkeyName in key.GetSubKeyNames())
+                                    {
+                                        int formatIndex;
+                                        if (!int.TryParse(subkeyName, out formatIndex))
+                                            continue;
+
+                                        using (var subKey1 = key.OpenSubKey(subkeyName))
+                                        using (var subKey2 = newKey.CreateSubKey(subkeyName))
+                                        {
+                                            var visible = !string.Equals("False", subKey1.GetValue("Visible") as string, StringComparison.InvariantCultureIgnoreCase);
+                                            var color = subKey1.GetValue("LineColor") as string ?? "Teal";
+                                            var style = subKey1.GetValue("LineStyle") as string ?? "Dotted";
+                                            subKey2.SetValue("Visible", visible ? 1 : 0);
+                                            subKey2.SetValue("LineColor", color);
+                                            subKey2.SetValue("LineStyle", style);
+                                        }
+                                    }
+                                }
+                            }
+
+                            reg.DeleteSubKeyTree(keyName);
+                        }
+                    }
+                }
+
+                if (writeDefaults)
+                {
+                    // TODO: Add default settings and themes.
+                    //using (var reg = root.CreateSubKey(SUBKEY_NAME))
+                    //{ }
+                }
             }
         }
     }

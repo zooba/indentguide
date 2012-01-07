@@ -124,7 +124,7 @@
     <value>&amp;Customize this content type</value>
   </data>
   <data name="btnThemeDelete" xml:space="preserve">
-    <value>&amp;Reset</value>
+    <value>&amp;Delete</value>
   </data>
   <data name="DefaultThemeName" xml:space="preserve">
     <value>(Default)</value>
@@ -257,5 +257,8 @@
   </data>
   <data name="UnalignedFormatName" xml:space="preserve">
     <value>Unaligned</value>
+  </data>
+  <data name="btnThemeReset" xml:space="preserve">
+    <value>&amp;Reset</value>
   </data>
 </root>

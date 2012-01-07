@@ -72,9 +72,7 @@ namespace IndentGuide
 
                         ActiveTheme = Service.DefaultTheme.Clone();
                         LocalThemes.Add(ActiveTheme);
-                        LocalThemes.AddRange(Service.Themes.Values
-                            .Select(t => t.Clone())
-                            .OrderBy(t => t.ContentType));
+                        LocalThemes.AddRange(Service.Themes.Values.Select(t => t.Clone()));
                         UpdateThemeList();
                     }
                     catch (Exception ex)
@@ -213,6 +211,7 @@ namespace IndentGuide
         {
             try
             {
+                LocalThemes.Sort();
                 cmbTheme.Items.Clear();
                 foreach (var theme in LocalThemes)
                 {
@@ -220,8 +219,9 @@ namespace IndentGuide
                 }
 
                 cmbTheme.SelectedItem = ActiveTheme;
-                
-                btnThemeDelete.Enabled = false;
+
+                btnThemeDelete.Enabled = (ActiveTheme != null);
+                btnThemeDelete.Text = ResourceLoader.LoadString(ActiveTheme.IsDefault ? "btnThemeReset" : "btnThemeDelete");
             }
             catch (Exception ex)
             {
@@ -285,24 +285,37 @@ namespace IndentGuide
         {
             ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
 
-            btnThemeDelete.Enabled = (ActiveTheme != null) && !ActiveTheme.IsDefault;
+            btnThemeDelete.Enabled = (ActiveTheme != null);
+            btnThemeDelete.Text = ResourceLoader.LoadString(ActiveTheme.IsDefault ? "btnThemeReset" : "btnThemeDelete");
 
             UpdateDisplay();
         }
 
         private void btnThemeDelete_Click(object sender, EventArgs e)
         {
-            if (ActiveTheme == null || ActiveTheme.IsDefault) return;
+            if (ActiveTheme == null) return;
 
             try
             {
-                DeletedThemes.Add(ActiveTheme);
-                LocalThemes.Remove(ActiveTheme);
+                if (ActiveTheme.IsDefault)
+                {
+                    ChangedThemes.RemoveAll(theme => theme.IsDefault);
+                    LocalThemes.Remove(ActiveTheme);
+                    ActiveTheme = new IndentTheme();
+                    LocalThemes.Add(ActiveTheme);
+                    ChangedThemes.Add(ActiveTheme);
+                    UpdateThemeList();
+                }
+                else
+                {
+                    DeletedThemes.Add(ActiveTheme);
+                    LocalThemes.Remove(ActiveTheme);
 
-                int i = cmbTheme.SelectedIndex;
-                cmbTheme.Items.Remove(ActiveTheme);
-                if (i < cmbTheme.Items.Count) cmbTheme.SelectedIndex = i;
-                else cmbTheme.SelectedIndex = cmbTheme.Items.Count - 1;
+                    int i = cmbTheme.SelectedIndex;
+                    cmbTheme.Items.Remove(ActiveTheme);
+                    if (i < cmbTheme.Items.Count) cmbTheme.SelectedIndex = i;
+                    else cmbTheme.SelectedIndex = cmbTheme.Items.Count - 1;
+                }
             }
             catch (Exception ex)
             {
