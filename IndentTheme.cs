@@ -225,7 +225,7 @@ namespace IndentGuide
             VisibleUnaligned = false;
             VisibleAtTextEnd = false;
             VisibleEmpty = true;
-            VisibleEmptyAtEnd = true;
+            VisibleEmptyAtEnd = false;
         }
 
         public LineBehavior Clone()

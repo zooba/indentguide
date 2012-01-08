@@ -326,7 +326,6 @@ namespace IndentGuide
                 if (version >= 0x000A0901)
                     return;
 
-                bool writeDefaults = true;
                 // v9 and later can be upgraded.
                 if (version == DEFAULT_VERSION)
                 {
@@ -334,9 +333,6 @@ namespace IndentGuide
                     {
                         foreach (var keyName in reg.GetSubKeyNames())
                         {
-                            if (keyName != IndentTheme.DefaultThemeName)
-                                writeDefaults = false;
-
                             using (var key = reg.OpenSubKey(keyName))
                             {
                                 if (key == null) continue;
@@ -427,13 +423,6 @@ namespace IndentGuide
                             reg.DeleteSubKeyTree(keyName);
                         }
                     }
-                }
-
-                if (writeDefaults)
-                {
-                    // TODO: Add default settings and themes.
-                    //using (var reg = root.CreateSubKey(SUBKEY_NAME))
-                    //{ }
                 }
             }
         }

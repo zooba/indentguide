@@ -36,3 +36,18 @@ Unindented
         		Eight spaces two tabs
          		Nine spaces two tabs
           		Ten spaces two tabs
+
+	    One tab four spaces
+	     One tab five spaces
+	      One tab six spaces
+	       One tab seven spaces
+	        One tab eight spaces
+	         One tab nine spaces
+	          One tab ten spaces
+
+ 	 One space one tab one space
+  	  Two spaces one tab two spaces
+   	   Three spaces one tab three spaces
+    	    Four spaces one tab four spaces
+     	     Five spaces one tab five spaces
+      	      Six spaces one tab six spaces

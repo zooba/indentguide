@@ -131,21 +131,24 @@ namespace IndentGuide
             if (!GlobalVisible)
                 return;
 
+            int tabSize = View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
             double spaceWidth = 0.0;
             {
-                var suitable = View.TextViewLines.FirstOrDefault(l => 
-                    View.TextSnapshot.GetLineFromPosition(l.Start.Position).GetText().StartsWith(" "));
+                var suitable = View.TextViewLines.FirstOrDefault(l => {
+                    var text = View.TextSnapshot.GetLineFromPosition(l.Start.Position).GetText();
+                    return text.StartsWith(" ") || text.StartsWith("\t");
+                });
                 if (suitable != null)
                 {
-                    spaceWidth = View.TextViewLines.GetMarkerGeometry(new SnapshotSpan(suitable.Start, 1)).Bounds.Width;
+                    var span = new SnapshotSpan(suitable.Start, 1);
+                    spaceWidth = View.TextViewLines.GetMarkerGeometry(span).Bounds.Width;
+                    if (span.GetText() == "\t")
+                        spaceWidth /= tabSize;
                 }
             }
             if (spaceWidth <= 0.0) return;
 
-            var caret = View.Caret.Position.VirtualBufferPosition.Position;
-            var caretLine = caret.GetContainingLine().LineNumber;
-            var caretPos = caret.Position - caret.GetContainingLine().Start.Position + View.Caret.Position.VirtualSpaces;
-            LineSpan caretLineSpan = null;
+            var caret = new CaretInfo(View.Caret.Position.VirtualBufferPosition, tabSize);
             
             foreach (var line in Analysis.Lines)
             {
@@ -160,7 +163,7 @@ namespace IndentGuide
                 if (line.Indent % Analysis.IndentSize != 0)
                     formatIndex = IndentTheme.UnalignedFormatIndex;
 
-                MaybeUpdateCaretLineSpan(ref caretLineSpan, line, caretLine, caretPos);
+                caret.Update(line);
 
                 if (firstLine.Start > View.TextViewLines.LastVisibleLine.Start) continue;
                 if (lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) continue;
@@ -187,9 +190,9 @@ namespace IndentGuide
                 }
             }
 
-            if (caretLineSpan != null)
+            if (caret.Nearest != null)
             {
-                UpdateGuide(caretLineSpan.Adornment as Line, IndentTheme.CaretFormatIndex);
+                UpdateGuide(caret.Nearest.Adornment as Line, IndentTheme.CaretFormatIndex);
             }
         }
 
@@ -260,17 +263,12 @@ namespace IndentGuide
         /// </summary>
         void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e)
         {
-            var oldCaret = e.OldPosition.VirtualBufferPosition.Position;
-            var oldCaretLine = oldCaret.GetContainingLine().LineNumber;
-            var oldCaretPos = oldCaret.Position - oldCaret.GetContainingLine().Start.Position + e.OldPosition.VirtualSpaces;
-            LineSpan oldCaretLineSpan = null;
+            int tabSize = e.TextView.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
+            var oldCaret = new CaretInfo(e.OldPosition.VirtualBufferPosition, tabSize);
             int oldCaretFormatIndex = IndentTheme.DefaultFormatIndex;
 
-            var caret = e.NewPosition.VirtualBufferPosition.Position;
-            var caretLine = caret.GetContainingLine().LineNumber;
-            var caretPos = caret.Position - caret.GetContainingLine().Start.Position + e.NewPosition.VirtualSpaces;
-            LineSpan caretLineSpan = null;
-
+            var caret = new CaretInfo(e.NewPosition.VirtualBufferPosition, tabSize);
+            
             foreach (var line in Analysis.Lines)
             {
                 int linePos = line.Indent;
@@ -284,31 +282,60 @@ namespace IndentGuide
                 if (line.Indent % Analysis.IndentSize != 0)
                     formatIndex = IndentTheme.UnalignedFormatIndex;
 
-                MaybeUpdateCaretLineSpan(ref caretLineSpan, line, caretLine, caretPos);
-                if (MaybeUpdateCaretLineSpan(ref oldCaretLineSpan, line, oldCaretLine, oldCaretPos))
+                caret.Update(line);
+                if (oldCaret.Update(line))
                     oldCaretFormatIndex = formatIndex;
             }
 
-            if (oldCaretLineSpan != null && oldCaretLineSpan != caretLineSpan)
-                UpdateGuide(oldCaretLineSpan.Adornment as Line, oldCaretFormatIndex);
+            if (oldCaret.Nearest != null && oldCaret.Nearest != caret.Nearest)
+                UpdateGuide(oldCaret.Nearest.Adornment as Line, oldCaretFormatIndex);
 
-            if (caretLineSpan != null && caretLineSpan != oldCaretLineSpan)
-                UpdateGuide(caretLineSpan.Adornment as Line, IndentTheme.CaretFormatIndex);
+            if (caret.Nearest != null && caret.Nearest != oldCaret.Nearest)
+                UpdateGuide(caret.Nearest.Adornment as Line, IndentTheme.CaretFormatIndex);
         }
 
-        private bool MaybeUpdateCaretLineSpan(ref LineSpan caretLineSpan, LineSpan line, int caretLine, int caretPos)
+        class CaretInfo
         {
-            if (line.FirstLine <= caretLine &&
-                caretLine <= line.LastLine &&
-                line.FirstLine != line.LastLine &&
-                !line.Type.HasFlag(LineSpanType.AtText) &&
-                line.Indent <= caretPos &&
-                (caretLineSpan == null || line.Indent > caretLineSpan.Indent))
+            public int LineNumber { get; private set; }
+            public int Position { get; private set; }
+
+            public LineSpan Nearest { get; private set; }
+
+            public CaretInfo(VirtualSnapshotPoint location, int tabSize)
             {
-                caretLineSpan = line;
-                return true;
+                var line = location.Position.GetContainingLine();
+                LineNumber = line.LineNumber;
+                Position = location.Position - line.Start.Position + location.VirtualSpaces;
+
+                int bufferIndent = 0;
+                int visualIndent = 0;
+                foreach (var c in line.GetText().Take(Position))
+                {
+                    if (c == '\t')
+                        bufferIndent += tabSize - (bufferIndent % tabSize);
+                    else if (c == ' ')
+                        bufferIndent += 1;
+                    else
+                        break;
+                    visualIndent += 1;
+                }
+                Position += bufferIndent - visualIndent;
             }
-            return false;
+
+            public bool Update(LineSpan line)
+            {
+                if (line.FirstLine <= LineNumber &&
+                    LineNumber <= line.LastLine &&
+                    line.FirstLine != line.LastLine &&
+                    !line.Type.HasFlag(LineSpanType.AtText) &&
+                    line.Indent <= Position &&
+                    (Nearest == null || line.Indent > Nearest.Indent))
+                {
+                    Nearest = line;
+                    return true;
+                }
+                return false;
+            }
         }
     }
 }
