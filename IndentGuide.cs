@@ -37,6 +37,7 @@ namespace IndentGuide
             View = view;
             View.Caret.PositionChanged += Caret_PositionChanged;
             View.LayoutChanged += View_LayoutChanged;
+            View.Options.OptionChanged += View_OptionChanged;
 
             Layer = view.GetAdornmentLayer("IndentGuide");
 
@@ -64,6 +65,22 @@ namespace IndentGuide
         }
 
         /// <summary>
+        /// Raised when a view option changes.
+        /// </summary>
+        void View_OptionChanged(object sender, EditorOptionChangedEventArgs e)
+        {
+            if (e.OptionId == DefaultOptions.IndentSizeOptionId.Name)
+            {
+                Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme.Behavior,
+                    View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId));
+                GuideBrushCache.Clear();
+
+                InvalidateLines();
+                UpdateAdornments();
+            }
+        }
+
+        /// <summary>
         /// Raised when the theme is updated.
         /// </summary>
         void Service_ThemesChanged(object sender, EventArgs e)
@@ -73,7 +90,7 @@ namespace IndentGuide
                 Theme = service.DefaultTheme;
 
             Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme.Behavior,
-                View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
+                View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId));
             GuideBrushCache.Clear();
 
             InvalidateLines();

@@ -17,14 +17,18 @@ namespace IndentGuide
             InitializeComponent();
 
             IndentSize = 4;
-            Theme = null;
+            _Theme = null;
         }
 
         public int IndentSize { get; set; }
-        
+
+        private IndentTheme _Theme;
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public IndentTheme Theme { get; set; }
+        public IndentTheme Theme {
+            get { return _Theme; }
+            set { _Theme = value; Invalidate(); }
+        }
 
         [Browsable(true)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
