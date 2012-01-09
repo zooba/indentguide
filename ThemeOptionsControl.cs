@@ -70,8 +70,7 @@ namespace IndentGuide
                         ChangedThemes.Clear();
                         DeletedThemes.Clear();
 
-                        ActiveTheme = Service.DefaultTheme.Clone();
-                        LocalThemes.Add(ActiveTheme);
+                        LocalThemes.Add(Service.DefaultTheme.Clone());
                         LocalThemes.AddRange(Service.Themes.Values.Select(t => t.Clone()));
                         UpdateThemeList();
                     }
@@ -101,9 +100,11 @@ namespace IndentGuide
                 CurrentContentType = null;
             }
 
-            Child.ActiveTheme = ActiveTheme;
             Child.Activate();
-            Child.Update(ActiveTheme, null);
+
+            ActiveTheme = LocalThemes.FirstOrDefault(theme => theme.ContentType == CurrentContentType);
+            if (ActiveTheme == null)
+                ActiveTheme = LocalThemes.FirstOrDefault(theme => theme.IsDefault);
         }
 
         internal void Apply()
@@ -161,6 +162,8 @@ namespace IndentGuide
                     var old = _ActiveTheme;
                     _ActiveTheme = value;
                     Child.ActiveTheme = value;
+                    if (cmbTheme.SelectedItem != value)
+                        cmbTheme.SelectedItem = value;
                     UpdateDisplay(_ActiveTheme, old);
                 }
                 else
