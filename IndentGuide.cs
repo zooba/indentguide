@@ -149,7 +149,7 @@ namespace IndentGuide
             if (spaceWidth <= 0.0) return;
 
             var caret = new CaretInfo(View.Caret.Position.VirtualBufferPosition, tabSize);
-            
+
             foreach (var line in Analysis.Lines)
             {
                 int linePos = line.Indent;
@@ -165,15 +165,23 @@ namespace IndentGuide
 
                 caret.Update(line);
 
-                if (firstLine.Start > View.TextViewLines.LastVisibleLine.Start) continue;
-                if (lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) continue;
+                var viewModel = View.TextViewModel;
+                if ((viewModel == null ||
+                    !viewModel.IsPointInVisualBuffer(firstLine.Start, PositionAffinity.Successor) ||
+                    !viewModel.IsPointInVisualBuffer(lastLine.End, PositionAffinity.Predecessor)) ||
+                    firstLine.Start > View.TextViewLines.LastVisibleLine.Start ||
+                    lastLine.Start < View.TextViewLines.FirstVisibleLine.Start)
+                {
+                    continue;
+                }
+
                 IWpfTextViewLine firstView, lastView;
                 try
                 {
                     firstView = View.GetTextViewLineContainingBufferPosition(firstLine.Start);
                     lastView = View.GetTextViewLineContainingBufferPosition(lastLine.End);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Trace.WriteLine("UpdateAdornments GetTextViewLineContainingBufferPosition failed");
                     Trace.WriteLine(" - Exception: " + ex.ToString());
@@ -186,7 +194,7 @@ namespace IndentGuide
                 double bottom = (lastView.VisibilityState != VisibilityState.Unattached) ?
                     lastView.Bottom :
                     View.TextViewLines.LastVisibleLine.Bottom;
-                double left = line.Indent * spaceWidth + 
+                double left = line.Indent * spaceWidth +
                     ((firstView.VisibilityState == VisibilityState.FullyVisible) ?
                     firstView.TextLeft : View.TextViewLines.FirstVisibleLine.TextLeft);
 
@@ -278,7 +286,7 @@ namespace IndentGuide
             int oldCaretFormatIndex = IndentTheme.DefaultFormatIndex;
 
             var caret = new CaretInfo(e.NewPosition.VirtualBufferPosition, tabSize);
-            
+
             foreach (var line in Analysis.Lines)
             {
                 int linePos = line.Indent;
@@ -288,7 +296,7 @@ namespace IndentGuide
                 var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
 
                 int formatIndex = line.Indent / Analysis.IndentSize;
-                
+
                 if (line.Indent % Analysis.IndentSize != 0)
                     formatIndex = IndentTheme.UnalignedFormatIndex;
 
