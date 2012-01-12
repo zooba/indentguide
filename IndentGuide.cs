@@ -167,8 +167,18 @@ namespace IndentGuide
 
                 if (firstLine.Start > View.TextViewLines.LastVisibleLine.Start) continue;
                 if (lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) continue;
-                var firstView = View.GetTextViewLineContainingBufferPosition(firstLine.Start);
-                var lastView = View.GetTextViewLineContainingBufferPosition(lastLine.End);
+                IWpfTextViewLine firstView, lastView;
+                try
+                {
+                    firstView = View.GetTextViewLineContainingBufferPosition(firstLine.Start);
+                    lastView = View.GetTextViewLineContainingBufferPosition(lastLine.End);
+                }
+                catch(Exception ex)
+                {
+                    Trace.WriteLine("UpdateAdornments GetTextViewLineContainingBufferPosition failed");
+                    Trace.WriteLine(" - Exception: " + ex.ToString());
+                    continue;
+                }
 
                 double top = (firstView.VisibilityState != VisibilityState.Unattached) ?
                     firstView.Top :
