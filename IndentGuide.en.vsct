@@ -32,6 +32,7 @@
 
             <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" priority="0x6550" type="Button">
                 <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
+                <Icon guid="guidIndentGuideBmp" id="bmpViewIndentGuides"/>
                 <CommandFlag>DynamicVisibility</CommandFlag>
                 <CommandFlag>DefaultInvisible</CommandFlag>
                 <CommandFlag>DefaultDisabled</CommandFlag>
@@ -39,12 +40,17 @@
                     <ButtonText>View Indent Guides</ButtonText>
                     <MenuText>View Indent &amp;Guides</MenuText>
                     <ToolTipText>Toggle the visibility of indentation guides.</ToolTipText>
-                    <CommandName>cmdidViewIndentGuides</CommandName>
+                    <CommandName>View Indent Guides</CommandName>
                 </Strings>
+                <!-- Add more Strings elements with language attribute and translations -->
             </Button>
 
         </Buttons>
 
+        <Bitmaps>
+            <Bitmap guid="guidIndentGuideBmp" href="menu.png" />
+        </Bitmaps>
+    
     </Commands>
 
     <Symbols>
@@ -55,6 +61,10 @@
         <GuidSymbol name="guidIndentGuideCmdSet" value="{1AE9DCDB-7723-4651-ABDC-3D4BBAA0731F}">
             <IDSymbol name="cmdidViewIndentGuides" value="0x0102" />
 
+        </GuidSymbol>
+
+        <GuidSymbol name="guidIndentGuideBmp" value="{93270977-7E37-4A49-8314-182C6A5836FF}">
+            <IDSymbol name="bmpViewIndentGuides" value="1"/>
         </GuidSymbol>
     </Symbols>
 
