@@ -1,0 +1,14 @@
+<UserSettings>
+	<ApplicationIdentity version="10.0"/>
+	<ToolsOptions/>
+	<DisplayName>Indent Guides - Current Block Only</DisplayName>
+	<Description>Only displays a guide for the block containing the cursor.</Description>
+	<Category name="IndentGuide_Display" Category="{05491866-4ed1-44fe-bdff-fb14246bdabb}" Package="{959beb25-6c38-440a-a37f-5d6717e9a41b}" RegisteredName="IndentGuide_Display" PackageName="Indent Guides Package">
+		<PropertyValue name="(Default)" TopToBottom="True" VisibleAligned="False" VisibleUnaligned="True" VisibleAtTextEnd="False" VisibleEmpty="True" VisibleEmptyAtEnd="True">(Default).Default;(Default).Unaligned;(Default).Caret</PropertyValue>
+		<PropertyValue name="(Default).Default" LineStyle="Dotted" LineColor="Teal" Visible="False"/>
+		<PropertyValue name="(Default).Unaligned" LineStyle="Dotted" LineColor="Teal" Visible="False"/>
+		<PropertyValue name="(Default).Caret" LineStyle="Dotted" LineColor="Blue" Visible="True"/>
+		<PropertyValue name="Themes">(Default);</PropertyValue>
+		<PropertyValue name="Visible">1</PropertyValue>
+	</Category>
+</UserSettings>
