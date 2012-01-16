@@ -504,7 +504,7 @@ namespace IndentGuide
 
             string lineStyle, lineColor, visible;
             string subkeys;
-            reader.ReadSettingAttribute(key, "Subkeys", out subkeys);
+            reader.ReadSettingString(key, out subkeys);
             if (!string.IsNullOrEmpty(subkeys))
             {
                 foreach (var subkey in subkeys.Split(';'))
@@ -564,17 +564,15 @@ namespace IndentGuide
         public string Save(IVsSettingsWriter writer)
         {
             var key = ContentType ?? DefaultThemeName;
+            var subkeys = string.Join(";", LineFormats.Select(item => key + "." + FormatIndexToString(item.Key)));
+            writer.WriteSettingString(key, subkeys);
+
             Behavior.Save(writer, key);
 
             string lineStyle, lineColor, visible;
-            var sb = new StringBuilder();
-
             foreach (var item in LineFormats)
             {
                 var subkeyName = key + "." + FormatIndexToString(item.Key);
-
-                sb.Append(subkeyName);
-                sb.Append(";");
 
                 writer.WriteSettingString(subkeyName, "");
                 
@@ -582,12 +580,6 @@ namespace IndentGuide
                 writer.WriteSettingAttribute(subkeyName, "LineStyle", lineStyle);
                 writer.WriteSettingAttribute(subkeyName, "LineColor", lineColor);
                 writer.WriteSettingAttribute(subkeyName, "Visible", visible);
-            }
-
-            if (sb.Length > 1)
-            {
-                sb.Length -= 1;
-                writer.WriteSettingAttribute(key, "Subkeys", sb.ToString());
             }
 
             return key;

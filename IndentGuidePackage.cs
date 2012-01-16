@@ -9,7 +9,7 @@ namespace IndentGuide
     [InstalledProductRegistration("#110", "#112", "11 (beta 4)", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, false)]
-    [ProvideProfile(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, true)]
+    [ProvideProfile(typeof(DisplayOptions), "IndentGuide", "Display", 110, 220, true)]
     [ProvideService(typeof(SIndentGuide))]
     [ResourceDescription("IndentGuidePackage")]
     [Guid(Guids.IndentGuidePackageGuid)]
