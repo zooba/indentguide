@@ -200,6 +200,7 @@ namespace IndentGuide
                     theme.ContentType = CurrentContentType;
                     LocalThemes.Add(theme);
                     ChangedThemes.Add(theme);
+                    DeletedThemes.RemoveAll(t => t.ContentType == theme.ContentType);
                     UpdateThemeList();
                 }
                 cmbTheme.SelectedItem = theme;
