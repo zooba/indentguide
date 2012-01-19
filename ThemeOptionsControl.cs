@@ -223,9 +223,6 @@ namespace IndentGuide
                 }
 
                 cmbTheme.SelectedItem = ActiveTheme;
-
-                btnThemeDelete.Enabled = (ActiveTheme != null);
-                btnThemeDelete.Text = ResourceLoader.LoadString(ActiveTheme.IsDefault ? "btnThemeReset" : "btnThemeDelete");
             }
             catch (Exception ex)
             {
@@ -289,8 +286,16 @@ namespace IndentGuide
         {
             ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
 
-            btnThemeDelete.Enabled = (ActiveTheme != null);
-            btnThemeDelete.Text = ResourceLoader.LoadString(ActiveTheme.IsDefault ? "btnThemeReset" : "btnThemeDelete");
+            if (ActiveTheme != null)
+            {
+                btnThemeDelete.Enabled = true;
+                btnThemeDelete.Text = ResourceLoader.LoadString(ActiveTheme.IsDefault ? "btnThemeReset" : "btnThemeDelete");
+            }
+            else
+            {
+                btnThemeDelete.Enabled = false;
+                btnThemeDelete.Text = ResourceLoader.LoadString("btnThemeReset");
+            }
 
             UpdateDisplay();
         }
