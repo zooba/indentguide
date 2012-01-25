@@ -194,11 +194,11 @@ namespace IndentGuide
             e.Graphics.Clear(BackColor);
 
             float spaceLeft, spaceWidth;
+            using (var sf = new StringFormat())
             {
                 RectangleF rect = ClientRectangle;
                 rect.Width *= 2.0f;
                 
-                var sf = new StringFormat();
                 sf.SetMeasurableCharacterRanges(new[] { new CharacterRange(0, 8) });
                 
                 var rgns = e.Graphics.MeasureCharacterRanges("        {", Font, rect, sf);
@@ -209,16 +209,20 @@ namespace IndentGuide
 #if DEBUG
                 sf.Alignment = StringAlignment.Far;
                 rect.Width /= 2;
-                e.Graphics.DrawString(string.Format("{0}, {1}", spaceLeft, spaceWidth), Font, Brushes.Black, rect, sf);
+                using (var brush = new SolidBrush(ForeColor))
+                    e.Graphics.DrawString(string.Format("{0}, {1}", spaceLeft, spaceWidth), Font, brush, rect, sf);
 #endif
             }
 
             try
             {
                 var snapshot = new FakeSnapshot(Text);
-                foreach (var line in snapshot.Lines)
+                using (var brush = new SolidBrush(ForeColor))
                 {
-                    e.Graphics.DrawString(line.GetText(), Font, Brushes.Black, 0, line.LineNumber * Font.Height);
+                    foreach (var line in snapshot.Lines)
+                    {
+                        e.Graphics.DrawString(line.GetText(), Font, brush, 0, line.LineNumber * Font.Height);
+                    }
                 }
 
                 if (Theme == null) return;

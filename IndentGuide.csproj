@@ -154,6 +154,7 @@
       <DependentUpon>DisplayOptionsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="DocumentAnalyzer.cs" />
+    <Compile Include="EditorFontAndColors.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="GenericOptions.cs">
       <SubType>Component</SubType>

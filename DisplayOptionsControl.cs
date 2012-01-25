@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -50,7 +51,17 @@ namespace IndentGuide
 
         public IndentTheme ActiveTheme { get; set; }
         public IIndentGuide Service { get; set; }
-        public void Activate() { }
+        
+        public void Activate()
+        {
+            var fac = new EditorFontAndColors();
+
+            lineTextPreview.Font = new Font(fac.FontFamily, fac.FontSize);
+            lineTextPreview.ForeColor = fac.ForeColor;
+            lineTextPreview.BackColor = fac.BackColor;
+            linePreview.BackColor = fac.BackColor;
+        }
+
         public void Apply() { }
 
         public void Update(IndentTheme active, IndentTheme previous)
@@ -134,6 +145,7 @@ namespace IndentGuide
 
             e.Value = oi.Text;
         }
+
     }
 
     [Guid("05491866-4ED1-44FE-BDFF-FB14246BDABB")]
