@@ -7,15 +7,13 @@ using System.Text;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
-namespace IndentGuide
-{
+namespace IndentGuide {
     /// <summary>
     /// Provides settings storage and update notifications.
     /// </summary>
     [Guid(Guids.IIndentGuideGuid)]
     [ComVisible(true)]
-    public interface IIndentGuide
-    {
+    public interface IIndentGuide {
         /// <summary>
         /// The version identifier for the service.
         /// </summary>
@@ -78,24 +76,18 @@ namespace IndentGuide
     /// The service interface.
     /// </summary>
     [Guid(Guids.SIndentGuideGuid)]
-    public interface SIndentGuide
-    { }
+    public interface SIndentGuide { }
 
     /// <summary>
     /// Implementation of the service supporting Indent Guides.
     /// </summary>
-    class IndentGuideService : SIndentGuide, IIndentGuide
-    {
-        public IndentGuideService(IndentGuidePackage package)
-        {
+    class IndentGuideService : SIndentGuide, IIndentGuide {
+        public IndentGuideService(IndentGuidePackage package) {
             _Package = package;
             _Themes = new Dictionary<string, IndentTheme>();
-            try
-            {
+            try {
                 Upgrade();
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
 #if DEBUG
                 Debug.Assert(false);
 #endif
@@ -109,19 +101,15 @@ namespace IndentGuide
         #region IIndentGuide Members
 
         private readonly IndentGuidePackage _Package;
-        public IndentGuidePackage Package
-        {
+        public IndentGuidePackage Package {
             get { return _Package; }
         }
 
         private bool _Visible = true;
-        public bool Visible
-        {
+        public bool Visible {
             get { return _Visible; }
-            set
-            {
-                if (_Visible != value)
-                {
+            set {
+                if (_Visible != value) {
                     _Visible = value;
 
                     var evt = VisibleChanged;
@@ -136,8 +124,7 @@ namespace IndentGuide
         public IDictionary<string, IndentTheme> Themes { get { return _Themes; } }
         public IndentTheme DefaultTheme { get; set; }
 
-        public void OnThemesChanged()
-        {
+        public void OnThemesChanged() {
             Save();
             var evt = ThemesChanged;
             if (evt != null) evt(this, EventArgs.Empty);
@@ -148,11 +135,9 @@ namespace IndentGuide
         private const string SUBKEY_NAME = "IndentGuide";
 
 
-        public void Save()
-        {
+        public void Save() {
             RegistryKey reg = null;
-            try
-            {
+            try {
                 using (var root = Package.UserRegistryRoot)
                     reg = root.CreateSubKey(SUBKEY_NAME);
 
@@ -167,28 +152,21 @@ namespace IndentGuide
 
                 foreach (var theme in Themes.Values)
                     theme.Save(reg);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Trace.WriteLine(string.Format("IndentGuide::Save: {0}", ex));
-            }
-            finally
-            {
+            } finally {
                 if (reg != null) reg.Close();
             }
         }
 
-        public void Save(IVsSettingsWriter writer)
-        {
+        public void Save(IVsSettingsWriter writer) {
             var sb = new StringBuilder();
-            if (DefaultTheme != null)
-            {
+            if (DefaultTheme != null) {
                 sb.Append(DefaultTheme.Save(writer));
                 sb.Append(";");
             }
 
-            foreach (var theme in Themes.Values)
-            {
+            foreach (var theme in Themes.Values) {
                 sb.Append(theme.Save(writer));
                 sb.Append(";");
             }
@@ -198,19 +176,15 @@ namespace IndentGuide
             writer.WriteSettingLong("Visible", Visible ? 1 : 0);
         }
 
-        public void Load()
-        {
+        public void Load() {
             Themes.Clear();
             RegistryKey reg = null;
-            try
-            {
+            try {
                 using (var root = Package.UserRegistryRoot)
                     reg = root.OpenSubKey(SUBKEY_NAME);
 
-                if (reg != null)
-                {
-                    foreach (var themeName in reg.GetSubKeyNames())
-                    {
+                if (reg != null) {
+                    foreach (var themeName in reg.GetSubKeyNames()) {
                         var theme = IndentTheme.Load(reg, themeName);
                         if (theme.IsDefault)
                             DefaultTheme = theme;
@@ -219,46 +193,35 @@ namespace IndentGuide
                     }
 
                     Visible = (int)reg.GetValue("Visible", 1) != 0;
-                }
-                else
-                {
+                } else {
                     Visible = true;
                 }
 
                 if (DefaultTheme == null)
                     DefaultTheme = new IndentTheme();
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Trace.WriteLine(string.Format("IndentGuide::LoadSettingsFromStorage: {0}", ex));
-            }
-            finally
-            {
+            } finally {
                 if (reg != null) reg.Close();
             }
 
             OnThemesChanged();
         }
 
-        public void Load(IVsSettingsReader reader)
-        {
+        public void Load(IVsSettingsReader reader) {
             string themeKeysString;
             reader.ReadSettingString("Themes", out themeKeysString);
 
-            foreach (var key in themeKeysString.Split(';'))
-            {
+            foreach (var key in themeKeysString.Split(';')) {
                 if (string.IsNullOrWhiteSpace(key)) continue;
 
-                try
-                {
+                try {
                     var theme = IndentTheme.Load(reader, key);
                     if (theme.IsDefault)
                         DefaultTheme = theme;
                     else
                         Themes[theme.ContentType] = theme;
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     Trace.WriteLine(string.Format("IndentGuide::LoadSettingsFromXML: {0}", ex));
                 }
             }
@@ -270,8 +233,7 @@ namespace IndentGuide
             OnThemesChanged();
         }
 
-        public void Reset()
-        {
+        public void Reset() {
             using (var root = Package.UserRegistryRoot)
                 root.DeleteSubKeyTree(SUBKEY_NAME, false);
 
@@ -288,16 +250,14 @@ namespace IndentGuide
 
         public int Version { get { return CURRENT_VERSION; } }
 
-        private static int GetCurrentVersion()
-        {
+        private static int GetCurrentVersion() {
             var assembly = typeof(IndentGuideService).Assembly;
             var attribs = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyFileVersionAttribute), false);
             if (attribs.Length == 0) return DEFAULT_VERSION;
 
             var attrib = (System.Reflection.AssemblyFileVersionAttribute)attribs[0];
 
-            try
-            {
+            try {
                 int version = attrib.Version.Split('.')
                     .Select(p => int.Parse(p))
                     .Take(3)
@@ -306,18 +266,14 @@ namespace IndentGuide
                 Trace.WriteLine(string.Format("IndentGuideService.CURRENT_VERSION == {0:X}", version));
 #endif
                 return version;
-            }
-            catch(Exception ex)
-            {
+            } catch (Exception ex) {
                 Trace.WriteLine(string.Format("IndentGuide::GetCurrentVersion: {0}", ex));
                 return DEFAULT_VERSION;
             }
         }
 
-        private void Upgrade()
-        {
-            using (var root = Package.UserRegistryRoot)
-            {
+        private void Upgrade() {
+            using (var root = Package.UserRegistryRoot) {
                 int version;
                 using (var reg = root.OpenSubKey(SUBKEY_NAME, false))
                     version = (reg == null) ? 0 : (int)reg.GetValue("Version", DEFAULT_VERSION);
@@ -327,27 +283,21 @@ namespace IndentGuide
                     return;
 
                 // v9 and later can be upgraded.
-                if (version == DEFAULT_VERSION)
-                {
-                    using (var reg = root.CreateSubKey(SUBKEY_NAME))
-                    {
-                        foreach (var keyName in reg.GetSubKeyNames())
-                        {
-                            using (var key = reg.OpenSubKey(keyName))
-                            {
+                if (version == DEFAULT_VERSION) {
+                    using (var reg = root.CreateSubKey(SUBKEY_NAME)) {
+                        foreach (var keyName in reg.GetSubKeyNames()) {
+                            using (var key = reg.OpenSubKey(keyName)) {
                                 if (key == null) continue;
                                 var name = key.GetValue("Name") as string;
                                 if (string.IsNullOrEmpty(name)) continue;
 
-                                using (var newKey = reg.CreateSubKey(name))
-                                {
+                                using (var newKey = reg.CreateSubKey(name)) {
                                     newKey.SetValue("VisibleAligned", 1);
                                     newKey.SetValue("VisibleUnaligned", 0);
 
                                     // Upgrade the old EmptyLineMode enumeration
                                     var elm = key.GetValue("EmptyLineMode") as string ?? "SameAsAboveLogical";
-                                    switch (elm)
-                                    {
+                                    switch (elm) {
                                         case "NoGuides":
                                             newKey.SetValue("TopToBottom", 1);
                                             newKey.SetValue("VisibleEmpty", 0);
@@ -383,8 +333,7 @@ namespace IndentGuide
                                     // Change the Caret theme color to Red, or Teal if it was already red.
                                     using (var subKey1 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.DefaultFormatIndex)))
                                     using (var subKey2 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.UnalignedFormatIndex)))
-                                    using (var subKey3 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.CaretFormatIndex)))
-                                    {
+                                    using (var subKey3 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.CaretFormatIndex))) {
                                         var visible = !string.Equals("False", key.GetValue("Visible") as string, StringComparison.InvariantCultureIgnoreCase);
                                         var color = key.GetValue("LineColor") as string ?? "Teal";
                                         var style = key.GetValue("LineStyle") as string ?? "Dotted";
@@ -400,15 +349,13 @@ namespace IndentGuide
                                     }
 
                                     // Copy the existing indent overrides.
-                                    foreach (var subkeyName in key.GetSubKeyNames())
-                                    {
+                                    foreach (var subkeyName in key.GetSubKeyNames()) {
                                         int formatIndex;
                                         if (!int.TryParse(subkeyName, out formatIndex))
                                             continue;
 
                                         using (var subKey1 = key.OpenSubKey(subkeyName))
-                                        using (var subKey2 = newKey.CreateSubKey(subkeyName))
-                                        {
+                                        using (var subKey2 = newKey.CreateSubKey(subkeyName)) {
                                             var visible = !string.Equals("False", subKey1.GetValue("Visible") as string, StringComparison.InvariantCultureIgnoreCase);
                                             var color = subKey1.GetValue("LineColor") as string ?? "Teal";
                                             var style = subKey1.GetValue("LineStyle") as string ?? "Dotted";

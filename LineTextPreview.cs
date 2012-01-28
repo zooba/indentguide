@@ -5,12 +5,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace IndentGuide
-{
-    public partial class LineTextPreview : UserControl
-    {
-        public LineTextPreview()
-        {
+namespace IndentGuide {
+    public partial class LineTextPreview : UserControl {
+        public LineTextPreview() {
             SetStyle(ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.ResizeRedraw | ControlStyles.Opaque, true);
 
@@ -32,25 +29,22 @@ namespace IndentGuide
 
         [Browsable(true)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-        public override string Text
-        {
+        public override string Text {
             get { return base.Text; }
             set { base.Text = (value ?? ""); Invalidate(); }
         }
 
-        protected override void OnTextChanged(EventArgs e)
-        {
+        protected override void OnTextChanged(EventArgs e) {
             base.OnTextChanged(e);
             Invalidate();
         }
 
-        private Pen GetLinePen(int formatIndex)
-        {
+        private Pen GetLinePen(int formatIndex) {
             LineFormat format;
 
             if (!Theme.LineFormats.TryGetValue(formatIndex, out format))
                 format = Theme.DefaultLineFormat;
-            
+
             if (!format.Visible) return null;
 
             Pen pen = null;
@@ -58,25 +52,20 @@ namespace IndentGuide
             pen = new Pen(format.LineColor, (float)format.LineStyle.GetStrokeThickness());
 
             var pattern = format.LineStyle.GetDashPattern();
-            if (pattern == null)
-            {
+            if (pattern == null) {
                 pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
                 pen.StartCap = System.Drawing.Drawing2D.LineCap.Flat;
                 pen.EndCap = System.Drawing.Drawing2D.LineCap.Flat;
-            }
-            else
-            {
+            } else {
                 pen.DashPattern = pattern;
             }
             return pen;
         }
 
-        private class FakeLine : Microsoft.VisualStudio.Text.ITextSnapshotLine
-        {
+        private class FakeLine : Microsoft.VisualStudio.Text.ITextSnapshotLine {
             internal readonly string _Text;
             internal readonly int _Line, _Start;
-            public FakeLine(Microsoft.VisualStudio.Text.ITextSnapshot snapshot, string text, int line, int start)
-            {
+            public FakeLine(Microsoft.VisualStudio.Text.ITextSnapshot snapshot, string text, int line, int start) {
                 Snapshot = snapshot;
                 _Text = text;
                 _Line = line;
@@ -98,8 +87,7 @@ namespace IndentGuide
             public Microsoft.VisualStudio.Text.ITextSnapshot Snapshot { get; set; }
         }
 
-        private class FakeTextBuffer : Microsoft.VisualStudio.Text.ITextBuffer
-        {
+        private class FakeTextBuffer : Microsoft.VisualStudio.Text.ITextBuffer {
             public Microsoft.VisualStudio.Text.ITextSnapshot CurrentSnapshot { get; set; }
 
             public void ChangeContentType(Microsoft.VisualStudio.Utilities.IContentType newContentType, object editTag) { throw new NotImplementedException(); }
@@ -130,21 +118,18 @@ namespace IndentGuide
 
 
 
-        private class FakeSnapshot : Microsoft.VisualStudio.Text.ITextSnapshot
-        {
+        private class FakeSnapshot : Microsoft.VisualStudio.Text.ITextSnapshot {
             private string _Source;
             private List<FakeLine> _Lines;
 
-            public FakeSnapshot(string source)
-            {
+            public FakeSnapshot(string source) {
                 _Source = source.Replace("\\n", "\n").Replace("\r\n", "\n");
                 if (!_Source.EndsWith("\n")) _Source += "\n";
 
                 _Lines = new List<FakeLine>();
                 for (int line = 0, start = 0, end = _Source.IndexOf('\n');
                     end >= start;
-                    start = end + 1, end = _Source.IndexOf('\n', start), line += 1)
-                {
+                    start = end + 1, end = _Source.IndexOf('\n', start), line += 1) {
                     _Lines.Add(new FakeLine(this, _Source.Substring(start, end - start), line, start));
                 }
             }
@@ -154,10 +139,8 @@ namespace IndentGuide
             public Microsoft.VisualStudio.Text.ITextSnapshotLine GetLineFromLineNumber(int lineNumber) { return _Lines[lineNumber]; }
             public Microsoft.VisualStudio.Text.ITextSnapshotLine GetLineFromPosition(int position) { return GetLineFromLineNumber(GetLineNumberFromPosition(position)); }
 
-            public int GetLineNumberFromPosition(int position)
-            {
-                for (int i = 1; i < LineCount; ++i)
-                {
+            public int GetLineNumberFromPosition(int position) {
+                for (int i = 1; i < LineCount; ++i) {
                     if (position < _Lines[i].Start)
                         return i - 1;
                     position -= _Lines[i].Start;
@@ -189,18 +172,16 @@ namespace IndentGuide
         }
 
 
-        protected override void OnPaint(PaintEventArgs e)
-        {
+        protected override void OnPaint(PaintEventArgs e) {
             e.Graphics.Clear(BackColor);
 
             float spaceLeft, spaceWidth;
-            using (var sf = new StringFormat())
-            {
+            using (var sf = new StringFormat()) {
                 RectangleF rect = ClientRectangle;
                 rect.Width *= 2.0f;
-                
+
                 sf.SetMeasurableCharacterRanges(new[] { new CharacterRange(0, 8) });
-                
+
                 var rgns = e.Graphics.MeasureCharacterRanges("        {", Font, rect, sf);
                 var bounds = rgns[0].GetBounds(e.Graphics);
                 spaceLeft = bounds.Left;
@@ -214,13 +195,10 @@ namespace IndentGuide
 #endif
             }
 
-            try
-            {
+            try {
                 var snapshot = new FakeSnapshot(Text);
-                using (var brush = new SolidBrush(ForeColor))
-                {
-                    foreach (var line in snapshot.Lines)
-                    {
+                using (var brush = new SolidBrush(ForeColor)) {
+                    foreach (var line in snapshot.Lines) {
                         e.Graphics.DrawString(line.GetText(), Font, brush, 0, line.LineNumber * Font.Height);
                     }
                 }
@@ -229,8 +207,7 @@ namespace IndentGuide
 
                 var analysis = new DocumentAnalyzer(snapshot, Theme.Behavior, IndentSize);
 
-                foreach (var line in analysis.Lines)
-                {
+                foreach (var line in analysis.Lines) {
                     int linePos = line.Indent;
                     if (!analysis.Behavior.VisibleUnaligned && (linePos % analysis.IndentSize) != 0)
                         continue;
@@ -244,15 +221,12 @@ namespace IndentGuide
                         formatIndex = IndentTheme.UnalignedFormatIndex;
 
                     var pen = GetLinePen(formatIndex);
-                    if (pen != null)
-                    {
+                    if (pen != null) {
                         e.Graphics.DrawLine(pen, left, top, left, bottom);
                         pen.Dispose();
                     }
                 }
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Trace.WriteLine("LineTextPreview::OnPaint Error");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
                 e.Graphics.DrawString(ex.ToString(), Font, Brushes.Black, 0.0f, 0.0f);

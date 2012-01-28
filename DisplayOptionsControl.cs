@@ -5,19 +5,15 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace IndentGuide
-{
-    public partial class DisplayOptionsControl : UserControl, IThemeAwareDialog
-    {
-        class OverrideInfo
-        {
+namespace IndentGuide {
+    public partial class DisplayOptionsControl : UserControl, IThemeAwareDialog {
+        class OverrideInfo {
             public string Text;
             public int Index;
             public string Pattern;
         }
 
-        public DisplayOptionsControl()
-        {
+        public DisplayOptionsControl() {
             InitializeComponent();
 
             gridLineMode.SelectableType = typeof(LineBehavior);
@@ -36,8 +32,7 @@ namespace IndentGuide
                 Index = IndentTheme.CaretFormatIndex,
                 Text = ResourceLoader.LoadString("CaretFormatName")
             });
-            for (int key = 1; key <= 30; ++key)
-            {
+            for (int key = 1; key <= 30; ++key) {
                 var name = string.Format(CultureInfo.CurrentCulture, "#{0}", key);
                 lstOverrides.Items.Add(new OverrideInfo {
                     Index = key,
@@ -51,9 +46,8 @@ namespace IndentGuide
 
         public IndentTheme ActiveTheme { get; set; }
         public IIndentGuide Service { get; set; }
-        
-        public void Activate()
-        {
+
+        public void Activate() {
             var fac = new EditorFontAndColors();
 
             lineTextPreview.Font = new Font(fac.FontFamily, fac.FontSize);
@@ -64,12 +58,9 @@ namespace IndentGuide
 
         public void Apply() { }
 
-        public void Update(IndentTheme active, IndentTheme previous)
-        {
-            if (active != null)
-            {
-                if (previous != active)
-                {
+        public void Update(IndentTheme active, IndentTheme previous) {
+            if (active != null) {
+                if (previous != active) {
                     lstOverrides.SelectedItem = null;    // ensure a change event occurs
                     lstOverrides.SelectedIndex = 0;
                 }
@@ -79,8 +70,7 @@ namespace IndentGuide
             }
         }
 
-        private void OnThemeChanged(IndentTheme theme)
-        {
+        private void OnThemeChanged(IndentTheme theme) {
             var evt = ThemeChanged;
             if (evt != null) evt(this, new ThemeEventArgs(theme));
         }
@@ -89,11 +79,9 @@ namespace IndentGuide
 
         #endregion
 
-        private void gridLineStyle_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
-        {
+        private void gridLineStyle_PropertyValueChanged(object s, PropertyValueChangedEventArgs e) {
             var format = gridLineStyle.SelectedObject as LineFormat;
-            if (format != null)
-            {
+            if (format != null) {
                 linePreview.ForeColor = format.LineColor;
                 linePreview.Style = format.LineStyle;
             }
@@ -104,16 +92,14 @@ namespace IndentGuide
             Update(ActiveTheme, ActiveTheme);
         }
 
-        private void gridLineMode_PropertyValueChanged(object s, EventArgs e)
-        {
+        private void gridLineMode_PropertyValueChanged(object s, EventArgs e) {
             lineTextPreview.Invalidate();
 
             OnThemeChanged(ActiveTheme);
             Update(ActiveTheme, ActiveTheme);
         }
 
-        private void lstOverrides_SelectedIndexChanged(object sender, EventArgs e)
-        {
+        private void lstOverrides_SelectedIndexChanged(object sender, EventArgs e) {
             if (lstOverrides.SelectedItem == null) return;
             var oi = lstOverrides.SelectedItem as OverrideInfo;
             Debug.Assert(oi != null);
@@ -121,13 +107,10 @@ namespace IndentGuide
 
             ActiveTheme.Apply();
             LineFormat format;
-            if (oi.Pattern == null)
-            {
+            if (oi.Pattern == null) {
                 if (!ActiveTheme.LineFormats.TryGetValue(oi.Index, out format))
                     ActiveTheme.LineFormats[oi.Index] = format = ActiveTheme.DefaultLineFormat.Clone();
-            }
-            else
-            {
+            } else {
                 // TODO: Pattern based formatting
                 format = ActiveTheme.DefaultLineFormat.Clone();
             }
@@ -137,8 +120,7 @@ namespace IndentGuide
             linePreview.Style = format.LineStyle;
         }
 
-        private void lstOverrides_Format(object sender, ListControlConvertEventArgs e)
-        {
+        private void lstOverrides_Format(object sender, ListControlConvertEventArgs e) {
             var oi = e.ListItem as OverrideInfo;
             Debug.Assert(oi != null);
             if (oi == null) return;

@@ -9,14 +9,12 @@ using System.Text;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
-namespace IndentGuide
-{
+namespace IndentGuide {
     /// <summary>
     /// The supported styles of guideline.
     /// </summary>
     [Flags]
-    public enum LineStyle
-    {
+    public enum LineStyle {
         Solid = 1,
         Thick = 2,
         Dotted = 4,
@@ -25,18 +23,15 @@ namespace IndentGuide
         DashedThick = Dashed | Thick
     }
 
-    public static class LineStyleExtensions
-    {
-        public static double GetStrokeThickness(this LineStyle style)
-        {
+    public static class LineStyleExtensions {
+        public static double GetStrokeThickness(this LineStyle style) {
             if (style.HasFlag(LineStyle.Thick))
                 return 3.0;
             else
                 return 1.0;
         }
 
-        public static System.Windows.Media.DoubleCollection GetStrokeDashArray(this LineStyle style)
-        {
+        public static System.Windows.Media.DoubleCollection GetStrokeDashArray(this LineStyle style) {
             if (style == LineStyle.Dotted)
                 return new System.Windows.Media.DoubleCollection { 1.0, 2.0, 1.0, 2.0 };
             else if (style == LineStyle.DottedThick)
@@ -49,8 +44,7 @@ namespace IndentGuide
                 return null;
         }
 
-        public static float[] GetDashPattern(this LineStyle style)
-        {
+        public static float[] GetDashPattern(this LineStyle style) {
             var dashArray = style.GetStrokeDashArray();
             if (dashArray == null)
                 return null;
@@ -62,27 +56,22 @@ namespace IndentGuide
     /// <summary>
     /// The format of a particular type of guideline.
     /// </summary>
-    public class LineFormat : IEquatable<LineFormat>
-    {
-        public LineFormat()
-        {
+    public class LineFormat : IEquatable<LineFormat> {
+        public LineFormat() {
             Visible = true;
             LineStyle = LineStyle.Dotted;
             LineColor = Color.Teal;
         }
 
-        public LineFormat Clone()
-        {
-            return new LineFormat
-            {
+        public LineFormat Clone() {
+            return new LineFormat {
                 Visible = Visible,
                 LineStyle = LineStyle,
                 LineColor = LineColor
             };
         }
 
-        public void Reset()
-        {
+        public void Reset() {
             Visible = true;
             LineStyle = LineStyle.Dotted;
             LineColor = Color.Teal;
@@ -106,98 +95,73 @@ namespace IndentGuide
         [TypeConverter(typeof(ColorConverter))]
         public Color LineColor { get; set; }
 
-        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, int visible)
-        {
+        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, int visible) {
             var inst = new LineFormat();
-            try
-            {
+            try {
                 inst.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
                     .ConvertFromInvariantString(lineStyle);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Trace.WriteLine("IndentGuide::Error parsing " + lineStyle.ToString() + " into LineStyle");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
             }
 
-            try
-            {
+            try {
                 inst.LineColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
                     .ConvertFromInvariantString(lineColor);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Trace.WriteLine("IndentGuide::Error parsing " + lineColor.ToString() + " into LineColor");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
             }
 
-            try
-            {
+            try {
                 inst.Visible = visible != 0;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Trace.WriteLine("IndentGuide::Error parsing " + visible.ToString() + " into Visible");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
             }
             return inst;
         }
 
-        public void ToInvariantStrings(out string lineStyle, out string lineColor, out int visible)
-        {
-            try
-            {
+        public void ToInvariantStrings(out string lineStyle, out string lineColor, out int visible) {
+            try {
                 lineStyle = TypeDescriptor.GetConverter(typeof(LineStyle))
                     .ConvertToInvariantString(LineStyle);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Trace.WriteLine("IndentGuide::Error converting LineStyle into string");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
                 lineStyle = LineStyle.Dotted.ToString();
             }
 
-            try
-            {
+            try {
                 lineColor = TypeDescriptor.GetConverter(typeof(Color))
                     .ConvertToInvariantString(LineColor);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Trace.WriteLine("IndentGuide::Error converting LineColor into string");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
                 lineColor = Color.Teal.ToString();
             }
 
-            try
-            {
+            try {
                 visible = Visible ? 1 : 0;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Trace.WriteLine("IndentGuide::Error converting Visible into string");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
                 visible = 1;
             }
         }
 
-        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, string visible)
-        {
+        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, string visible) {
             int visibleInt = 1;
-            try
-            {
+            try {
                 visibleInt = bool.Parse(visible) ? 1 : 0;
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Trace.WriteLine("IndentGuide::Error converting Visible into bool");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
             }
             return FromInvariantStrings(lineStyle, lineColor, visibleInt);
         }
 
-        public void ToInvariantStrings(out string lineStyle, out string lineColor, out string visible)
-        {
+        public void ToInvariantStrings(out string lineStyle, out string lineColor, out string visible) {
             int visibleInt;
             ToInvariantStrings(out lineStyle, out lineColor, out visibleInt);
             visible = (visibleInt != 0).ToString();
@@ -205,8 +169,7 @@ namespace IndentGuide
 
         #region IEquatable<LineFormat> Members
 
-        public bool Equals(LineFormat other)
-        {
+        public bool Equals(LineFormat other) {
             if (null == other) return false;
             return LineStyle.Equals(other.LineStyle) &&
                 LineColor.Equals(other.LineColor) &&
@@ -216,10 +179,8 @@ namespace IndentGuide
         #endregion
     }
 
-    public class LineBehavior : IEquatable<LineBehavior>
-    {
-        public LineBehavior()
-        {
+    public class LineBehavior : IEquatable<LineBehavior> {
+        public LineBehavior() {
             TopToBottom = true;
             VisibleAligned = true;
             VisibleUnaligned = false;
@@ -228,8 +189,7 @@ namespace IndentGuide
             VisibleEmptyAtEnd = false;
         }
 
-        public LineBehavior Clone()
-        {
+        public LineBehavior Clone() {
             return new LineBehavior {
                 TopToBottom = TopToBottom,
                 VisibleAligned = VisibleAligned,
@@ -240,14 +200,12 @@ namespace IndentGuide
             };
         }
 
-        public override bool Equals(object obj)
-        {
+        public override bool Equals(object obj) {
             return Equals(obj as LineBehavior);
         }
 
-        public bool Equals(LineBehavior other)
-        {
-            return other != null && 
+        public bool Equals(LineBehavior other) {
+            return other != null &&
                 TopToBottom == other.TopToBottom &&
                 VisibleAligned == other.VisibleAligned &&
                 VisibleAtTextEnd == other.VisibleAtTextEnd &&
@@ -256,8 +214,7 @@ namespace IndentGuide
                 VisibleUnaligned == other.VisibleUnaligned;
         }
 
-        public override int GetHashCode()
-        {
+        public override int GetHashCode() {
             return (TopToBottom ? 1 : 0) |
                 (VisibleAligned ? 2 : 0) |
                 (VisibleAtTextEnd ? 4 : 0) |
@@ -316,8 +273,7 @@ namespace IndentGuide
         [SortOrder(2)]
         public bool VisibleUnaligned { get; set; }
 
-        internal void Load(RegistryKey key)
-        {
+        internal void Load(RegistryKey key) {
             TopToBottom = (int)key.GetValue("TopToBottom", 1) != 0;
             VisibleAligned = (int)key.GetValue("VisibleAligned", 1) != 0;
             VisibleUnaligned = (int)key.GetValue("VisibleUnaligned", 0) != 0;
@@ -326,8 +282,7 @@ namespace IndentGuide
             VisibleEmptyAtEnd = (int)key.GetValue("VisibleEmptyAtEnd", 1) != 0;
         }
 
-        internal void Load(IVsSettingsReader reader, string key)
-        {
+        internal void Load(IVsSettingsReader reader, string key) {
             string temp;
             reader.ReadSettingAttribute(key, "TopToBottom", out temp);
             TopToBottom = bool.Parse(temp);
@@ -343,8 +298,7 @@ namespace IndentGuide
             VisibleEmptyAtEnd = bool.Parse(temp);
         }
 
-        internal void Save(RegistryKey key)
-        {
+        internal void Save(RegistryKey key) {
             key.SetValue("TopToBottom", TopToBottom ? 1 : 0);
             key.SetValue("VisibleAligned", VisibleAligned ? 1 : 0);
             key.SetValue("VisibleUnaligned", VisibleUnaligned ? 1 : 0);
@@ -353,8 +307,7 @@ namespace IndentGuide
             key.SetValue("VisibleEmptyAtEnd", VisibleEmptyAtEnd ? 1 : 0);
         }
 
-        internal void Save(IVsSettingsWriter writer, string key)
-        {
+        internal void Save(IVsSettingsWriter writer, string key) {
             writer.WriteSettingAttribute(key, "TopToBottom", TopToBottom.ToString());
             writer.WriteSettingAttribute(key, "VisibleAligned", VisibleAligned.ToString());
             writer.WriteSettingAttribute(key, "VisibleUnaligned", VisibleUnaligned.ToString());
@@ -367,32 +320,27 @@ namespace IndentGuide
     /// <summary>
     /// A theme for a particular language or document type.
     /// </summary>
-    public class IndentTheme : IComparable<IndentTheme>
-    {
+    public class IndentTheme : IComparable<IndentTheme> {
         public static readonly string DefaultThemeName = ResourceLoader.LoadString("DefaultThemeName");
         public const int DefaultFormatIndex = int.MinValue;
         public const int UnalignedFormatIndex = -1;
         public const int CaretFormatIndex = -2;
 
-        public static LineFormat DefaultUnalignedFormat
-        {
+        public static LineFormat DefaultUnalignedFormat {
             get { return new LineFormat(); }
         }
-        public static LineFormat DefaultCaretFormat
-        {
+        public static LineFormat DefaultCaretFormat {
             get { return new LineFormat { LineColor = Color.Red }; }
         }
 
         public event EventHandler Updated;
 
-        internal void OnUpdated()
-        {
+        internal void OnUpdated() {
             var evt = Updated;
             if (evt != null) Updated(this, EventArgs.Empty);
         }
 
-        public IndentTheme()
-        {
+        public IndentTheme() {
             ContentType = null;
             LineFormats = new Dictionary<int, LineFormat>();
             DefaultLineFormat = new LineFormat();
@@ -401,8 +349,7 @@ namespace IndentGuide
             Behavior = new LineBehavior();
         }
 
-        public IndentTheme Clone()
-        {
+        public IndentTheme Clone() {
             var inst = new IndentTheme();
             inst.ContentType = ContentType;
             foreach (var item in LineFormats)
@@ -411,8 +358,7 @@ namespace IndentGuide
             return inst;
         }
 
-        public static string FormatIndexToString(int formatIndex)
-        {
+        public static string FormatIndexToString(int formatIndex) {
             if (formatIndex == DefaultFormatIndex)
                 return "Default";
             else if (formatIndex == UnalignedFormatIndex)
@@ -423,8 +369,7 @@ namespace IndentGuide
                 return formatIndex.ToString(CultureInfo.InvariantCulture);
         }
 
-        public static int? FormatIndexFromString(string source)
-        {
+        public static int? FormatIndexFromString(string source) {
             int result;
             if (source == "Default")
                 return DefaultFormatIndex;
@@ -445,14 +390,12 @@ namespace IndentGuide
         public bool IsDefault { get { return ContentType == null; } }
 
         [TypeConverter(typeof(ExpandableObjectConverter))]
-        public LineFormat DefaultLineFormat
-        {
-            get 
-            {
+        public LineFormat DefaultLineFormat {
+            get {
                 LineFormat format;
                 if (LineFormats.TryGetValue(DefaultFormatIndex, out format))
                     return format;
-                
+
                 return LineFormats[DefaultFormatIndex] = new LineFormat();
             }
             set { LineFormats[DefaultFormatIndex] = value; }
@@ -464,20 +407,16 @@ namespace IndentGuide
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public LineBehavior Behavior { get; set; }
 
-        public static IndentTheme Load(RegistryKey reg, string themeKey)
-        {
+        public static IndentTheme Load(RegistryKey reg, string themeKey) {
             var theme = new IndentTheme();
 
-            using (var key = reg.OpenSubKey(themeKey))
-            {
+            using (var key = reg.OpenSubKey(themeKey)) {
                 theme.ContentType = (themeKey == DefaultThemeName) ? null : themeKey;
                 theme.Behavior.Load(key);
 
-                foreach (var subkeyName in key.GetSubKeyNames())
-                {
+                foreach (var subkeyName in key.GetSubKeyNames()) {
                     LineFormat format;
-                    using (var subkey = key.OpenSubKey(subkeyName))
-                    {
+                    using (var subkey = key.OpenSubKey(subkeyName)) {
                         format = LineFormat.FromInvariantStrings(
                             (string)subkey.GetValue("LineStyle"),
                             (string)subkey.GetValue("LineColor"),
@@ -495,8 +434,7 @@ namespace IndentGuide
             return theme;
         }
 
-        public static IndentTheme Load(IVsSettingsReader reader, string key)
-        {
+        public static IndentTheme Load(IVsSettingsReader reader, string key) {
             var theme = new IndentTheme();
 
             theme.ContentType = (key == DefaultThemeName) ? null : key;
@@ -505,10 +443,8 @@ namespace IndentGuide
             string lineStyle, lineColor, visible;
             string subkeys;
             reader.ReadSettingString(key, out subkeys);
-            if (!string.IsNullOrEmpty(subkeys))
-            {
-                foreach (var subkey in subkeys.Split(';'))
-                {
+            if (!string.IsNullOrEmpty(subkeys)) {
+                foreach (var subkey in subkeys.Split(';')) {
                     if (string.IsNullOrEmpty(subkeys)) continue;
 
                     int i = subkey.LastIndexOf('.');
@@ -531,26 +467,21 @@ namespace IndentGuide
             return theme;
         }
 
-        public string Save(RegistryKey reg)
-        {
-            using (var key = reg.CreateSubKey(ContentType ?? DefaultThemeName))
-            {
+        public string Save(RegistryKey reg) {
+            using (var key = reg.CreateSubKey(ContentType ?? DefaultThemeName)) {
                 Behavior.Save(key);
 
-                foreach (var subkey in key.GetSubKeyNames())
-                {
+                foreach (var subkey in key.GetSubKeyNames()) {
                     key.DeleteSubKeyTree(subkey, false);
                 }
 
                 string lineStyle, lineColor;
                 int visible;
 
-                foreach (var item in LineFormats)
-                {
+                foreach (var item in LineFormats) {
                     var subkeyName = FormatIndexToString(item.Key);
 
-                    using (var subkey = key.CreateSubKey(subkeyName))
-                    {
+                    using (var subkey = key.CreateSubKey(subkeyName)) {
                         item.Value.ToInvariantStrings(out lineStyle, out lineColor, out visible);
                         subkey.SetValue("LineStyle", lineStyle);
                         subkey.SetValue("LineColor", lineColor);
@@ -561,8 +492,7 @@ namespace IndentGuide
             return ContentType;
         }
 
-        public string Save(IVsSettingsWriter writer)
-        {
+        public string Save(IVsSettingsWriter writer) {
             var key = ContentType ?? DefaultThemeName;
             var subkeys = string.Join(";", LineFormats.Select(item => key + "." + FormatIndexToString(item.Key)));
             writer.WriteSettingString(key, subkeys);
@@ -570,12 +500,11 @@ namespace IndentGuide
             Behavior.Save(writer, key);
 
             string lineStyle, lineColor, visible;
-            foreach (var item in LineFormats)
-            {
+            foreach (var item in LineFormats) {
                 var subkeyName = key + "." + FormatIndexToString(item.Key);
 
                 writer.WriteSettingString(subkeyName, "");
-                
+
                 item.Value.ToInvariantStrings(out lineStyle, out lineColor, out visible);
                 writer.WriteSettingAttribute(subkeyName, "LineStyle", lineStyle);
                 writer.WriteSettingAttribute(subkeyName, "LineColor", lineColor);
@@ -585,13 +514,11 @@ namespace IndentGuide
             return key;
         }
 
-        public void Delete(RegistryKey reg)
-        {
+        public void Delete(RegistryKey reg) {
             reg.DeleteSubKeyTree(ContentType);
         }
 
-        public int CompareTo(IndentTheme other)
-        {
+        public int CompareTo(IndentTheme other) {
             if (null == other) return -1;
             if (IsDefault && other.IsDefault) return 0;
             if (IsDefault) return -1;
@@ -599,14 +526,13 @@ namespace IndentGuide
             return ContentType.CompareTo(other.ContentType);
         }
 
-        internal void Apply()
-        {
+        internal void Apply() {
             var toRemove = LineFormats
                 .Where(kv => kv.Key >= 0)
                 .Where(kv => DefaultLineFormat.Equals(kv.Value) || null == kv.Value)
                 .Select(kv => kv.Key)
                 .ToList();
-            
+
             foreach (var key in toRemove)
                 LineFormats.Remove(key);
         }

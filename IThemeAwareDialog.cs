@@ -1,24 +1,20 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace IndentGuide
-{
-    public class ThemeEventArgs : EventArgs
-    {
+namespace IndentGuide {
+    public class ThemeEventArgs : EventArgs {
         public ThemeEventArgs(IndentTheme theme)
-            : base()
-        {
+            : base() {
             Theme = theme;
         }
 
         public IndentTheme Theme { get; set; }
     }
 
-    public interface IThemeAwareDialog
-    {
+    public interface IThemeAwareDialog {
         IndentTheme ActiveTheme { set; }
         IIndentGuide Service { set; }
-        
+
         Control.ControlCollection Controls { get; }
 
         void Activate();

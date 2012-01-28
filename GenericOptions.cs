@@ -6,24 +6,18 @@ using Microsoft.VisualStudio.Shell;
 using System.Windows.Forms;
 using System.ComponentModel;
 
-namespace IndentGuide
-{
-    public class GenericOptions<T> : DialogPage
-        where T : Control, IThemeAwareDialog, new()
-    {
+namespace IndentGuide {
+    public class GenericOptions<T> : DialogPage where T : Control, IThemeAwareDialog, new() {
         private IIndentGuide Service;
 
-        public GenericOptions()
-        {
+        public GenericOptions() {
             var provider = ServiceProvider.GlobalProvider;
             Service = (IIndentGuide)provider.GetService(typeof(SIndentGuide));
         }
 
         private T _Control = null;
-        private T Control
-        {
-            get
-            {
+        private T Control {
+            get {
                 if (_Control == null)
                     System.Threading.Interlocked.CompareExchange(ref _Control, new T(), null);
 
@@ -32,10 +26,8 @@ namespace IndentGuide
         }
 
         private ThemeOptionsControl _Wrapper = null;
-        private ThemeOptionsControl Wrapper
-        {
-            get
-            {
+        private ThemeOptionsControl Wrapper {
+            get {
                 if (_Wrapper == null)
                     System.Threading.Interlocked.CompareExchange(ref _Wrapper, new ThemeOptionsControl(Control), null);
 
@@ -43,50 +35,41 @@ namespace IndentGuide
             }
         }
 
-        protected override System.Windows.Forms.IWin32Window Window
-        {
+        protected override System.Windows.Forms.IWin32Window Window {
             get { return Wrapper; }
         }
 
-        public override void LoadSettingsFromStorage()
-        {
+        public override void LoadSettingsFromStorage() {
             Service.Load();
         }
 
-        public override void LoadSettingsFromXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsReader reader)
-        {
+        public override void LoadSettingsFromXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsReader reader) {
             Service.Load(reader);
         }
 
-        public override void SaveSettingsToStorage()
-        {
+        public override void SaveSettingsToStorage() {
             Service.Save();
         }
 
-        public override void SaveSettingsToXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsWriter writer)
-        {
+        public override void SaveSettingsToXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsWriter writer) {
             Service.Save(writer);
         }
 
-        public override void ResetSettings()
-        {
+        public override void ResetSettings() {
             Service.Reset();
         }
 
-        protected override void OnActivate(CancelEventArgs e)
-        {
+        protected override void OnActivate(CancelEventArgs e) {
             base.OnActivate(e);
             Wrapper.Activate();
         }
 
-        protected override void OnApply(DialogPage.PageApplyEventArgs e)
-        {
+        protected override void OnApply(DialogPage.PageApplyEventArgs e) {
             Wrapper.Apply();
             base.OnApply(e);
         }
 
-        protected override void OnClosed(EventArgs e)
-        {
+        protected override void OnClosed(EventArgs e) {
             Wrapper.Close();
             base.OnClosed(e);
         }

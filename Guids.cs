@@ -1,9 +1,7 @@
 ﻿using System;
 
-namespace IndentGuide
-{
-    class Guids
-    {
+namespace IndentGuide {
+    class Guids {
         public const string IIndentGuideGuid = "A65F346F-3F88-4949-BFC1-F5DD3848754F";
         public const string SIndentGuideGuid = "46A005F6-0E33-47A8-9791-190D4121678E";
 

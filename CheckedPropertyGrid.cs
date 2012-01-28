@@ -7,24 +7,20 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace IndentGuide
-{
-    public partial class CheckedPropertyGrid : UserControl
-    {
+namespace IndentGuide {
+    public partial class CheckedPropertyGrid : UserControl {
         private readonly List<PropertyBox> CheckBoxes;
 
-        class PropertyBox
-        {
+        class PropertyBox {
             public CheckBox CheckBox { get; set; }
             public string Name { get; private set; }
             public int SortPriority { get; private set; }
             public string DisplayName { get; private set; }
             public string Description { get; private set; }
-            
+
             private readonly PropertyInfo PropInfo;
-            
-            public PropertyBox(PropertyInfo propInfo)
-            {
+
+            public PropertyBox(PropertyInfo propInfo) {
                 PropInfo = propInfo;
                 Name = "chk" + propInfo.Name;
                 SortPriority = GetSortOrder();
@@ -41,68 +37,48 @@ namespace IndentGuide
                 CheckBox.Tag = new WeakReference(this);
             }
 
-            public void SetValue(object target)
-            {
-                try
-                {
+            public void SetValue(object target) {
+                try {
                     PropInfo.SetValue(target, CheckBox.Checked, null);
-                }
-                catch
-                {
+                } catch {
                     CheckBox.Enabled = false;
                 }
             }
 
-            public void GetValue(object source)
-            {
-                try
-                {
+            public void GetValue(object source) {
+                try {
                     CheckBox.Checked = (bool)PropInfo.GetValue(source, null);
                     CheckBox.Enabled = true;
-                }
-                catch
-                {
+                } catch {
                     CheckBox.Enabled = false;
                 }
             }
 
-            private int GetSortOrder()
-            {
-                try
-                {
+            private int GetSortOrder() {
+                try {
                     var sort = PropInfo.GetCustomAttributes(false).OfType<SortOrderAttribute>().First();
                     return sort.Priority;
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     Trace.WriteLine("CheckedPropertyGrid.GetSortOrder Exception: " + ex.ToString());
                     return 0;
                 }
             }
 
-            private string GetDisplayName()
-            {
-                try
-                {
+            private string GetDisplayName() {
+                try {
                     var name = PropInfo.GetCustomAttributes(false).OfType<DisplayNameAttribute>().First();
                     return name.DisplayName;
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     Trace.WriteLine("CheckedPropertyGrid.GetDisplayName Exception: " + ex.ToString());
                     return PropInfo.Name;
                 }
             }
 
-            private string GetDescription()
-            {
-                try
-                {
+            private string GetDescription() {
+                try {
                     var descr = PropInfo.GetCustomAttributes(false).OfType<DescriptionAttribute>().First();
                     return descr.Description;
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     Trace.WriteLine("CheckedPropertyGrid.GetDescription Exception: " + ex.ToString());
                     return PropInfo.Name;
                 }
@@ -110,8 +86,7 @@ namespace IndentGuide
 
         }
 
-        public CheckedPropertyGrid()
-        {
+        public CheckedPropertyGrid() {
             InitializeComponent();
             panel.HorizontalScroll.Visible = false;
 
@@ -119,8 +94,7 @@ namespace IndentGuide
         }
 
         public event EventHandler PropertyValueChanged;
-        private void OnPropertyValueChanged()
-        {
+        private void OnPropertyValueChanged() {
             var evt = PropertyValueChanged;
             if (evt != null)
                 evt(this, EventArgs.Empty);
@@ -128,11 +102,9 @@ namespace IndentGuide
 
         private object _SelectedObject;
         [Browsable(false)]
-        public object SelectedObject
-        {
+        public object SelectedObject {
             get { return _SelectedObject; }
-            set
-            {
+            set {
                 _SelectedObject = value;
                 if (InvokeRequired)
                     BeginInvoke((Action)UpdateObject);
@@ -141,25 +113,21 @@ namespace IndentGuide
             }
         }
 
-        private void UpdateObject()
-        {
+        private void UpdateObject() {
             var obj = SelectedObject;
             if (obj == null) return;
             if (SelectableType != obj.GetType()) return;
 
-            foreach (var check in CheckBoxes)
-            {
+            foreach (var check in CheckBoxes) {
                 check.GetValue(obj);
             }
         }
 
         private Type _SelectableType;
         [Browsable(false)]
-        public Type SelectableType
-        {
+        public Type SelectableType {
             get { return _SelectableType; }
-            set
-            {
+            set {
                 _SelectableType = value;
                 if (InvokeRequired)
                     BeginInvoke((Action)UpdateType);
@@ -168,23 +136,18 @@ namespace IndentGuide
             }
         }
 
-        private void UpdateType()
-        {
+        private void UpdateType() {
             SuspendLayout();
 
             var type = SelectableType;
-            if (type == null)
-            {
+            if (type == null) {
                 table.Controls.Clear();
                 CheckBoxes.Clear();
                 toolTip.RemoveAll();
                 table.RowCount = 1;
-            }
-            else
-            {
+            } else {
                 CheckBoxes.Clear();
-                foreach (var prop in type.GetProperties())
-                {
+                foreach (var prop in type.GetProperties()) {
                     if (!prop.CanWrite || !prop.GetSetMethod().IsPublic) continue;
 
                     var check = new PropertyBox(prop);
@@ -196,8 +159,7 @@ namespace IndentGuide
                 toolTip.RemoveAll();
                 table.RowCount = CheckBoxes.Count;
                 int row = 0;
-                foreach (var check in CheckBoxes.OrderBy(v => v.SortPriority))
-                {
+                foreach (var check in CheckBoxes.OrderBy(v => v.SortPriority)) {
                     table.RowStyles[row].SizeType = SizeType.AutoSize;
                     table.Controls.Add(check.CheckBox, 0, row++);
                     toolTip.SetToolTip(check.CheckBox, check.Description);
@@ -207,8 +169,7 @@ namespace IndentGuide
             ResumeLayout(true);
         }
 
-        void check_CheckedChanged(object sender, EventArgs e)
-        {
+        void check_CheckedChanged(object sender, EventArgs e) {
             var check = sender as CheckBox;
             Debug.Assert(check != null);
             if (check == null) return;
@@ -228,15 +189,12 @@ namespace IndentGuide
     }
 
     [AttributeUsage(AttributeTargets.All, Inherited = false, AllowMultiple = false)]
-    sealed class SortOrderAttribute : Attribute
-    {
-        public SortOrderAttribute()
-        {
+    sealed class SortOrderAttribute : Attribute {
+        public SortOrderAttribute() {
             Priority = 0;
         }
 
-        public SortOrderAttribute(int priority)
-        {
+        public SortOrderAttribute(int priority) {
             Priority = priority;
         }
 
