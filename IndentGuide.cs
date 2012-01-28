@@ -122,19 +122,8 @@ namespace IndentGuide {
                 return;
 
             int tabSize = View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
-            double spaceWidth = 0.0;
-            {
-                var suitable = View.TextViewLines.FirstOrDefault(l => {
-                    var text = View.TextSnapshot.GetLineFromPosition(l.Start.Position).GetText();
-                    return text.StartsWith(" ") || text.StartsWith("\t");
-                });
-                if (suitable != null) {
-                    var span = new SnapshotSpan(suitable.Start, 1);
-                    spaceWidth = View.TextViewLines.GetMarkerGeometry(span).Bounds.Width;
-                    if (span.GetText() == "\t")
-                        spaceWidth /= tabSize;
-                }
-            }
+
+            double spaceWidth = View.TextViewLines.Select(line => line.VirtualSpaceWidth).FirstOrDefault();
             if (spaceWidth <= 0.0) return;
 
             var caret = new CaretInfo(View.Caret.Position.VirtualBufferPosition, tabSize);
