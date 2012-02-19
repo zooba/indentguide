@@ -205,7 +205,7 @@ namespace IndentGuide {
 
                 if (Theme == null) return;
 
-                var analysis = new DocumentAnalyzer(snapshot, Theme.Behavior, IndentSize);
+                var analysis = new DocumentAnalyzer(snapshot, Theme.Behavior, IndentSize, IndentSize);
 
                 foreach (var line in analysis.Lines) {
                     int linePos = line.Indent;

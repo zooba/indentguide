@@ -28,10 +28,6 @@ namespace IndentGuide {
                 Index = IndentTheme.UnalignedFormatIndex,
                 Text = ResourceLoader.LoadString("UnalignedFormatName")
             });
-            lstOverrides.Items.Add(new OverrideInfo {
-                Index = IndentTheme.CaretFormatIndex,
-                Text = ResourceLoader.LoadString("CaretFormatName")
-            });
             for (int key = 1; key <= 30; ++key) {
                 var name = string.Format(CultureInfo.CurrentCulture, "#{0}", key);
                 lstOverrides.Items.Add(new OverrideInfo {

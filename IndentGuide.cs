@@ -44,7 +44,8 @@ namespace IndentGuide {
             service.ThemesChanged += new EventHandler(Service_ThemesChanged);
 
             Analysis = new DocumentAnalyzer(view.TextSnapshot, Theme.Behavior,
-                View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId));
+                View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
+                View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
             Analysis.Reset();
 
             GlobalVisible = service.Visible;
@@ -66,7 +67,8 @@ namespace IndentGuide {
         void View_OptionChanged(object sender, EditorOptionChangedEventArgs e) {
             if (e.OptionId == DefaultOptions.IndentSizeOptionId.Name) {
                 Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme.Behavior,
-                    View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId));
+                    View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
+                    View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
                 GuideBrushCache.Clear();
 
                 InvalidateLines();
@@ -83,7 +85,8 @@ namespace IndentGuide {
                 Theme = service.DefaultTheme;
 
             Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme.Behavior,
-                View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId));
+                View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
+                View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
             GuideBrushCache.Clear();
 
             InvalidateLines();
@@ -121,12 +124,11 @@ namespace IndentGuide {
             if (!GlobalVisible)
                 return;
 
-            int tabSize = View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
-
             double spaceWidth = View.TextViewLines.Select(line => line.VirtualSpaceWidth).FirstOrDefault();
             if (spaceWidth <= 0.0) return;
 
-            var caret = new CaretInfo(View.Caret.Position.VirtualBufferPosition, tabSize);
+            CaretHandlerBase caret;
+            caret = new CaretNearestLeft(View.Caret.Position.VirtualBufferPosition, Analysis.TabSize, 2);
 
             foreach (var line in Analysis.Lines) {
                 int linePos = line.Indent;
@@ -140,8 +142,6 @@ namespace IndentGuide {
                 if (line.Indent % Analysis.IndentSize != 0)
                     formatIndex = IndentTheme.UnalignedFormatIndex;
 
-                caret.Update(line);
-
                 var viewModel = View.TextViewModel;
                 if ((viewModel == null ||
                     !viewModel.IsPointInVisualBuffer(firstLine.Start, PositionAffinity.Successor) ||
@@ -150,6 +150,8 @@ namespace IndentGuide {
                     lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) {
                     continue;
                 }
+
+                caret.AddLine(line, willUpdateImmediately: true);
 
                 IWpfTextViewLine firstView, lastView;
                 try {
@@ -171,17 +173,16 @@ namespace IndentGuide {
                     ((firstView.VisibilityState == VisibilityState.FullyVisible) ?
                     firstView.TextLeft : View.TextViewLines.FirstVisibleLine.TextLeft);
 
-                var guide = AddGuide(top, bottom, left, formatIndex);
-                line.Adornment = guide;
+                line.Adornment = CreateGuide(top, bottom, left);
+                line.FormatIndex = formatIndex;
                 line.Span = new SnapshotSpan(firstLine.Start, lastLine.End);
+                UpdateGuide(line);
 
-                if (guide != null) {
-                    Layer.AddAdornment(AdornmentPositioningBehavior.TextRelative, line.Span, line, guide, null);
-                }
+                Layer.AddAdornment(line);
             }
 
-            if (caret.Nearest != null) {
-                UpdateGuide(caret.Nearest.Adornment as Line, IndentTheme.CaretFormatIndex);
+            foreach (var line in caret.GetModified()) {
+                UpdateGuide(line);
             }
         }
 
@@ -191,10 +192,9 @@ namespace IndentGuide {
         /// <param name="firstLine">The line to start the guide at.</param>
         /// <param name="lastLine">The line to end the guide at.</param>
         /// <param name="indent">The indent number.</param>
-        /// <param name="formatIndex">The format index for this guide.
         /// </param>
         /// <returns>The added line.</returns>
-        private Line AddGuide(double top, double bottom, double left, int formatIndex) {
+        private Line CreateGuide(double top, double bottom, double left) {
             if (left == 0 || left > View.ViewportWidth) return null;
 
             var guide = new Line() {
@@ -207,8 +207,6 @@ namespace IndentGuide {
                 SnapsToDevicePixels = true
             };
 
-            UpdateGuide(guide, formatIndex);
-
             return guide;
         }
 
@@ -217,12 +215,14 @@ namespace IndentGuide {
         /// </summary>
         /// <param name="guide">The <see cref="Line"/> to update.</param>
         /// <param name="formatIndex">The new format index.</param>
-        void UpdateGuide(Line guide, int formatIndex) {
-            if (guide == null)
-                return;
+        void UpdateGuide(LineSpan lineSpan) {
+            if (lineSpan == null) return;
+            var guide = lineSpan.Adornment as Line;
+            if (guide == null) return;
+
 
             LineFormat format;
-            if (!Theme.LineFormats.TryGetValue(formatIndex, out format))
+            if (!Theme.LineFormats.TryGetValue(lineSpan.FormatIndex, out format))
                 format = Theme.DefaultLineFormat;
 
             if (!format.Visible) {
@@ -230,17 +230,20 @@ namespace IndentGuide {
                 return;
             }
 
+            var lineColor = lineSpan.Highlight ? format.HighlightColor : format.LineColor;
+            var lineStyle = lineSpan.Highlight ? format.HighlightStyle : format.LineStyle;
+
             Brush brush;
-            if (!GuideBrushCache.TryGetValue(format.LineColor, out brush)) {
-                brush = new SolidColorBrush(format.LineColor.ToSWMC());
+            if (!GuideBrushCache.TryGetValue(lineColor, out brush)) {
+                brush = new SolidColorBrush(lineColor.ToSWMC());
                 if (brush.CanFreeze) brush.Freeze();
                 GuideBrushCache[format.LineColor] = brush;
             }
 
             guide.Visibility = System.Windows.Visibility.Visible;
             guide.Stroke = brush;
-            guide.StrokeThickness = format.LineStyle.GetStrokeThickness();
-            guide.StrokeDashArray = format.LineStyle.GetStrokeDashArray();
+            guide.StrokeThickness = lineStyle.GetStrokeThickness();
+            guide.StrokeDashArray = lineStyle.GetStrokeDashArray();
         }
 
         /// <summary>
@@ -248,10 +251,9 @@ namespace IndentGuide {
         /// </summary>
         void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e) {
             int tabSize = e.TextView.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
-            var oldCaret = new CaretInfo(e.OldPosition.VirtualBufferPosition, tabSize);
-            int oldCaretFormatIndex = IndentTheme.DefaultFormatIndex;
-
-            var caret = new CaretInfo(e.NewPosition.VirtualBufferPosition, tabSize);
+            
+            CaretHandlerBase caret;
+            caret = new CaretNearestLeft(e.NewPosition.VirtualBufferPosition, tabSize, 2);
 
             foreach (var line in Analysis.Lines) {
                 int linePos = line.Indent;
@@ -265,54 +267,11 @@ namespace IndentGuide {
                 if (line.Indent % Analysis.IndentSize != 0)
                     formatIndex = IndentTheme.UnalignedFormatIndex;
 
-                caret.Update(line);
-                if (oldCaret.Update(line))
-                    oldCaretFormatIndex = formatIndex;
+                caret.AddLine(line, willUpdateImmediately: false);
             }
 
-            if (oldCaret.Nearest != null && oldCaret.Nearest != caret.Nearest)
-                UpdateGuide(oldCaret.Nearest.Adornment as Line, oldCaretFormatIndex);
-
-            if (caret.Nearest != null && caret.Nearest != oldCaret.Nearest)
-                UpdateGuide(caret.Nearest.Adornment as Line, IndentTheme.CaretFormatIndex);
-        }
-
-        class CaretInfo {
-            public int LineNumber { get; private set; }
-            public int Position { get; private set; }
-
-            public LineSpan Nearest { get; private set; }
-
-            public CaretInfo(VirtualSnapshotPoint location, int tabSize) {
-                var line = location.Position.GetContainingLine();
-                LineNumber = line.LineNumber;
-                Position = location.Position - line.Start.Position + location.VirtualSpaces;
-
-                int bufferIndent = 0;
-                int visualIndent = 0;
-                foreach (var c in line.GetText().Take(Position)) {
-                    if (c == '\t')
-                        bufferIndent += tabSize - (bufferIndent % tabSize);
-                    else if (c == ' ')
-                        bufferIndent += 1;
-                    else
-                        break;
-                    visualIndent += 1;
-                }
-                Position += bufferIndent - visualIndent;
-            }
-
-            public bool Update(LineSpan line) {
-                if (line.FirstLine <= LineNumber &&
-                    LineNumber <= line.LastLine &&
-                    line.FirstLine != line.LastLine &&
-                    !line.Type.HasFlag(LineSpanType.AtText) &&
-                    line.Indent <= Position &&
-                    (Nearest == null || line.Indent > Nearest.Indent)) {
-                    Nearest = line;
-                    return true;
-                }
-                return false;
+            foreach (var line in caret.GetModified()) {
+                UpdateGuide(line);
             }
         }
     }

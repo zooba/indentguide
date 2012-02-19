@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Resources;
 
@@ -13,13 +14,22 @@ namespace IndentGuide {
         }
 
         internal static string LoadString(string id, CultureInfo culture = null) {
+#if DEBUG
+            var str = ResourceManager.GetString(id, culture ?? CultureInfo.CurrentCulture);
+            Trace.WriteLineIf(string.IsNullOrEmpty(str), "No resource found for " + id);
+            return str;
+#else
             return ResourceManager.GetString(id, culture ?? CultureInfo.CurrentCulture);
+#endif
         }
 
         internal static string LoadString(string id, string fallback, CultureInfo culture = null) {
             try {
                 return LoadString(id, culture);
             } catch {
+#if DEBUG
+                Trace.WriteLine("No resource found for " + id);
+#endif
                 return fallback;
             }
         }

@@ -141,6 +141,7 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CaretHandlers.cs" />
     <Compile Include="CheckedPropertyGrid.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -160,6 +161,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Guids.cs" />
+    <Compile Include="CaretHandlerBase.cs" />
     <Compile Include="IndentGuideFactory.cs" />
     <Compile Include="IndentGuidePackage.cs" />
     <Compile Include="IndentGuideService.cs" />

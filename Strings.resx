@@ -261,4 +261,16 @@
   <data name="btnThemeReset" xml:space="preserve">
     <value>&amp;Reset</value>
   </data>
+  <data name="HighlightColorDescription" xml:space="preserve">
+    <value>The color to use when the line is highlighted.</value>
+  </data>
+  <data name="HighlightColorDisplayName" xml:space="preserve">
+    <value>Highlight Color</value>
+  </data>
+  <data name="HighlightStyleDescription" xml:space="preserve">
+    <value>The style to use when the line is highlighted.</value>
+  </data>
+  <data name="HighlightStyleDisplayName" xml:space="preserve">
+    <value>Highlight Style</value>
+  </data>
 </root>

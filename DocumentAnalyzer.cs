@@ -23,6 +23,8 @@ namespace IndentGuide {
         public bool Changed;
         public object Adornment;
         public SnapshotSpan? Span;
+        public int FormatIndex;
+        public bool Highlight;
 
         public LineSpan(int first, int last, int indent, LineSpanType type) {
             FirstLine = first;
@@ -32,6 +34,8 @@ namespace IndentGuide {
             Changed = true;
             Adornment = null;
             Span = null;
+            FormatIndex = 0;
+            Highlight = false;
         }
     }
 
@@ -51,12 +55,14 @@ namespace IndentGuide {
 
         public readonly LineBehavior Behavior;
         public readonly int IndentSize;
+        public readonly int TabSize;
 
-        public DocumentAnalyzer(ITextSnapshot snapshot, LineBehavior behavior, int indentSize) {
+        public DocumentAnalyzer(ITextSnapshot snapshot, LineBehavior behavior, int indentSize, int tabSize) {
             Snapshot = snapshot;
             Lines = null;
             Behavior = behavior.Clone();
             IndentSize = indentSize;
+            TabSize = tabSize;
         }
 
         public void Reset() {
@@ -72,7 +78,7 @@ namespace IndentGuide {
                 if (string.IsNullOrWhiteSpace(text))
                     continue;
 
-                lineInfo[lineNumber] = text.LeadingWhitespace(IndentSize);
+                lineInfo[lineNumber] = text.LeadingWhitespace(TabSize);
             }
             lineInfo.Add(0);
 

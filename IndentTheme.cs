@@ -58,16 +58,16 @@ namespace IndentGuide {
     /// </summary>
     public class LineFormat : IEquatable<LineFormat> {
         public LineFormat() {
-            Visible = true;
-            LineStyle = LineStyle.Dotted;
-            LineColor = Color.Teal;
+            Reset();
         }
 
         public LineFormat Clone() {
             return new LineFormat {
                 Visible = Visible,
                 LineStyle = LineStyle,
-                LineColor = LineColor
+                LineColor = LineColor,
+                HighlightStyle = HighlightStyle,
+                HighlightColor = HighlightColor
             };
         }
 
@@ -75,6 +75,8 @@ namespace IndentGuide {
             Visible = true;
             LineStyle = LineStyle.Dotted;
             LineColor = Color.Teal;
+            HighlightStyle = LineStyle.Dotted;
+            HighlightColor = Color.Red;
         }
 
         [ResourceDescription("VisibilityDescription")]
@@ -95,7 +97,19 @@ namespace IndentGuide {
         [TypeConverter(typeof(ColorConverter))]
         public Color LineColor { get; set; }
 
-        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, int visible) {
+        [ResourceDisplayName("HighlightStyleDisplayName")]
+        [ResourceDescription("HighlightStyleDescription")]
+        [ResourceCategory("Appearance")]
+        [TypeConverter(typeof(LineStyleConverter))]
+        public LineStyle HighlightStyle { get; set; }
+
+        [ResourceDisplayName("HighlightColorDisplayName")]
+        [ResourceDescription("HighlightColorDescription")]
+        [ResourceCategory("Appearance")]
+        [TypeConverter(typeof(ColorConverter))]
+        public Color HighlightColor { get; set; }
+
+        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, string highlightStyle, string highlightColor, int visible) {
             var inst = new LineFormat();
             try {
                 inst.LineStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
@@ -114,6 +128,22 @@ namespace IndentGuide {
             }
 
             try {
+                inst.HighlightStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
+                    .ConvertFromInvariantString(highlightStyle);
+            } catch (Exception ex) {
+                Trace.WriteLine("IndentGuide::Error parsing " + highlightStyle.ToString() + " into HighlightStyle");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
+            }
+
+            try {
+                inst.HighlightColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
+                    .ConvertFromInvariantString(highlightColor);
+            } catch (Exception ex) {
+                Trace.WriteLine("IndentGuide::Error parsing " + highlightColor.ToString() + " into HighlightColor");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
+            }
+
+            try {
                 inst.Visible = visible != 0;
             } catch (Exception ex) {
                 Trace.WriteLine("IndentGuide::Error parsing " + visible.ToString() + " into Visible");
@@ -122,7 +152,7 @@ namespace IndentGuide {
             return inst;
         }
 
-        public void ToInvariantStrings(out string lineStyle, out string lineColor, out int visible) {
+        public void ToInvariantStrings(out string lineStyle, out string lineColor, out string highlightStyle, out string highlightColor, out int visible) {
             try {
                 lineStyle = TypeDescriptor.GetConverter(typeof(LineStyle))
                     .ConvertToInvariantString(LineStyle);
@@ -142,6 +172,24 @@ namespace IndentGuide {
             }
 
             try {
+                highlightStyle = TypeDescriptor.GetConverter(typeof(LineStyle))
+                    .ConvertToInvariantString(HighlightStyle);
+            } catch (Exception ex) {
+                Trace.WriteLine("IndentGuide::Error converting LineStyle into string");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
+                highlightStyle = LineStyle.Dotted.ToString();
+            }
+
+            try {
+                highlightColor = TypeDescriptor.GetConverter(typeof(Color))
+                    .ConvertToInvariantString(HighlightColor);
+            } catch (Exception ex) {
+                Trace.WriteLine("IndentGuide::Error converting LineColor into string");
+                Trace.WriteLine(" - Exception: " + ex.ToString());
+                highlightColor = Color.Red.ToString();
+            }
+
+            try {
                 visible = Visible ? 1 : 0;
             } catch (Exception ex) {
                 Trace.WriteLine("IndentGuide::Error converting Visible into string");
@@ -150,7 +198,7 @@ namespace IndentGuide {
             }
         }
 
-        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, string visible) {
+        public static LineFormat FromInvariantStrings(string lineStyle, string lineColor, string highlightStyle, string highlightColor, string visible) {
             int visibleInt = 1;
             try {
                 visibleInt = bool.Parse(visible) ? 1 : 0;
@@ -158,12 +206,12 @@ namespace IndentGuide {
                 Trace.WriteLine("IndentGuide::Error converting Visible into bool");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
             }
-            return FromInvariantStrings(lineStyle, lineColor, visibleInt);
+            return FromInvariantStrings(lineStyle, lineColor, highlightStyle, highlightColor, visibleInt);
         }
 
-        public void ToInvariantStrings(out string lineStyle, out string lineColor, out string visible) {
+        public void ToInvariantStrings(out string lineStyle, out string lineColor, out string highlightStyle, out string highlightColor, out string visible) {
             int visibleInt;
-            ToInvariantStrings(out lineStyle, out lineColor, out visibleInt);
+            ToInvariantStrings(out lineStyle, out lineColor, out highlightStyle, out highlightColor, out visibleInt);
             visible = (visibleInt != 0).ToString();
         }
 
@@ -173,6 +221,8 @@ namespace IndentGuide {
             if (null == other) return false;
             return LineStyle.Equals(other.LineStyle) &&
                 LineColor.Equals(other.LineColor) &&
+                HighlightStyle.Equals(other.HighlightStyle) &&
+                HighlightColor.Equals(other.HighlightColor) &&
                 Visible.Equals(other.Visible);
         }
 
@@ -324,13 +374,10 @@ namespace IndentGuide {
         public static readonly string DefaultThemeName = ResourceLoader.LoadString("DefaultThemeName");
         public const int DefaultFormatIndex = int.MinValue;
         public const int UnalignedFormatIndex = -1;
-        public const int CaretFormatIndex = -2;
+        public const int CaretFormatIndex_Deprecated = -2;
 
         public static LineFormat DefaultUnalignedFormat {
             get { return new LineFormat(); }
-        }
-        public static LineFormat DefaultCaretFormat {
-            get { return new LineFormat { LineColor = Color.Red }; }
         }
 
         public event EventHandler Updated;
@@ -345,7 +392,6 @@ namespace IndentGuide {
             LineFormats = new Dictionary<int, LineFormat>();
             DefaultLineFormat = new LineFormat();
             LineFormats[UnalignedFormatIndex] = DefaultUnalignedFormat;
-            LineFormats[CaretFormatIndex] = DefaultCaretFormat;
             Behavior = new LineBehavior();
         }
 
@@ -363,8 +409,8 @@ namespace IndentGuide {
                 return "Default";
             else if (formatIndex == UnalignedFormatIndex)
                 return "Unaligned";
-            else if (formatIndex == CaretFormatIndex)
-                return "Caret";
+            else if (formatIndex == CaretFormatIndex_Deprecated)
+                throw new NotImplementedException("Caret format index has been removed");
             else
                 return formatIndex.ToString(CultureInfo.InvariantCulture);
         }
@@ -376,7 +422,7 @@ namespace IndentGuide {
             else if (source == "Unaligned")
                 return UnalignedFormatIndex;
             else if (source == "Caret")
-                return CaretFormatIndex;
+                throw new NotImplementedException("Caret format index has been removed");
             else if (int.TryParse(source, out result))
                 return result;
             else
@@ -420,6 +466,8 @@ namespace IndentGuide {
                         format = LineFormat.FromInvariantStrings(
                             (string)subkey.GetValue("LineStyle"),
                             (string)subkey.GetValue("LineColor"),
+                            (string)subkey.GetValue("HighlightStyle"),
+                            (string)subkey.GetValue("HighlightColor"),
                             (int)subkey.GetValue("Visible", 1));
                     }
 
@@ -440,7 +488,7 @@ namespace IndentGuide {
             theme.ContentType = (key == DefaultThemeName) ? null : key;
             theme.Behavior.Load(reader, key);
 
-            string lineStyle, lineColor, visible;
+            string lineStyle, lineColor, highlightStyle, highlightColor, visible;
             string subkeys;
             reader.ReadSettingString(key, out subkeys);
             if (!string.IsNullOrEmpty(subkeys)) {
@@ -452,8 +500,10 @@ namespace IndentGuide {
 
                     reader.ReadSettingAttribute(subkey, "LineStyle", out lineStyle);
                     reader.ReadSettingAttribute(subkey, "LineColor", out lineColor);
+                    reader.ReadSettingAttribute(subkey, "HighlightStyle", out highlightStyle);
+                    reader.ReadSettingAttribute(subkey, "HighlightColor", out highlightColor);
                     reader.ReadSettingAttribute(subkey, "Visible", out visible);
-                    var format = LineFormat.FromInvariantStrings(lineStyle, lineColor, visible);
+                    var format = LineFormat.FromInvariantStrings(lineStyle, lineColor, highlightStyle, highlightColor, visible);
 
                     var keypart = subkey.Substring(i + 1);
                     int? formatIndex = FormatIndexFromString(keypart);
@@ -475,16 +525,18 @@ namespace IndentGuide {
                     key.DeleteSubKeyTree(subkey, false);
                 }
 
-                string lineStyle, lineColor;
+                string lineStyle, lineColor, highlightStyle, highlightColor;
                 int visible;
 
                 foreach (var item in LineFormats) {
                     var subkeyName = FormatIndexToString(item.Key);
 
                     using (var subkey = key.CreateSubKey(subkeyName)) {
-                        item.Value.ToInvariantStrings(out lineStyle, out lineColor, out visible);
+                        item.Value.ToInvariantStrings(out lineStyle, out lineColor, out highlightStyle, out highlightColor, out visible);
                         subkey.SetValue("LineStyle", lineStyle);
                         subkey.SetValue("LineColor", lineColor);
+                        subkey.SetValue("HighlightStyle", highlightStyle);
+                        subkey.SetValue("HighlightColor", highlightColor);
                         subkey.SetValue("Visible", visible);
                     }
                 }
@@ -499,15 +551,17 @@ namespace IndentGuide {
 
             Behavior.Save(writer, key);
 
-            string lineStyle, lineColor, visible;
+            string lineStyle, lineColor, highlightStyle, highlightColor, visible;
             foreach (var item in LineFormats) {
                 var subkeyName = key + "." + FormatIndexToString(item.Key);
 
                 writer.WriteSettingString(subkeyName, "");
 
-                item.Value.ToInvariantStrings(out lineStyle, out lineColor, out visible);
+                item.Value.ToInvariantStrings(out lineStyle, out lineColor, out highlightStyle, out highlightColor, out visible);
                 writer.WriteSettingAttribute(subkeyName, "LineStyle", lineStyle);
                 writer.WriteSettingAttribute(subkeyName, "LineColor", lineColor);
+                writer.WriteSettingAttribute(subkeyName, "HighlightStyle", highlightStyle);
+                writer.WriteSettingAttribute(subkeyName, "HighlightColor", highlightColor);
                 writer.WriteSettingAttribute(subkeyName, "Visible", visible);
             }
 

@@ -278,11 +278,47 @@ namespace IndentGuide {
                 using (var reg = root.OpenSubKey(SUBKEY_NAME, false))
                     version = (reg == null) ? 0 : (int)reg.GetValue("Version", DEFAULT_VERSION);
 
-                // v11 (beta 2) (10.9.1) and later don't require an upgrade
-                if (version >= 0x000A0901)
+                // v12 (beta 1) (11.9.0) and later don't require any upgrades
+                if (version >= 0x000B0900)
                     return;
 
-                // v9 and later can be upgraded.
+                // v11 (beta 2) (10.9.1) and later need highlighting settings to be copied.
+                if (version >= 0x000A0901) {
+                    using (var reg = root.CreateSubKey(SUBKEY_NAME)) {
+                        foreach (var themeName in reg.GetSubKeyNames()) {
+                            using (var themeKey = reg.OpenSubKey(themeName, true)) {
+                                if (themeKey == null) continue;
+                                
+                                string highlightColor = null, highlightStyle = null;
+
+                                using (var key = themeKey.OpenSubKey("Caret")) {
+                                    if (key != null) {
+                                        highlightColor = (string)key.GetValue("LineColor");
+                                        highlightStyle = (string)key.GetValue("LineStyle");
+                                    }
+                                }
+                                themeKey.DeleteSubKeyTree("Caret", throwOnMissingSubKey: false);
+
+                                foreach (var keyName in themeKey.GetSubKeyNames()) {
+                                    using (var key = themeKey.OpenSubKey(keyName, true)) {
+                                        if (key == null) continue;
+
+                                        if (key.GetValue("HighlightColor") == null) {
+                                            key.SetValue("HighlightColor", highlightColor);
+                                        }
+                                        if (key.GetValue("HighlightStyle") == null) {
+                                            key.SetValue("HighlightStyle", highlightStyle);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    return;
+                }
+
+                // v9 and later are fully upgraded.
                 if (version == DEFAULT_VERSION) {
                     using (var reg = root.CreateSubKey(SUBKEY_NAME)) {
                         foreach (var keyName in reg.GetSubKeyNames()) {
@@ -332,20 +368,20 @@ namespace IndentGuide {
                                     // Copy the default color/style to Default, Unaligned and Caret themes.
                                     // Change the Caret theme color to Red, or Teal if it was already red.
                                     using (var subKey1 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.DefaultFormatIndex)))
-                                    using (var subKey2 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.UnalignedFormatIndex)))
-                                    using (var subKey3 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.CaretFormatIndex))) {
+                                    using (var subKey2 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.UnalignedFormatIndex))) {
                                         var visible = !string.Equals("False", key.GetValue("Visible") as string, StringComparison.InvariantCultureIgnoreCase);
                                         var color = key.GetValue("LineColor") as string ?? "Teal";
                                         var style = key.GetValue("LineStyle") as string ?? "Dotted";
                                         subKey1.SetValue("Visible", visible ? 1 : 0);
                                         subKey2.SetValue("Visible", visible ? 1 : 0);
-                                        subKey3.SetValue("Visible", visible ? 1 : 0);
                                         subKey1.SetValue("LineColor", color);
                                         subKey2.SetValue("LineColor", color);
-                                        subKey3.SetValue("LineColor", (color == "Red") ? "Teal" : "Red");
                                         subKey1.SetValue("LineStyle", style);
                                         subKey2.SetValue("LineStyle", style);
-                                        subKey3.SetValue("LineStyle", style);
+                                        subKey1.SetValue("HighlightColor", (color == "Red") ? "Teal" : "Red");
+                                        subKey1.SetValue("HighlightStyle", style);
+                                        subKey2.SetValue("HighlightColor", (color == "Red") ? "Teal" : "Red");
+                                        subKey2.SetValue("HighlightStyle", style);
                                     }
 
                                     // Copy the existing indent overrides.
@@ -362,6 +398,8 @@ namespace IndentGuide {
                                             subKey2.SetValue("Visible", visible ? 1 : 0);
                                             subKey2.SetValue("LineColor", color);
                                             subKey2.SetValue("LineStyle", style);
+                                            subKey2.SetValue("HighlightColor", (color == "Red") ? "Teal" : "Red");
+                                            subKey2.SetValue("HighlightStyle", style);
                                         }
                                     }
                                 }
