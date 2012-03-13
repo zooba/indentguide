@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.Text;
 
 namespace IndentGuide {
     [Flags]
-    enum LineSpanType {
+    public enum LineSpanType {
         None = 0,
         Normal = 1,
         AtText = 2,
@@ -15,7 +15,7 @@ namespace IndentGuide {
     }
 
     [DebuggerDisplay("Indent {Indent} lines {FirstLine}-{LastLine}, {Type}")]
-    class LineSpan {
+    public sealed class LineSpan {
         public int FirstLine;
         public int LastLine;
         public int Indent;

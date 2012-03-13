@@ -6,6 +6,10 @@ namespace IndentGuide {
     /// Does not highlight any guides.
     /// </summary>
     class CaretNone : CaretHandlerBase {
+        public CaretNone(VirtualSnapshotPoint location, int tabSize)
+            : base(location, tabSize) {
+        }
+
         public override void AddLine(LineSpan lineSpan, bool willUpdateImmediately) {
             if (lineSpan.Highlight) {
                 lineSpan.Highlight = false;
@@ -27,6 +31,9 @@ namespace IndentGuide {
         private LineSpan Nearest;
         private readonly int MinimumLength;
 
+        public CaretNearestLeft(VirtualSnapshotPoint location, int tabSize)
+            : this(location, tabSize, 2) { }
+        
         public CaretNearestLeft(VirtualSnapshotPoint location, int tabSize, int minimumLength)
             : base(location, tabSize) {
             Nearest = null;
@@ -41,7 +48,9 @@ namespace IndentGuide {
                 line.Indent <= Position &&
                 (Nearest == null || line.Indent > Nearest.Indent)) {
                 Nearest = line;
-            } else if (line.Highlight) {
+            }
+            
+            if (line.Highlight) {
                 line.Highlight = false;
                 if (!willUpdateImmediately) {
                     Modified.Add(line);
@@ -51,6 +60,7 @@ namespace IndentGuide {
 
         public override IEnumerable<LineSpan> GetModified() {
             if (Nearest != null) {
+                while (Modified.Remove(Nearest)) { }
                 Nearest.Highlight = true;
                 Modified.Add(Nearest);
                 Nearest = null;

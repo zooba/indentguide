@@ -273,4 +273,13 @@
   <data name="HighlightStyleDisplayName" xml:space="preserve">
     <value>Highlight Style</value>
   </data>
+  <data name="LineStyle_DashedGlow" xml:space="preserve">
+    <value>Dashed (glow)</value>
+  </data>
+  <data name="LineStyle_DottedGlow" xml:space="preserve">
+    <value>Dotted (glow)</value>
+  </data>
+  <data name="LineStyle_Glow" xml:space="preserve">
+    <value>Solid (glow)</value>
+  </data>
 </root>

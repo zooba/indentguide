@@ -16,10 +16,13 @@ namespace IndentGuide {
     public enum LineStyle {
         Solid = 1,
         Thick = 2,
-        Dotted = 4,
-        Dashed = 8,
+        Glow = 4,
+        Dotted = 0x100,
         DottedThick = Dotted | Thick,
-        DashedThick = Dashed | Thick
+        DottedGlow = Dotted | Glow,
+        Dashed = 0x200,
+        DashedThick = Dashed | Thick,
+        DashedGlow = Dashed | Glow
     }
 
     public static class LineStyleExtensions {
@@ -31,13 +34,9 @@ namespace IndentGuide {
         }
 
         public static System.Windows.Media.DoubleCollection GetStrokeDashArray(this LineStyle style) {
-            if (style == LineStyle.Dotted)
+            if (style.HasFlag(LineStyle.Dotted))
                 return new System.Windows.Media.DoubleCollection { 1.0, 2.0, 1.0, 2.0 };
-            else if (style == LineStyle.DottedThick)
-                return new System.Windows.Media.DoubleCollection { 1.0, 2.0, 1.0, 2.0 };
-            else if (style == LineStyle.Dashed)
-                return new System.Windows.Media.DoubleCollection { 3.0, 3.0, 3.0, 3.0 };
-            else if (style == LineStyle.DashedThick)
+            else if (style.HasFlag(LineStyle.Dashed))
                 return new System.Windows.Media.DoubleCollection { 3.0, 3.0, 3.0, 3.0 };
             else
                 return null;
@@ -73,9 +72,9 @@ namespace IndentGuide {
         public void Reset() {
             Visible = true;
             LineStyle = LineStyle.Dotted;
-            LineColor = Color.Teal;
-            HighlightStyle = LineStyle.Dotted;
-            HighlightColor = Color.Red;
+            LineColor = Color.DimGray;
+            HighlightStyle = LineStyle.DottedGlow;
+            HighlightColor = Color.Cyan;
         }
 
         [ResourceDescription("VisibilityDescription")]

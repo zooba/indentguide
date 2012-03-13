@@ -73,6 +73,22 @@ namespace IndentGuide {
     }
 
     /// <summary>
+    /// Adds a caret handler string and event to IIndentGuide.
+    /// </summary>
+    [Guid(Guids.IIndentGuide2Guid)]
+    [ComVisible(true)]
+    public interface IIndentGuide2 : IIndentGuide {
+        /// <summary>
+        /// The name of the caret handler to use.
+        /// </summary>
+        string CaretHandler { get; }
+        /// <summary>
+        /// Raised when the caret handler changes.
+        /// </summary>
+        event EventHandler CaretHandlerChanged;
+    }
+
+    /// <summary>
     /// The service interface.
     /// </summary>
     [Guid(Guids.SIndentGuideGuid)]
@@ -81,7 +97,7 @@ namespace IndentGuide {
     /// <summary>
     /// Implementation of the service supporting Indent Guides.
     /// </summary>
-    class IndentGuideService : SIndentGuide, IIndentGuide {
+    class IndentGuideService : SIndentGuide, IIndentGuide2 {
         public IndentGuideService(IndentGuidePackage package) {
             _Package = package;
             _Themes = new Dictionary<string, IndentTheme>();
@@ -120,6 +136,21 @@ namespace IndentGuide {
 
         public event EventHandler VisibleChanged;
 
+        private string _CaretHandler = null;
+        public string CaretHandler {
+            get { return _CaretHandler; }
+            set {
+                if (!String.Equals(_CaretHandler, value, StringComparison.Ordinal)) {
+                    _CaretHandler = value;
+
+                    var evt = CaretHandlerChanged;
+                    if (evt != null) evt(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        public event EventHandler CaretHandlerChanged;
+
         private readonly Dictionary<string, IndentTheme> _Themes;
         public IDictionary<string, IndentTheme> Themes { get { return _Themes; } }
         public IndentTheme DefaultTheme { get; set; }
@@ -143,6 +174,11 @@ namespace IndentGuide {
 
                 reg.SetValue("Version", CURRENT_VERSION);
                 reg.SetValue("Visible", Visible ? 1 : 0);
+                if (string.IsNullOrEmpty(CaretHandler)) {
+                    reg.DeleteValue("CaretHandler", false);
+                } else {
+                    reg.SetValue("CaretHandler", CaretHandler);
+                }
 
                 foreach (var key in reg.GetSubKeyNames())
                     reg.DeleteSubKeyTree(key);
@@ -174,6 +210,9 @@ namespace IndentGuide {
             writer.WriteSettingLong("Version", CURRENT_VERSION);
             writer.WriteSettingString("Themes", sb.ToString());
             writer.WriteSettingLong("Visible", Visible ? 1 : 0);
+            if (!string.IsNullOrEmpty(CaretHandler)) {
+                writer.WriteSettingString("CaretHandler", CaretHandler);
+            }
         }
 
         public void Load() {
@@ -193,8 +232,10 @@ namespace IndentGuide {
                     }
 
                     Visible = (int)reg.GetValue("Visible", 1) != 0;
+                    CaretHandler = (string)reg.GetValue("CaretHandler");
                 } else {
                     Visible = true;
+                    CaretHandler = null;
                 }
 
                 if (DefaultTheme == null)
@@ -226,9 +267,12 @@ namespace IndentGuide {
                 }
             }
 
-            int temp;
-            reader.ReadSettingBoolean("Visible", out temp);
-            Visible = (temp != 0);
+            int tempInt;
+            reader.ReadSettingBoolean("Visible", out tempInt);
+            Visible = (tempInt != 0);
+            string tempString;
+            reader.ReadSettingString("CaretHandler", out tempString);
+            CaretHandler = string.IsNullOrEmpty(tempString) ? null : tempString;
 
             OnThemesChanged();
         }

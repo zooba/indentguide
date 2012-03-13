@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.VisualStudio.Text;
 
@@ -7,7 +9,7 @@ namespace IndentGuide {
     /// Derived classes provide highlighting logic for guides based on the
     /// caret positien.
     /// </summary>
-    abstract class CaretHandlerBase {
+    public abstract class CaretHandlerBase {
         /// <summary>
         /// Updates the internal state based on the line. All lines should be
         /// passed.
@@ -31,12 +33,6 @@ namespace IndentGuide {
         protected readonly int LineNumber;
         protected readonly int Position;
 
-        public CaretHandlerBase() {
-            LineNumber = 0;
-            Position = 0;
-            Modified = new List<LineSpan>();
-        }
-
         protected CaretHandlerBase(VirtualSnapshotPoint location, int tabSize) {
             var line = location.Position.GetContainingLine();
             LineNumber = line.LineNumber;
@@ -55,6 +51,24 @@ namespace IndentGuide {
             }
             Position += bufferIndent - visualIndent;
             Modified = new List<LineSpan>();
+        }
+
+        private static Dictionary<string, Type> LoadedCaretHandlers = new Dictionary<string, Type>();
+
+        public static CaretHandlerBase FromName(string name, VirtualSnapshotPoint location, int tabSize) {
+            Type type;
+            if (name == null) {
+                return new CaretNone(location, tabSize);
+            }
+
+            if (!LoadedCaretHandlers.TryGetValue(name, out type)) {
+                type = Type.GetType(name);
+                LoadedCaretHandlers[name] = type;
+                Trace.WriteLine("Loaded caret handler " + type.AssemblyQualifiedName);
+            }
+            
+            return type.InvokeMember(null, System.Reflection.BindingFlags.CreateInstance, null, null,
+                new object[] { location, tabSize }) as CaretHandlerBase;
         }
     }
 }

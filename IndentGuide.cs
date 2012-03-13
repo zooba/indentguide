@@ -18,6 +18,7 @@ namespace IndentGuide {
         IDictionary<System.Drawing.Color, Brush> GuideBrushCache;
         IndentTheme Theme;
         bool GlobalVisible;
+        string CaretHandlerTypeName;
 
         DocumentAnalyzer Analysis;
         Dictionary<int, double> CachedLefts;
@@ -50,6 +51,20 @@ namespace IndentGuide {
 
             GlobalVisible = service.Visible;
             service.VisibleChanged += new EventHandler(Service_VisibleChanged);
+
+            var service2 = service as IIndentGuide2;
+            if (service2 != null) {
+                CaretHandlerTypeName = service2.CaretHandler;
+                service2.CaretHandlerChanged += new EventHandler(Service_CaretHandlerChanged);
+            }
+        }
+
+        /// <summary>
+        /// Raised when the caret handler is changed.
+        /// </summary>
+        void Service_CaretHandlerChanged(object sender, EventArgs e) {
+            CaretHandlerTypeName = ((IIndentGuide2)sender).CaretHandler;
+            UpdateAdornments();
         }
 
         /// <summary>
@@ -127,8 +142,7 @@ namespace IndentGuide {
             double spaceWidth = View.TextViewLines.Select(line => line.VirtualSpaceWidth).FirstOrDefault();
             if (spaceWidth <= 0.0) return;
 
-            CaretHandlerBase caret;
-            caret = new CaretNearestLeft(View.Caret.Position.VirtualBufferPosition, Analysis.TabSize, 2);
+            var caret = CaretHandlerBase.FromName(CaretHandlerTypeName, View.Caret.Position.VirtualBufferPosition, Analysis.TabSize);
 
             foreach (var line in Analysis.Lines) {
                 int linePos = line.Indent;
@@ -220,7 +234,6 @@ namespace IndentGuide {
             var guide = lineSpan.Adornment as Line;
             if (guide == null) return;
 
-
             LineFormat format;
             if (!Theme.LineFormats.TryGetValue(lineSpan.FormatIndex, out format))
                 format = Theme.DefaultLineFormat;
@@ -230,20 +243,33 @@ namespace IndentGuide {
                 return;
             }
 
-            var lineColor = lineSpan.Highlight ? format.HighlightColor : format.LineColor;
             var lineStyle = lineSpan.Highlight ? format.HighlightStyle : format.LineStyle;
+            var lineColor = (lineSpan.Highlight && !lineStyle.HasFlag(LineStyle.Glow)) ? 
+                format.HighlightColor : format.LineColor;
 
             Brush brush;
             if (!GuideBrushCache.TryGetValue(lineColor, out brush)) {
-                brush = new SolidColorBrush(lineColor.ToSWMC());
-                if (brush.CanFreeze) brush.Freeze();
-                GuideBrushCache[format.LineColor] = brush;
+                    brush = new SolidColorBrush(lineColor.ToSWMC());
+                    if (brush.CanFreeze) brush.Freeze();
+                    GuideBrushCache[lineColor] = brush;
             }
 
             guide.Visibility = System.Windows.Visibility.Visible;
             guide.Stroke = brush;
             guide.StrokeThickness = lineStyle.GetStrokeThickness();
             guide.StrokeDashArray = lineStyle.GetStrokeDashArray();
+
+            if (lineStyle.HasFlag(LineStyle.Glow)) {
+                guide.Effect = new System.Windows.Media.Effects.DropShadowEffect {
+                    Color = (lineSpan.Highlight ? format.HighlightColor : format.LineColor).ToSWMC(),
+                    BlurRadius = LineStyle.Thick.GetStrokeThickness(),
+                    Opacity = 1.0,
+                    ShadowDepth = 0.0,
+                    RenderingBias = System.Windows.Media.Effects.RenderingBias.Performance
+                };
+            } else {
+                guide.Effect = null;
+            }
         }
 
         /// <summary>
@@ -251,9 +277,8 @@ namespace IndentGuide {
         /// </summary>
         void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e) {
             int tabSize = e.TextView.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
-            
-            CaretHandlerBase caret;
-            caret = new CaretNearestLeft(e.NewPosition.VirtualBufferPosition, tabSize, 2);
+
+            var caret = CaretHandlerBase.FromName(CaretHandlerTypeName, View.Caret.Position.VirtualBufferPosition, Analysis.TabSize);
 
             foreach (var line in Analysis.Lines) {
                 int linePos = line.Indent;
