@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Shell;
-using System.Windows.Forms;
 using System.ComponentModel;
+using System.Windows.Forms;
+using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide {
     public class GenericOptions<T> : DialogPage where T : Control, IThemeAwareDialog, new() {

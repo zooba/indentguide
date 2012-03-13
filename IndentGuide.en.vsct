@@ -30,9 +30,23 @@
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
 
-            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" priority="0x6550" type="Button">
+            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides2010" priority="0x6550" type="Button">
                 <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
-                <Icon guid="guidIndentGuideBmp" id="bmpViewIndentGuides"/>
+                <Icon guid="guidIndentGuideBmp" id="bmpViewIndentGuides2010"/>
+                <CommandFlag>DynamicVisibility</CommandFlag>
+                <CommandFlag>DefaultInvisible</CommandFlag>
+                <CommandFlag>DefaultDisabled</CommandFlag>
+                <Strings>
+                    <ButtonText>View Indent Guides</ButtonText>
+                    <MenuText>View Indent &amp;Guides</MenuText>
+                    <ToolTipText>Toggle the visibility of indentation guides.</ToolTipText>
+                    <CommandName>View Indent Guides</CommandName>
+                </Strings>
+                <!-- Add more Strings elements with language attribute and translations -->
+            </Button>
+            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides11" priority="0x6550" type="Button">
+                <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
+                <Icon guid="guidIndentGuideBmp" id="bmpViewIndentGuides11"/>
                 <CommandFlag>DynamicVisibility</CommandFlag>
                 <CommandFlag>DefaultInvisible</CommandFlag>
                 <CommandFlag>DefaultDisabled</CommandFlag>
@@ -59,12 +73,13 @@
 
         <!-- This is our command set GUID and associated commands -->
         <GuidSymbol name="guidIndentGuideCmdSet" value="{1AE9DCDB-7723-4651-ABDC-3D4BBAA0731F}">
-            <IDSymbol name="cmdidViewIndentGuides" value="0x0102" />
-
+            <IDSymbol name="cmdidViewIndentGuides2010" value="0x0102" />
+            <IDSymbol name="cmdidViewIndentGuides11" value="0x0103" />
         </GuidSymbol>
 
         <GuidSymbol name="guidIndentGuideBmp" value="{93270977-7E37-4A49-8314-182C6A5836FF}">
-            <IDSymbol name="bmpViewIndentGuides" value="1"/>
+            <IDSymbol name="bmpViewIndentGuides2010" value="1"/>
+            <IDSymbol name="bmpViewIndentGuides11" value="2"/>
         </GuidSymbol>
     </Symbols>
 

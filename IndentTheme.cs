@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
