@@ -87,6 +87,15 @@ namespace IndentGuide {
             public Microsoft.VisualStudio.Text.ITextSnapshot Snapshot { get; set; }
         }
 
+        private class FakeContentType : Microsoft.VisualStudio.Utilities.IContentType {
+            public FakeContentType(string name) { TypeName = name; }
+            public IEnumerable<Microsoft.VisualStudio.Utilities.IContentType> BaseTypes {get { throw new NotImplementedException(); }}
+            public string DisplayName { get { return TypeName; } }
+            public bool IsOfType(string type) {return string.Equals(type, TypeName);}
+            public string TypeName { get; set; }
+        }
+
+
         private class FakeTextBuffer : Microsoft.VisualStudio.Text.ITextBuffer {
             public Microsoft.VisualStudio.Text.ITextSnapshot CurrentSnapshot { get; set; }
 
@@ -96,7 +105,7 @@ namespace IndentGuide {
             public event EventHandler<Microsoft.VisualStudio.Text.TextContentChangedEventArgs> ChangedLowPriority { add { } remove { } }
             public event EventHandler<Microsoft.VisualStudio.Text.TextContentChangingEventArgs> Changing { add { } remove { } }
             public bool CheckEditAccess() { throw new NotImplementedException(); }
-            public Microsoft.VisualStudio.Utilities.IContentType ContentType { get { throw new NotImplementedException(); } }
+            public Microsoft.VisualStudio.Utilities.IContentType ContentType { get { return new FakeContentType("CSharp"); } }
             public event EventHandler<Microsoft.VisualStudio.Text.ContentTypeChangedEventArgs> ContentTypeChanged { add { } remove { } }
             public Microsoft.VisualStudio.Text.ITextEdit CreateEdit() { throw new NotImplementedException(); }
             public Microsoft.VisualStudio.Text.ITextEdit CreateEdit(Microsoft.VisualStudio.Text.EditOptions options, int? reiteratedVersionNumber, object editTag) { throw new NotImplementedException(); }
@@ -161,7 +170,7 @@ namespace IndentGuide {
             public void Write(System.IO.TextWriter writer, Microsoft.VisualStudio.Text.Span span) { writer.Write(GetText(span)); }
             public char this[int position] { get { return _Source[position]; } }
 
-            public Microsoft.VisualStudio.Utilities.IContentType ContentType { get { throw new NotImplementedException(); } }
+            public Microsoft.VisualStudio.Utilities.IContentType ContentType { get { return new FakeContentType("CSharp"); } }
             public Microsoft.VisualStudio.Text.ITrackingPoint CreateTrackingPoint(int position, Microsoft.VisualStudio.Text.PointTrackingMode trackingMode, Microsoft.VisualStudio.Text.TrackingFidelityMode trackingFidelity) { throw new NotImplementedException(); }
             public Microsoft.VisualStudio.Text.ITrackingPoint CreateTrackingPoint(int position, Microsoft.VisualStudio.Text.PointTrackingMode trackingMode) { throw new NotImplementedException(); }
             public Microsoft.VisualStudio.Text.ITrackingSpan CreateTrackingSpan(int start, int length, Microsoft.VisualStudio.Text.SpanTrackingMode trackingMode, Microsoft.VisualStudio.Text.TrackingFidelityMode trackingFidelity) { throw new NotImplementedException(); }

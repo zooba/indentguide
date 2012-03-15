@@ -67,7 +67,11 @@ namespace IndentGuide {
 
         public void Reset() {
             Snapshot = Snapshot.TextBuffer.CurrentSnapshot;
+            var contentType = Snapshot.ContentType.TypeName;
+            bool isCSharp = string.Equals(contentType, "csharp", StringComparison.OrdinalIgnoreCase);
+            bool isCPlusPlus = string.Equals(contentType, "c/c++", StringComparison.OrdinalIgnoreCase);
 
+            // Maps every line number to the amount of leading whitespace on that line.
             var lineInfo = new List<int?>(Snapshot.LineCount);
 
             foreach (var line in Snapshot.Lines) {
@@ -78,10 +82,19 @@ namespace IndentGuide {
                 if (string.IsNullOrWhiteSpace(text))
                     continue;
 
-                lineInfo[lineNumber] = text.LeadingWhitespace(TabSize);
+                int spaces = text.LeadingWhitespace(TabSize);
+                lineInfo[lineNumber] = spaces;
+
+                if (isCSharp || isCPlusPlus) {
+                    // Left-aligned pragmas don't reduce the indent to zero.
+                    if (spaces == 0 && text.StartsWith("#")) {
+                        lineInfo[lineNumber] = -1;
+                    }
+                }
             }
             lineInfo.Add(0);
 
+            // Maps amount of leading whitespace to the line where the indent started.
             var indentInfo = new Dictionary<int, int>();
             var result = new List<LineSpan>();
             int lineStart = Behavior.TopToBottom ? 0 : (lineInfo.Count - 1);
@@ -93,6 +106,16 @@ namespace IndentGuide {
 
                 if (lineInfo[line].HasValue) {
                     int indent = lineInfo[line].Value;
+
+                    if (indent == -1) {
+                        foreach (var key in indentInfo.Keys.ToList()) {
+                            var value = indentInfo[key];
+                            if ((value < line && Behavior.TopToBottom) || (value > line && !Behavior.TopToBottom))
+                                result.Add(new LineSpan(value, linePrev, key, LineSpanType.Normal));
+                            indentInfo[key] = lineNext;
+                        }
+                        continue;
+                    }
 
                     if (Behavior.VisibleAligned) {
                         for (int i = IndentSize; i < indent; i += IndentSize) {
