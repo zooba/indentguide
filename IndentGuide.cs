@@ -151,11 +151,6 @@ namespace IndentGuide {
                 var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
                 var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
 
-                int formatIndex = line.Indent / Analysis.IndentSize;
-
-                if (line.Indent % Analysis.IndentSize != 0)
-                    formatIndex = IndentTheme.UnalignedFormatIndex;
-
                 var viewModel = View.TextViewModel;
                 if ((viewModel == null ||
                     !viewModel.IsPointInVisualBuffer(firstLine.Start, PositionAffinity.Successor) ||
@@ -188,7 +183,6 @@ namespace IndentGuide {
                     firstView.TextLeft : View.TextViewLines.FirstVisibleLine.TextLeft);
 
                 line.Adornment = CreateGuide(top, bottom, left);
-                line.FormatIndex = formatIndex;
                 line.Span = new SnapshotSpan(firstLine.Start, lastLine.End);
                 UpdateGuide(line);
 
@@ -276,9 +270,7 @@ namespace IndentGuide {
         /// Raised when the caret position changes.
         /// </summary>
         void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e) {
-            int tabSize = e.TextView.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
-
-            var caret = CaretHandlerBase.FromName(CaretHandlerTypeName, View.Caret.Position.VirtualBufferPosition, Analysis.TabSize);
+            var caret = CaretHandlerBase.FromName(CaretHandlerTypeName, e.NewPosition.VirtualBufferPosition, Analysis.TabSize);
 
             foreach (var line in Analysis.Lines) {
                 int linePos = line.Indent;

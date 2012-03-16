@@ -70,6 +70,17 @@ namespace IndentGuide {
             public bool HasText = false;
             public int TextAt = 0;
             public readonly HashSet<int> GuidesAt = new HashSet<int>();
+
+            public override string ToString() {
+                var gas = string.Join(", ", GuidesAt.OrderBy(k => k).Select(k => k.ToString()));
+                if (HasText) {
+                    return string.Format("{0}:{1}", TextAt, gas);
+                } else if (TextAt == int.MaxValue) {
+                    return "##:" + gas;
+                } else {
+                    return "-:" + gas;
+                }
+            }
         }
 
         public void Reset() {
@@ -79,13 +90,15 @@ namespace IndentGuide {
             bool isCPlusPlus = string.Equals(contentType, "c/c++", StringComparison.OrdinalIgnoreCase);
 
             // Maps every line number to the amount of leading whitespace on that line.
-            var lineInfo = new List<LineInfo>(Snapshot.LineCount);
+            var lineInfo = new List<LineInfo>(Snapshot.LineCount + 2);
 
             lineInfo.Add(new LineInfo { Number = 0, TextAt = 0 });
 
             foreach (var line in Snapshot.Lines) {
                 int lineNumber = line.LineNumber + 1;
-                while (lineInfo.Count <= lineNumber) lineInfo.Add(new LineInfo { Number = lineNumber });
+                while (lineInfo.Count <= lineNumber) {
+                    lineInfo.Add(new LineInfo { Number = lineInfo.Count });
+                }
 
                 var text = line.GetText();
                 if (string.IsNullOrWhiteSpace(text))
@@ -116,7 +129,7 @@ namespace IndentGuide {
                 }
             }
 
-            lineInfo.Add(new LineInfo { Number = Snapshot.LineCount, TextAt = 0 });
+            lineInfo.Add(new LineInfo { Number = Snapshot.LineCount + 1, TextAt = 0 });
 
             {
                 bool needBoth = true;
@@ -125,7 +138,7 @@ namespace IndentGuide {
                 preceding = following = lineInfo.First();
                 for (int line = 1; line < lineInfo.Count - 1; ++line) {
                     var curLine = lineInfo[line];
-                    if (line > following.Number) {
+                    if (line >= following.Number) {
                         var nextLineIndex = lineInfo.FindIndex(line + 1, (li => li.HasText));
                         following = (nextLineIndex >= 0) ? lineInfo[nextLineIndex] : lineInfo.Last();
                     }
@@ -144,7 +157,7 @@ namespace IndentGuide {
                 preceding = following = lineInfo.Last();
                 for (int line = lineInfo.Count - 2; line > 0; --line) {
                     var curLine = lineInfo[line];
-                    if (line < following.Number) {
+                    if (line <= following.Number) {
                         var nextLineIndex = lineInfo.FindLastIndex(line - 1, (li => li.HasText));
                         following = (nextLineIndex >= 0) ? lineInfo[nextLineIndex] : lineInfo.First();
                     }
@@ -176,25 +189,34 @@ namespace IndentGuide {
                 if (!curLine.GuidesAt.Any()) {
                     if (!Behavior.VisibleEmptyAtEnd && !curLine.HasText ||
                         !Behavior.VisibleAtTextEnd && curLine.HasText && curLine.TextAt == indent) {
-                        lineNumber += 1;
                         continue;
                     }
                 }
 
                 int lastLineNumber = lineNumber;
-                while (++lastLineNumber < lineInfo.Count && lineInfo[lastLineNumber].GuidesAt.Remove(indent)) {
+                while (lastLineNumber < lineInfo.Count && lineInfo[lastLineNumber].GuidesAt.Remove(indent)) {
                     if (lineInfo[lastLineNumber].HasText) {
                         if (!Behavior.VisibleAtTextEnd && lineInfo[lastLineNumber].TextAt == indent) {
                             break;
                         }
+                    } else if (lineInfo[lastLineNumber].TextAt == int.MaxValue) {
+                        break;
+                    }
+                    lastLineNumber += 1;
+                }
+
+                int formatIndex = indent / IndentSize;
+                if (indent % IndentSize != 0) {
+                    if (!Behavior.VisibleUnaligned) {
+                        continue;
                     } else {
-                        if (lineInfo[lastLineNumber].TextAt == int.MaxValue) {
-                            break;
-                        }
+                        formatIndex = IndentTheme.UnalignedFormatIndex;
                     }
                 }
 
-                result.Add(new LineSpan(lineNumber - 1, lastLineNumber - 2, indent, LineSpanType.Normal));
+                result.Add(new LineSpan(lineNumber - 1, lastLineNumber - 1, indent, LineSpanType.Normal) {
+                    FormatIndex = formatIndex
+                });
             }
 
             Lines = result;
