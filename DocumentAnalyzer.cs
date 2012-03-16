@@ -65,6 +65,13 @@ namespace IndentGuide {
             TabSize = tabSize;
         }
 
+        private class LineInfo {
+            public int Number;
+            public bool HasText = false;
+            public int TextAt = 0;
+            public readonly HashSet<int> GuidesAt = new HashSet<int>();
+        }
+
         public void Reset() {
             Snapshot = Snapshot.TextBuffer.CurrentSnapshot;
             var contentType = Snapshot.ContentType.TypeName;
@@ -72,105 +79,122 @@ namespace IndentGuide {
             bool isCPlusPlus = string.Equals(contentType, "c/c++", StringComparison.OrdinalIgnoreCase);
 
             // Maps every line number to the amount of leading whitespace on that line.
-            var lineInfo = new List<int?>(Snapshot.LineCount);
+            var lineInfo = new List<LineInfo>(Snapshot.LineCount);
+
+            lineInfo.Add(new LineInfo { Number = 0, TextAt = 0 });
 
             foreach (var line in Snapshot.Lines) {
-                int lineNumber = line.LineNumber;
-                while (lineInfo.Count <= lineNumber) lineInfo.Add(null);
+                int lineNumber = line.LineNumber + 1;
+                while (lineInfo.Count <= lineNumber) lineInfo.Add(new LineInfo { Number = lineNumber });
 
                 var text = line.GetText();
                 if (string.IsNullOrWhiteSpace(text))
                     continue;
 
                 int spaces = text.LeadingWhitespace(TabSize);
-                lineInfo[lineNumber] = spaces;
+                lineInfo[lineNumber].HasText = true;
+                lineInfo[lineNumber].TextAt = spaces;
+
+                if (spaces > 0) {
+                    lineInfo[lineNumber].GuidesAt.Add(spaces);
+
+                    if (Behavior.VisibleAligned) {
+                        var guides = lineInfo[lineNumber].GuidesAt;
+                        for (int i = IndentSize; i < spaces; i += IndentSize) {
+                            guides.Add(i);
+                        }
+                    }
+                }
 
                 if (isCSharp || isCPlusPlus) {
                     // Left-aligned pragmas don't reduce the indent to zero.
                     if (spaces == 0 && text.StartsWith("#")) {
-                        lineInfo[lineNumber] = -1;
+                        lineInfo[lineNumber].HasText = false;
+                        lineInfo[lineNumber].TextAt = int.MaxValue;
+                        lineInfo[lineNumber].GuidesAt.Clear();
                     }
                 }
             }
-            lineInfo.Add(0);
 
-            // Maps amount of leading whitespace to the line where the indent started.
-            var indentInfo = new Dictionary<int, int>();
+            lineInfo.Add(new LineInfo { Number = Snapshot.LineCount, TextAt = 0 });
+
+            {
+                bool needBoth = true;
+                LineInfo preceding, following;
+
+                preceding = following = lineInfo.First();
+                for (int line = 1; line < lineInfo.Count - 1; ++line) {
+                    var curLine = lineInfo[line];
+                    if (line > following.Number) {
+                        var nextLineIndex = lineInfo.FindIndex(line + 1, (li => li.HasText));
+                        following = (nextLineIndex >= 0) ? lineInfo[nextLineIndex] : lineInfo.Last();
+                    }
+                    
+                    IEnumerable<int> newGuides = preceding.GuidesAt.Union(following.GuidesAt);
+                    if (curLine.HasText) {
+                        newGuides = newGuides.Where(i => i <= curLine.TextAt);
+                    } else if (needBoth) {
+                        newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
+                    }
+                    curLine.GuidesAt.UnionWith(newGuides);
+                    
+                    if (curLine.HasText) preceding = curLine;
+                }
+
+                preceding = following = lineInfo.Last();
+                for (int line = lineInfo.Count - 2; line > 0; --line) {
+                    var curLine = lineInfo[line];
+                    if (line < following.Number) {
+                        var nextLineIndex = lineInfo.FindLastIndex(line - 1, (li => li.HasText));
+                        following = (nextLineIndex >= 0) ? lineInfo[nextLineIndex] : lineInfo.First();
+                    }
+
+                    IEnumerable<int> newGuides = preceding.GuidesAt.Union(following.GuidesAt);
+                    if (curLine.HasText) {
+                        newGuides = newGuides.Where(i => i <= curLine.TextAt);
+                    } else if (needBoth) {
+                        newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
+                    }
+                    curLine.GuidesAt.UnionWith(newGuides);
+
+                    if (curLine.HasText) preceding = curLine;
+                }
+            }
+
             var result = new List<LineSpan>();
-            int lineStart = Behavior.TopToBottom ? 0 : (lineInfo.Count - 1);
-            int lineStep = Behavior.TopToBottom ? 1 : -1;
 
-            for (int line = lineStart; 0 <= line && line < lineInfo.Count; line += lineStep) {
-                int lineNext = line + lineStep;
-                int linePrev = line - lineStep;
+            for (int lineNumber = 1; lineNumber < lineInfo.Count - 1; ) {
+                var curLine = lineInfo[lineNumber];
+                if (!curLine.GuidesAt.Any()) {
+                    lineNumber += 1;
+                    continue;
+                }
 
-                if (lineInfo[line].HasValue) {
-                    int indent = lineInfo[line].Value;
+                int indent = curLine.GuidesAt.Min();
+                curLine.GuidesAt.Remove(indent);
 
-                    if (indent == -1) {
-                        foreach (var key in indentInfo.Keys.ToList()) {
-                            var value = indentInfo[key];
-                            if ((value < line && Behavior.TopToBottom) || (value > line && !Behavior.TopToBottom))
-                                result.Add(new LineSpan(value, linePrev, key, LineSpanType.Normal));
-                            indentInfo[key] = lineNext;
-                        }
+                if (!curLine.GuidesAt.Any()) {
+                    if (!Behavior.VisibleEmptyAtEnd && !curLine.HasText ||
+                        !Behavior.VisibleAtTextEnd && curLine.HasText && curLine.TextAt == indent) {
+                        lineNumber += 1;
                         continue;
                     }
+                }
 
-                    if (Behavior.VisibleAligned) {
-                        for (int i = IndentSize; i < indent; i += IndentSize) {
-                            if (!indentInfo.ContainsKey(i))
-                                indentInfo[i] = line;
+                int lastLineNumber = lineNumber;
+                while (++lastLineNumber < lineInfo.Count && lineInfo[lastLineNumber].GuidesAt.Remove(indent)) {
+                    if (lineInfo[lastLineNumber].HasText) {
+                        if (!Behavior.VisibleAtTextEnd && lineInfo[lastLineNumber].TextAt == indent) {
+                            break;
                         }
-                    }
-
-                    var last = result.LastOrDefault();
-                    if (last != null && last.Type.HasFlag(LineSpanType.AtText) &&
-                        Behavior.VisibleAtTextEnd &&
-                        last.Indent == indent && last.LastLine == linePrev) {
-                        last.LastLine = line;
-                        indentInfo[indent] = lineNext;
-                        continue;
-                    }
-
-                    if (indent > 0) {
-                        foreach (var kv in indentInfo.Where(kv => kv.Key >= indent).ToList()) {
-                            if ((kv.Value < line && Behavior.TopToBottom) || (kv.Value > line && !Behavior.TopToBottom))
-                                result.Add(new LineSpan(kv.Value, linePrev, kv.Key, LineSpanType.Normal));
-                            indentInfo.Remove(kv.Key);
-                        }
-                        indentInfo[indent] = lineNext;
-                        if (Behavior.VisibleAtTextEnd)
-                            result.Add(new LineSpan(line, line, indent, LineSpanType.AtText));
                     } else {
-                        foreach (var kv in indentInfo) {
-                            if ((kv.Value < line && Behavior.TopToBottom) || (kv.Value > line && !Behavior.TopToBottom))
-                                result.Add(new LineSpan(kv.Value, linePrev, kv.Key, LineSpanType.Normal));
+                        if (lineInfo[lastLineNumber].TextAt == int.MaxValue) {
+                            break;
                         }
-                        indentInfo.Clear();
-                    }
-                } else if (!Behavior.VisibleEmpty) {
-                    foreach (var key in indentInfo.Keys.ToList()) {
-                        if ((indentInfo[key] < line && Behavior.TopToBottom) || (indentInfo[key] > line && !Behavior.TopToBottom))
-                            result.Add(new LineSpan(indentInfo[key], linePrev, key, LineSpanType.Normal));
-                        indentInfo[key] = lineNext;
-                    }
-                } else if (!Behavior.VisibleEmptyAtEnd) {
-                    if (indentInfo.Any()) {
-                        int key = indentInfo.Keys.Max();
-                        if ((indentInfo[key] < line && Behavior.TopToBottom) || (indentInfo[key] > line && !Behavior.TopToBottom))
-                            result.Add(new LineSpan(indentInfo[key], linePrev, key, LineSpanType.Normal));
-                        indentInfo[key] = lineNext;
                     }
                 }
-            }
 
-            if (!Behavior.TopToBottom) {
-                foreach (var ls in result) {
-                    int temp = ls.LastLine;
-                    ls.LastLine = ls.FirstLine;
-                    ls.FirstLine = temp;
-                }
+                result.Add(new LineSpan(lineNumber - 1, lastLineNumber - 2, indent, LineSpanType.Normal));
             }
 
             Lines = result;

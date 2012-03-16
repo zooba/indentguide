@@ -58,7 +58,7 @@ namespace IndentGuide {
         public static CaretHandlerBase FromName(string name, VirtualSnapshotPoint location, int tabSize) {
             Type type;
             if (name == null) {
-                return new CaretNone(location, tabSize);
+                return new CaretNearestLeft(location, tabSize);
             }
 
             if (!LoadedCaretHandlers.TryGetValue(name, out type)) {
