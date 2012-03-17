@@ -16,8 +16,6 @@ namespace IndentGuide {
         public DisplayOptionsControl() {
             InitializeComponent();
 
-            gridLineMode.SelectableType = typeof(LineBehavior);
-
             lstOverrides.BeginUpdate();
             lstOverrides.Items.Clear();
             lstOverrides.Items.Add(new OverrideInfo {
@@ -46,10 +44,8 @@ namespace IndentGuide {
         public void Activate() {
             var fac = new EditorFontAndColors();
 
-            lineTextPreview.Font = new Font(fac.FontFamily, fac.FontSize);
-            lineTextPreview.ForeColor = fac.ForeColor;
-            lineTextPreview.BackColor = fac.BackColor;
             linePreview.BackColor = fac.BackColor;
+            linePreviewHighlight.BackColor = fac.BackColor;
         }
 
         public void Apply() { }
@@ -60,9 +56,6 @@ namespace IndentGuide {
                     lstOverrides.SelectedItem = null;    // ensure a change event occurs
                     lstOverrides.SelectedIndex = 0;
                 }
-
-                gridLineMode.SelectedObject = active.Behavior;
-                lineTextPreview.Theme = active;
             }
         }
 
@@ -80,16 +73,9 @@ namespace IndentGuide {
             if (format != null) {
                 linePreview.ForeColor = format.LineColor;
                 linePreview.Style = format.LineStyle;
+                linePreviewHighlight.ForeColor = format.HighlightColor;
+                linePreviewHighlight.Style = format.HighlightStyle;
             }
-
-            lineTextPreview.Invalidate();
-
-            OnThemeChanged(ActiveTheme);
-            Update(ActiveTheme, ActiveTheme);
-        }
-
-        private void gridLineMode_PropertyValueChanged(object s, EventArgs e) {
-            lineTextPreview.Invalidate();
 
             OnThemeChanged(ActiveTheme);
             Update(ActiveTheme, ActiveTheme);
@@ -114,6 +100,8 @@ namespace IndentGuide {
             gridLineStyle.SelectedObject = format;
             linePreview.ForeColor = format.LineColor;
             linePreview.Style = format.LineStyle;
+            linePreviewHighlight.ForeColor = format.HighlightColor;
+            linePreviewHighlight.Style = format.HighlightStyle;
         }
 
         private void lstOverrides_Format(object sender, ListControlConvertEventArgs e) {
@@ -123,7 +111,6 @@ namespace IndentGuide {
 
             e.Value = oi.Text;
         }
-
     }
 
     [Guid("05491866-4ED1-44FE-BDFF-FB14246BDABB")]

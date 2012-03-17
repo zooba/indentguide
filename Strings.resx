@@ -282,4 +282,10 @@
   <data name="LineStyle_Glow" xml:space="preserve">
     <value>Solid (glow)</value>
   </data>
+  <data name="tabPageAdvanced" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="tabPageQuick" xml:space="preserve">
+    <value>Quick Set</value>
+  </data>
 </root>

@@ -141,6 +141,12 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BehaviorOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BehaviorOptionsControl.Designer.cs">
+      <DependentUpon>BehaviorOptionsControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="CaretHandlers.cs" />
     <Compile Include="CheckedPropertyGrid.cs">
       <SubType>UserControl</SubType>
@@ -212,8 +218,15 @@
     <None Include="Package.ico" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="BehaviorOptionsControl.resx">
+      <DependentUpon>BehaviorOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CheckedPropertyGrid.resx">
       <DependentUpon>CheckedPropertyGrid.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="VSPackage.resx">
+      <MergeWithCTO>true</MergeWithCTO>
+      <LogicalName>VSPackage.Resources</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="DisplayOptionsControl.resx">
       <DependentUpon>DisplayOptionsControl.cs</DependentUpon>
@@ -229,10 +242,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ThemeOptionsControl.resx">
       <DependentUpon>ThemeOptionsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="VSPackage.en.resx">
-      <MergeWithCTO>true</MergeWithCTO>
-      <LogicalName>VSPackage.en.Resources</LogicalName>
     </EmbeddedResource>
     <VSCTCompile Include="IndentGuide.en.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
