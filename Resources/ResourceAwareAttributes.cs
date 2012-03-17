@@ -10,7 +10,7 @@ namespace IndentGuide {
         private static ResourceManager ResourceManager;
 
         static ResourceLoader() {
-            ResourceManager = new ResourceManager("IndentGuide.Strings", typeof(ResourceLoader).Assembly);
+            ResourceManager = new ResourceManager("IndentGuide.Resources.Strings", typeof(ResourceLoader).Assembly);
         }
 
         internal static string LoadString(string id, CultureInfo culture = null) {

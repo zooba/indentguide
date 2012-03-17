@@ -141,60 +141,60 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BehaviorOptionsControl.cs">
+    <Compile Include="Dialogs\BehaviorOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="BehaviorOptionsControl.Designer.cs">
+    <Compile Include="Dialogs\BehaviorOptionsControl.Designer.cs">
       <DependentUpon>BehaviorOptionsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="CaretHandlers.cs" />
-    <Compile Include="CheckedPropertyGrid.cs">
+    <Compile Include="Guides\CaretHandlers.cs" />
+    <Compile Include="Dialogs\Controls\CheckedPropertyGrid.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="CheckedPropertyGrid.Designer.cs">
+    <Compile Include="Dialogs\Controls\CheckedPropertyGrid.Designer.cs">
       <DependentUpon>CheckedPropertyGrid.cs</DependentUpon>
     </Compile>
-    <Compile Include="DisplayOptionsControl.cs">
+    <Compile Include="Dialogs\DisplayOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="DisplayOptionsControl.Designer.cs">
+    <Compile Include="Dialogs\DisplayOptionsControl.Designer.cs">
       <DependentUpon>DisplayOptionsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="DocumentAnalyzer.cs" />
-    <Compile Include="EditorFontAndColors.cs" />
-    <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="GenericOptions.cs">
+    <Compile Include="Guides\DocumentAnalyzer.cs" />
+    <Compile Include="Utils\EditorFontAndColors.cs" />
+    <Compile Include="Utils\ExtensionMethods.cs" />
+    <Compile Include="Dialogs\GenericOptions.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Guids.cs" />
-    <Compile Include="CaretHandlerBase.cs" />
-    <Compile Include="IndentGuideFactory.cs" />
+    <Compile Include="Guides\CaretHandlerBase.cs" />
+    <Compile Include="Guides\IndentGuideFactory.cs" />
     <Compile Include="IndentGuidePackage.cs" />
-    <Compile Include="IndentGuideService.cs" />
-    <Compile Include="IndentTheme.cs" />
-    <Compile Include="IThemeAwareDialog.cs" />
-    <Compile Include="LinePreview.cs">
+    <Compile Include="Guides\IndentGuideService.cs" />
+    <Compile Include="Guides\IndentTheme.cs" />
+    <Compile Include="Dialogs\IThemeAwareDialog.cs" />
+    <Compile Include="Dialogs\Controls\LinePreview.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="LinePreview.Designer.cs">
+    <Compile Include="Dialogs\Controls\LinePreview.Designer.cs">
       <DependentUpon>LinePreview.cs</DependentUpon>
     </Compile>
-    <Compile Include="LineTextPreview.cs">
+    <Compile Include="Dialogs\Controls\LineTextPreview.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="LineTextPreview.Designer.cs">
+    <Compile Include="Dialogs\Controls\LineTextPreview.Designer.cs">
       <DependentUpon>LineTextPreview.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="IndentGuide.cs" />
-    <Compile Include="ResourceAwareAttributes.cs" />
-    <Compile Include="ThemeOptionsControl.cs">
+    <Compile Include="Guides\IndentGuide.cs" />
+    <Compile Include="Resources\ResourceAwareAttributes.cs" />
+    <Compile Include="Dialogs\ThemeOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ThemeOptionsControl.Designer.cs">
+    <Compile Include="Dialogs\ThemeOptionsControl.Designer.cs">
       <DependentUpon>ThemeOptionsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="UpgradeSettings.cs" />
+    <Compile Include="Settings\UpgradeSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
@@ -203,47 +203,47 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="embed_icon.png">
+    <Content Include="Resources\embed_icon.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="embed_screen.png">
+    <Content Include="Resources\embed_screen.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Licence.txt">
+    <Content Include="Resources\Licence.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="Package.ico" />
+    <None Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="BehaviorOptionsControl.resx">
+    <EmbeddedResource Include="Dialogs\BehaviorOptionsControl.resx">
       <DependentUpon>BehaviorOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="CheckedPropertyGrid.resx">
+    <EmbeddedResource Include="Dialogs\Controls\CheckedPropertyGrid.resx">
       <DependentUpon>CheckedPropertyGrid.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="VSPackage.resx">
+    <EmbeddedResource Include="Resources\VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
       <LogicalName>VSPackage.Resources</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="DisplayOptionsControl.resx">
+    <EmbeddedResource Include="Dialogs\DisplayOptionsControl.resx">
       <DependentUpon>DisplayOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="LineTextPreview.resx">
+    <EmbeddedResource Include="Dialogs\Controls\LineTextPreview.resx">
       <DependentUpon>LineTextPreview.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Strings.en-AU.resx" />
-    <EmbeddedResource Include="Strings.en-GB.resx" />
-    <EmbeddedResource Include="Strings.en.resx" />
-    <EmbeddedResource Include="Strings.resx">
+    <EmbeddedResource Include="Resources\Strings.en-AU.resx"/>
+    <EmbeddedResource Include="Resources\Strings.en-GB.resx"/>
+    <EmbeddedResource Include="Resources\Strings.en.resx"/>
+    <EmbeddedResource Include="Resources\Strings.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="ThemeOptionsControl.resx">
+    <EmbeddedResource Include="Dialogs\ThemeOptionsControl.resx">
       <DependentUpon>ThemeOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <VSCTCompile Include="IndentGuide.en.vsct">
+    <VSCTCompile Include="Resources\IndentGuide.en.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
@@ -252,7 +252,7 @@
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Package.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\Package.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_11|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
