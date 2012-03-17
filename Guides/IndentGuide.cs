@@ -52,18 +52,15 @@ namespace IndentGuide {
             GlobalVisible = service.Visible;
             service.VisibleChanged += new EventHandler(Service_VisibleChanged);
 
-            var service2 = service as IIndentGuide2;
-            if (service2 != null) {
-                CaretHandlerTypeName = service2.CaretHandler;
-                service2.CaretHandlerChanged += new EventHandler(Service_CaretHandlerChanged);
-            }
+            CaretHandlerTypeName = service.CaretHandler;
+            service.CaretHandlerChanged += new EventHandler(Service_CaretHandlerChanged);
         }
 
         /// <summary>
         /// Raised when the caret handler is changed.
         /// </summary>
         void Service_CaretHandlerChanged(object sender, EventArgs e) {
-            CaretHandlerTypeName = ((IIndentGuide2)sender).CaretHandler;
+            CaretHandlerTypeName = ((IIndentGuide)sender).CaretHandler;
             UpdateAdornments();
         }
 

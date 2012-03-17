@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel.Design;
+using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 
@@ -9,7 +11,8 @@ namespace IndentGuide {
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, false)]
     [ProvideOptionPage(typeof(BehaviorOptions), "IndentGuide", "Behavior", 110, 130, false)]
-    [ProvideProfile(typeof(DisplayOptions), "IndentGuide", "Display", 110, 220, true)]
+    [ProvideProfile(typeof(ProfileManager), "IndentGuide", "Styles", 110, 220, false,
+        MigrationType = ProfileMigrationType.PassThrough, DescriptionResourceID = 230)]
     [ProvideService(typeof(SIndentGuide))]
     [ResourceDescription("IndentGuidePackage")]
     [Guid(Guids.IndentGuidePackageGuid)]
@@ -118,5 +121,34 @@ namespace IndentGuide {
             menuCmd.Checked = service.Visible;
         }
 
+        // Default version is 10.9.0.0, also known as 11 (beta 1).
+        // This was the version prior to the version field being added.
+        public const int DEFAULT_VERSION = 0x000A0900;
+
+        private static readonly int CURRENT_VERSION = GetCurrentVersion();
+
+        public static int Version { get { return CURRENT_VERSION; } }
+
+        private static int GetCurrentVersion() {
+            var assembly = typeof(IndentGuideService).Assembly;
+            var attribs = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyFileVersionAttribute), false);
+            if (attribs.Length == 0) return DEFAULT_VERSION;
+
+            var attrib = (System.Reflection.AssemblyFileVersionAttribute)attribs[0];
+
+            try {
+                int version = attrib.Version.Split('.')
+                    .Select(p => int.Parse(p))
+                    .Take(3)
+                    .Aggregate(0, (acc, i) => acc << 8 | i);
+#if DEBUG
+                Trace.WriteLine(string.Format("IndentGuideService.CURRENT_VERSION == {0:X}", version));
+#endif
+                return version;
+            } catch (Exception ex) {
+                Trace.WriteLine(string.Format("IndentGuide::GetCurrentVersion: {0}", ex));
+                return DEFAULT_VERSION;
+            }
+        }
     }
 }

@@ -1,21 +1,43 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Win32;
 
 namespace IndentGuide {
-    static class UpgradeSettings {
+    partial class ProfileManager {
+        public void Upgrade(IIndentGuide service) {
+            using (var root = service.Package.UserRegistryRoot) {
+                int version;
+                using (var reg = root.OpenSubKey(SUBKEY_NAME, false)) {
+                    version = (reg == null) ? 0 : (int)reg.GetValue("Version", IndentGuidePackage.DEFAULT_VERSION);
+                }
+
+                if (version == IndentGuidePackage.Version) {
+                    return;
+                }
+
+                using (var reg = root.CreateSubKey(SUBKEY_NAME)) {
+                    if (version >= 0x000B0900) {
+                        // Nothing to upgrade
+                    } else if (version >= 0x000B0000) {
+                        UpgradeFrom_11_0_0(reg);
+                    } else if (version >= 0x000A0901) {
+                        UpgradeFrom_10_9_1(reg);
+                    } else {
+                        UpgradeFrom_Earlier(reg);
+                    }
+                }
+            }
+        }
+
         /// <summary>
-        /// Upgrades from v12 (Beta 1) through to v12.
+        /// Upgrades from v11 through to v12 (Beta 1).
         /// </summary>
-        public static void UpgradeFrom_11_9_0(RegistryKey reg) {
+        static void UpgradeFrom_11_0_0(RegistryKey reg) {
             foreach (var themeName in reg.GetSubKeyNames()) {
                 using (var themeKey = reg.OpenSubKey(themeName, true)) {
                     if (themeKey == null) continue;
 
                     themeKey.SetValue("ExtendInwardsOnly", 1);
-                    themeKey.DeleteValue("TopToBottom", false);
+                    themeKey.DeleteValue("TopToBottom", throwOnMissingValue: false);
                 }
             }
         }
@@ -23,14 +45,14 @@ namespace IndentGuide {
         /// <summary>
         /// Upgrades from v11 (Beta 2) through to v11.
         /// </summary>
-        public static void UpgradeFrom_10_9_1(RegistryKey reg) {
+        static void UpgradeFrom_10_9_1(RegistryKey reg) {
             // v11 (beta 2) (10.9.1) and later need highlighting settings to be copied.
             foreach (var themeName in reg.GetSubKeyNames()) {
                 using (var themeKey = reg.OpenSubKey(themeName, true)) {
                     if (themeKey == null) continue;
 
                     themeKey.SetValue("ExtendInwardsOnly", 1);
-                    themeKey.DeleteValue("TopToBottom", false);
+                    themeKey.DeleteValue("TopToBottom", throwOnMissingValue: false);
 
                     string highlightColor = null, highlightStyle = null;
 
@@ -61,7 +83,7 @@ namespace IndentGuide {
         /// <summary>
         /// Upgrades from versions up to and including v11 (beta 1)
         /// </summary>
-        public static void UpgradeFrom_Earlier(RegistryKey reg) {
+        static void UpgradeFrom_Earlier(RegistryKey reg) {
             foreach (var themeName in reg.GetSubKeyNames()) {
                 using (var themeKey = reg.OpenSubKey(themeName)) {
                     if (themeKey == null) continue;
@@ -142,7 +164,7 @@ namespace IndentGuide {
                     }
                 }
 
-                reg.DeleteSubKeyTree(themeName);
+                reg.DeleteSubKeyTree(themeName, throwOnMissingSubKey: false);
             }
         }
     }

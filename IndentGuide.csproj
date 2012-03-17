@@ -161,6 +161,9 @@
       <DependentUpon>DisplayOptionsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Guides\DocumentAnalyzer.cs" />
+    <Compile Include="Settings\ProfileManager.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Utils\EditorFontAndColors.cs" />
     <Compile Include="Utils\ExtensionMethods.cs" />
     <Compile Include="Dialogs\GenericOptions.cs">
@@ -194,7 +197,9 @@
     <Compile Include="Dialogs\ThemeOptionsControl.Designer.cs">
       <DependentUpon>ThemeOptionsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Settings\UpgradeSettings.cs" />
+    <Compile Include="Settings\UpgradeSettings.cs">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
@@ -234,9 +239,9 @@
     <EmbeddedResource Include="Dialogs\Controls\LineTextPreview.resx">
       <DependentUpon>LineTextPreview.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Strings.en-AU.resx"/>
-    <EmbeddedResource Include="Resources\Strings.en-GB.resx"/>
-    <EmbeddedResource Include="Resources\Strings.en.resx"/>
+    <EmbeddedResource Include="Resources\Strings.en-AU.resx" />
+    <EmbeddedResource Include="Resources\Strings.en-GB.resx" />
+    <EmbeddedResource Include="Resources\Strings.en.resx" />
     <EmbeddedResource Include="Resources\Strings.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
