@@ -188,6 +188,7 @@
     <Compile Include="ThemeOptionsControl.Designer.cs">
       <DependentUpon>ThemeOptionsControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="UpgradeSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
@@ -278,10 +279,8 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\VSSDK\Microsoft.VsSDK.targets"
-          Condition="'$(Configuration)' == 'Debug' or '$(Configuration)' == 'Release'"/>
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v11.0\VSSDK\Microsoft.VsSDK.targets"
-          Condition="'$(Configuration)' == 'Debug_11' or '$(Configuration)' == 'Release_11'"/>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\VSSDK\Microsoft.VsSDK.targets" Condition="'$(Configuration)' == 'Debug' or '$(Configuration)' == 'Release'" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v11.0\VSSDK\Microsoft.VsSDK.targets" Condition="'$(Configuration)' == 'Debug_11' or '$(Configuration)' == 'Release_11'" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

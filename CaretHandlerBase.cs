@@ -60,15 +60,19 @@ namespace IndentGuide {
             if (name == null) {
                 return new CaretNearestLeft(location, tabSize);
             }
+            try {
+                if (!LoadedCaretHandlers.TryGetValue(name, out type)) {
+                    type = Type.GetType(name);
+                    LoadedCaretHandlers[name] = type;
+                    Trace.WriteLine("Loaded caret handler " + type.AssemblyQualifiedName);
+                }
 
-            if (!LoadedCaretHandlers.TryGetValue(name, out type)) {
-                type = Type.GetType(name);
-                LoadedCaretHandlers[name] = type;
-                Trace.WriteLine("Loaded caret handler " + type.AssemblyQualifiedName);
+                return type.InvokeMember(null, System.Reflection.BindingFlags.CreateInstance, null, null,
+                    new object[] { location, tabSize }) as CaretHandlerBase;
+            } catch (Exception ex) {
+                Trace.WriteLine(string.Format("CaretHandler::FromName: {0}", ex));
+                return new CaretNearestLeft(location, tabSize);
             }
-            
-            return type.InvokeMember(null, System.Reflection.BindingFlags.CreateInstance, null, null,
-                new object[] { location, tabSize }) as CaretHandlerBase;
         }
     }
 }

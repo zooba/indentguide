@@ -109,7 +109,9 @@ namespace IndentGuide {
                 lineInfo[lineNumber].TextAt = spaces;
 
                 if (spaces > 0) {
-                    lineInfo[lineNumber].GuidesAt.Add(spaces);
+                    if (Behavior.VisibleUnaligned || (spaces % IndentSize) == 0) {
+                        lineInfo[lineNumber].GuidesAt.Add(spaces);
+                    }
 
                     if (Behavior.VisibleAligned) {
                         var guides = lineInfo[lineNumber].GuidesAt;
@@ -131,8 +133,7 @@ namespace IndentGuide {
 
             lineInfo.Add(new LineInfo { Number = Snapshot.LineCount + 1, TextAt = 0 });
 
-            {
-                bool needBoth = true;
+            if (Behavior.VisibleEmpty) {
                 LineInfo preceding, following;
 
                 preceding = following = lineInfo.First();
@@ -146,7 +147,7 @@ namespace IndentGuide {
                     IEnumerable<int> newGuides = preceding.GuidesAt.Union(following.GuidesAt);
                     if (curLine.HasText) {
                         newGuides = newGuides.Where(i => i <= curLine.TextAt);
-                    } else if (needBoth) {
+                    } else if (Behavior.ExtendInwardsOnly) {
                         newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
                     }
                     curLine.GuidesAt.UnionWith(newGuides);
@@ -165,7 +166,7 @@ namespace IndentGuide {
                     IEnumerable<int> newGuides = preceding.GuidesAt.Union(following.GuidesAt);
                     if (curLine.HasText) {
                         newGuides = newGuides.Where(i => i <= curLine.TextAt);
-                    } else if (needBoth) {
+                    } else if (Behavior.ExtendInwardsOnly) {
                         newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
                     }
                     curLine.GuidesAt.UnionWith(newGuides);
@@ -193,7 +194,7 @@ namespace IndentGuide {
                     }
                 }
 
-                int lastLineNumber = lineNumber;
+                int lastLineNumber = lineNumber + 1;
                 while (lastLineNumber < lineInfo.Count && lineInfo[lastLineNumber].GuidesAt.Remove(indent)) {
                     if (lineInfo[lastLineNumber].HasText) {
                         if (!Behavior.VisibleAtTextEnd && lineInfo[lastLineNumber].TextAt == indent) {
@@ -201,20 +202,18 @@ namespace IndentGuide {
                         }
                     } else if (lineInfo[lastLineNumber].TextAt == int.MaxValue) {
                         break;
+                    } else if (!Behavior.VisibleEmptyAtEnd && !lineInfo[lastLineNumber].GuidesAt.Any(i => i > indent)) {
+                        break;
                     }
                     lastLineNumber += 1;
                 }
 
                 int formatIndex = indent / IndentSize;
                 if (indent % IndentSize != 0) {
-                    if (!Behavior.VisibleUnaligned) {
-                        continue;
-                    } else {
-                        formatIndex = IndentTheme.UnalignedFormatIndex;
-                    }
+                    formatIndex = IndentTheme.UnalignedFormatIndex;
                 }
 
-                result.Add(new LineSpan(lineNumber - 1, lastLineNumber - 1, indent, LineSpanType.Normal) {
+                result.Add(new LineSpan(lineNumber - 1, lastLineNumber - 2, indent, LineSpanType.Normal) {
                     FormatIndex = formatIndex
                 });
             }

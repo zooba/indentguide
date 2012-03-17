@@ -146,10 +146,10 @@ namespace IndentGuide {
 
             foreach (var line in Analysis.Lines) {
                 int linePos = line.Indent;
-                if (!Analysis.Behavior.VisibleUnaligned && (linePos % Analysis.IndentSize) != 0)
-                    continue;
                 var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
                 var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
+
+                caret.AddLine(line, willUpdateImmediately: true);
 
                 var viewModel = View.TextViewModel;
                 if ((viewModel == null ||
@@ -159,8 +159,6 @@ namespace IndentGuide {
                     lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) {
                     continue;
                 }
-
-                caret.AddLine(line, willUpdateImmediately: true);
 
                 IWpfTextViewLine firstView, lastView;
                 try {
@@ -206,13 +204,18 @@ namespace IndentGuide {
             if (left == 0 || left > View.ViewportWidth) return null;
 
             var guide = new Line() {
+#if DEBUG
+                X1 = left - 1,
+                X2 = left + 1,
+#else
                 X1 = left,
-                Y1 = top,
                 X2 = left,
+#endif
+                Y1 = top,
                 Y2 = bottom,
                 StrokeThickness = 1.0,
                 StrokeDashOffset = top,
-                SnapsToDevicePixels = true
+                SnapsToDevicePixels = true,
             };
 
             return guide;

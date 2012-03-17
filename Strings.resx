@@ -183,11 +183,11 @@
   <data name="UnalignedThemeName" xml:space="preserve">
     <value>Unaligned</value>
   </data>
-  <data name="TopToBottomDescription" xml:space="preserve">
-    <value>Copy guides onto empty lines from the line above; otherwise, from below</value>
+  <data name="ExtendInwardsOnlyDescription" xml:space="preserve">
+    <value>Empty lines only show guides where the guides appear both above and below</value>
   </data>
-  <data name="TopToBottomDisplayName" xml:space="preserve">
-    <value>Copy from above</value>
+  <data name="ExtendInwardsOnlyDisplayName" xml:space="preserve">
+    <value>Only extend inwards</value>
   </data>
   <data name="VisibleAlignedDescription" xml:space="preserve">
     <value>Show guides at all multiples of the indent size, regardless of the surrounding text</value>

@@ -229,17 +229,17 @@ namespace IndentGuide {
 
     public class LineBehavior : IEquatable<LineBehavior> {
         public LineBehavior() {
-            TopToBottom = true;
+            ExtendInwardsOnly = true;
             VisibleAligned = true;
             VisibleUnaligned = false;
             VisibleAtTextEnd = false;
             VisibleEmpty = true;
-            VisibleEmptyAtEnd = false;
+            VisibleEmptyAtEnd = true;
         }
 
         public LineBehavior Clone() {
             return new LineBehavior {
-                TopToBottom = TopToBottom,
+                ExtendInwardsOnly = ExtendInwardsOnly,
                 VisibleAligned = VisibleAligned,
                 VisibleUnaligned = VisibleUnaligned,
                 VisibleAtTextEnd = VisibleAtTextEnd,
@@ -254,7 +254,7 @@ namespace IndentGuide {
 
         public bool Equals(LineBehavior other) {
             return other != null &&
-                TopToBottom == other.TopToBottom &&
+                ExtendInwardsOnly == other.ExtendInwardsOnly &&
                 VisibleAligned == other.VisibleAligned &&
                 VisibleAtTextEnd == other.VisibleAtTextEnd &&
                 VisibleEmpty == other.VisibleEmpty &&
@@ -263,7 +263,7 @@ namespace IndentGuide {
         }
 
         public override int GetHashCode() {
-            return (TopToBottom ? 1 : 0) |
+            return (ExtendInwardsOnly ? 1 : 0) |
                 (VisibleAligned ? 2 : 0) |
                 (VisibleAtTextEnd ? 4 : 0) |
                 (VisibleEmpty ? 8 : 0) |
@@ -272,12 +272,12 @@ namespace IndentGuide {
         }
 
         /// <summary>
-        /// True to scan from top to bottom; false to scan from bottom to top.
+        /// True to require guides to appear on both sides of empty lines.
         /// </summary>
-        [ResourceDisplayName("TopToBottomDisplayName")]
-        [ResourceDescription("TopToBottomDescription")]
+        [ResourceDisplayName("ExtendInwardsOnlyDisplayName")]
+        [ResourceDescription("ExtendInwardsOnlyDescription")]
         [SortOrder(4)]
-        public bool TopToBottom { get; set; }
+        public bool ExtendInwardsOnly { get; set; }
 
         /// <summary>
         /// True to copy guidelines from the previous non-empty line into empty
@@ -322,7 +322,7 @@ namespace IndentGuide {
         public bool VisibleUnaligned { get; set; }
 
         internal void Load(RegistryKey key) {
-            TopToBottom = (int)key.GetValue("TopToBottom", 1) != 0;
+            ExtendInwardsOnly = (int)key.GetValue("ExtendInwardsOnly", 1) != 0;
             VisibleAligned = (int)key.GetValue("VisibleAligned", 1) != 0;
             VisibleUnaligned = (int)key.GetValue("VisibleUnaligned", 0) != 0;
             VisibleAtTextEnd = (int)key.GetValue("VisibleAtTextEnd", 0) != 0;
@@ -332,8 +332,8 @@ namespace IndentGuide {
 
         internal void Load(IVsSettingsReader reader, string key) {
             string temp;
-            reader.ReadSettingAttribute(key, "TopToBottom", out temp);
-            TopToBottom = bool.Parse(temp);
+            reader.ReadSettingAttribute(key, "ExtendInwardsOnly", out temp);
+            ExtendInwardsOnly = bool.Parse(temp);
             reader.ReadSettingAttribute(key, "VisibleAligned", out temp);
             VisibleAligned = bool.Parse(temp);
             reader.ReadSettingAttribute(key, "VisibleUnaligned", out temp);
@@ -347,7 +347,7 @@ namespace IndentGuide {
         }
 
         internal void Save(RegistryKey key) {
-            key.SetValue("TopToBottom", TopToBottom ? 1 : 0);
+            key.SetValue("ExtendInwardsOnly", ExtendInwardsOnly ? 1 : 0);
             key.SetValue("VisibleAligned", VisibleAligned ? 1 : 0);
             key.SetValue("VisibleUnaligned", VisibleUnaligned ? 1 : 0);
             key.SetValue("VisibleAtTextEnd", VisibleAtTextEnd ? 1 : 0);
@@ -356,7 +356,7 @@ namespace IndentGuide {
         }
 
         internal void Save(IVsSettingsWriter writer, string key) {
-            writer.WriteSettingAttribute(key, "TopToBottom", TopToBottom.ToString());
+            writer.WriteSettingAttribute(key, "ExtendInwardsOnly", ExtendInwardsOnly.ToString());
             writer.WriteSettingAttribute(key, "VisibleAligned", VisibleAligned.ToString());
             writer.WriteSettingAttribute(key, "VisibleUnaligned", VisibleUnaligned.ToString());
             writer.WriteSettingAttribute(key, "VisibleAtTextEnd", VisibleAtTextEnd.ToString());
