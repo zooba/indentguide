@@ -128,6 +128,18 @@ namespace IndentGuide {
                 if (_Visible != value) {
                     _Visible = value;
 
+                    // Save the setting immediately.
+                    using (var root = Package.UserRegistryRoot)
+                    using (var reg = root.OpenSubKey(SUBKEY_NAME, true)) {
+                        if (reg != null) {
+                            // Key already exists, so just update this setting.
+                            reg.SetValue("Visible", _Visible ? 1 : 0);
+                        } else {
+                            // Key doesn't exist, so save all settings.
+                            Save();
+                        }
+                    }
+
                     var evt = VisibleChanged;
                     if (evt != null) evt(this, EventArgs.Empty);
                 }

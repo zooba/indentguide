@@ -1,38 +1,38 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
-    <Identifier Id="IndentGuide.SteveDower.0a67eb97-becd-451f-aa29-851d9fe5dd2b">
-        <Name>Indent Guides</Name>
-        <Author>Steve Dower</Author>
-        <Version>11.9.0</Version>
-        <Description xml:space="preserve">Adds vertical lines at each indent level.</Description>
-        <Locale>1033</Locale>
-        <MoreInfoUrl>http://visualstudiogallery.msdn.microsoft.com/e792686d-542b-474a-8c55-630980e72c30</MoreInfoUrl>
-        <License>Licence.txt</License>
-        <Icon>embed_icon.png</Icon>
-        <PreviewImage>embed_screen.png</PreviewImage>
-        <SupportedProducts>
-            <VisualStudio Version="10.0">
-                <Edition>Ultimate</Edition>
-                <Edition>Premium</Edition>
-                <Edition>Pro</Edition>
-                <Edition>IntegratedShell</Edition>
-            </VisualStudio>
-            <VisualStudio Version="11.0">
-                <Edition>Ultimate</Edition>
-                <Edition>Premium</Edition>
-                <Edition>Pro</Edition>
-                <Edition>IntegratedShell</Edition>
-            </VisualStudio>
-        </SupportedProducts>
-        <SupportedFrameworkRuntimeEdition MinVersion="4.0" MaxVersion="4.0" />
-    </Identifier>
-    <References>
-        <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
-            <Name>Visual Studio MPF</Name>
-        </Reference>
-    </References>
-    <Content>
-        <MefComponent>|%CurrentProject%|</MefComponent>
-        <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
-    </Content>
+  <Identifier Id="IndentGuide.SteveDower.0a67eb97-becd-451f-aa29-851d9fe5dd2b">
+    <Name>Indent Guides</Name>
+    <Author>Steve Dower</Author>
+    <Version>11.9.1</Version>
+    <Description xml:space="preserve">Adds vertical lines at each indent level.</Description>
+    <Locale>1033</Locale>
+    <MoreInfoUrl>http://visualstudiogallery.msdn.microsoft.com/e792686d-542b-474a-8c55-630980e72c30</MoreInfoUrl>
+    <License>Licence.txt</License>
+    <Icon>embed_icon.png</Icon>
+    <PreviewImage>embed_screen.png</PreviewImage>
+    <SupportedProducts>
+      <VisualStudio Version="10.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+      </VisualStudio>
+      <VisualStudio Version="11.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.0" MaxVersion="4.0" />
+  </Identifier>
+  <References>
+    <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
+      <Name>Visual Studio MPF</Name>
+    </Reference>
+  </References>
+  <Content>
+    <MefComponent>|%CurrentProject%|</MefComponent>
+    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
+  </Content>
 </Vsix>
