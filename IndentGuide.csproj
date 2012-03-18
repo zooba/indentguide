@@ -248,7 +248,7 @@
     <EmbeddedResource Include="Dialogs\ThemeOptionsControl.resx">
       <DependentUpon>ThemeOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <VSCTCompile Include="Resources\IndentGuide.en.vsct">
+    <VSCTCompile Include="Resources\IndentGuide.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>

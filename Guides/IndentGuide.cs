@@ -39,9 +39,13 @@ namespace IndentGuide {
 
             Layer = view.GetAdornmentLayer("IndentGuide");
 
-            if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme))
+            if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme)) {
                 Theme = service.DefaultTheme;
+            }
             Debug.Assert(Theme != null, "No themes loaded");
+            if (Theme == null) {
+                Theme = new IndentTheme();
+            }
             service.ThemesChanged += new EventHandler(Service_ThemesChanged);
 
             Analysis = new DocumentAnalyzer(view.TextSnapshot, Theme.Behavior,
