@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 
 namespace IndentGuide {
@@ -83,18 +85,36 @@ namespace IndentGuide {
             }
         }
 
-        public void Reset() {
-            Snapshot = Snapshot.TextBuffer.CurrentSnapshot;
-            var contentType = Snapshot.ContentType.TypeName;
+        public Task Reset() {
+            var cts = new CancellationTokenSource();
+            var snapshot = Snapshot.TextBuffer.CurrentSnapshot;
+            var worker = new Task<List<LineSpan>>(ResetImpl, snapshot, cts.Token);
+            var continuation = worker.ContinueWith(task => {
+                if (task.Result == null) {
+                    cts.Cancel();
+                } else {
+                    Lines = task.Result;
+                    Snapshot = snapshot;
+                }
+            }, cts.Token,
+            TaskContinuationOptions.OnlyOnRanToCompletion,
+            TaskScheduler.FromCurrentSynchronizationContext());
+            worker.Start();
+            return continuation;
+        }
+
+        private List<LineSpan> ResetImpl(object snapshot_obj) {
+            var snapshot = snapshot_obj as ITextSnapshot;
+            var contentType = snapshot.ContentType.TypeName;
             bool isCSharp = string.Equals(contentType, "csharp", StringComparison.OrdinalIgnoreCase);
             bool isCPlusPlus = string.Equals(contentType, "c/c++", StringComparison.OrdinalIgnoreCase);
 
             // Maps every line number to the amount of leading whitespace on that line.
-            var lineInfo = new List<LineInfo>(Snapshot.LineCount + 2);
+            var lineInfo = new List<LineInfo>(snapshot.LineCount + 2);
 
             lineInfo.Add(new LineInfo { Number = 0, TextAt = 0 });
 
-            foreach (var line in Snapshot.Lines) {
+            foreach (var line in snapshot.Lines) {
                 int lineNumber = line.LineNumber + 1;
                 while (lineInfo.Count <= lineNumber) {
                     lineInfo.Add(new LineInfo { Number = lineInfo.Count });
@@ -131,7 +151,7 @@ namespace IndentGuide {
                 }
             }
 
-            lineInfo.Add(new LineInfo { Number = Snapshot.LineCount + 1, TextAt = 0 });
+            lineInfo.Add(new LineInfo { Number = snapshot.LineCount + 1, TextAt = 0 });
 
             if (Behavior.VisibleEmpty) {
                 LineInfo preceding, following;
@@ -218,15 +238,17 @@ namespace IndentGuide {
                 });
             }
 
-            Lines = result;
+            if (snapshot != snapshot.TextBuffer.CurrentSnapshot) {
+                return null;
+            }
+            return result;
         }
 
-        public bool Update() {
+        public Task Update() {
             if (Snapshot != Snapshot.TextBuffer.CurrentSnapshot) {
-                Reset();
-                return true;
+                return Reset();
             }
-            return false;
+            return null;
         }
     }
 }

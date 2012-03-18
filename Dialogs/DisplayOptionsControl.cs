@@ -60,8 +60,10 @@ namespace IndentGuide {
         }
 
         private void OnThemeChanged(IndentTheme theme) {
-            var evt = ThemeChanged;
-            if (evt != null) evt(this, new ThemeEventArgs(theme));
+            if (theme != null) {
+                var evt = ThemeChanged;
+                if (evt != null) evt(this, new ThemeEventArgs(theme));
+            }
         }
 
         public event EventHandler<ThemeEventArgs> ThemeChanged;

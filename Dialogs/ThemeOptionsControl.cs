@@ -26,7 +26,7 @@ namespace IndentGuide {
             InitializeComponent();
 
             Child = child;
-            var control = child as Control;
+            var control = (Control)child;
             Debug.Assert(Child != null);
             Debug.Assert(control != null);
 
@@ -48,7 +48,10 @@ namespace IndentGuide {
         }
 
         void Child_ThemeChanged(object sender, ThemeEventArgs e) {
-            if (!ChangedThemes.Contains(e.Theme)) ChangedThemes.Add(e.Theme);
+            Debug.Assert(e.Theme != null);
+            if (!ChangedThemes.Contains(e.Theme)) {
+                ChangedThemes.Add(e.Theme);
+            }
         }
 
         static int ActivationCount = 0;
@@ -98,7 +101,7 @@ namespace IndentGuide {
             bool needsRefresh = false;
 
             if (ChangedThemes.Any()) {
-                foreach (var theme in ChangedThemes) {
+                foreach (var theme in ChangedThemes.Where(t => t != null)) {
                     theme.Apply();
                     if (theme.IsDefault)
                         Service.DefaultTheme = theme;
@@ -109,7 +112,7 @@ namespace IndentGuide {
                 ChangedThemes.Clear();
             }
             if (DeletedThemes.Any()) {
-                foreach (var theme in DeletedThemes) {
+                foreach (var theme in DeletedThemes.Where(t => t != null)) {
                     if (!theme.IsDefault)
                         Service.Themes.Remove(theme.ContentType);
                 }
