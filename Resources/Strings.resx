@@ -288,4 +288,22 @@
   <data name="tabPageQuick" xml:space="preserve">
     <value>Quick Set</value>
   </data>
+  <data name="preset1" xml:space="preserve">
+    <value>\n\t  Col 7\n\t\tCol 9\n\t\t\tCol 13\n\n\t\t\t Col 14\n\n\t  Col 7\n Col 2\n\n</value>
+  </data>
+  <data name="preset2" xml:space="preserve">
+    <value>\n\t  A\n\t\tB\n\t\t\tC\n\n\t\t\t D\n\n\t  E\n F\n\n</value>
+  </data>
+  <data name="preset3" xml:space="preserve">
+    <value>\n\t  1\n\t\t2\n\t\t\t3\n\n\t\t\t 4\n\n\t  5\n 6\n\n</value>
+  </data>
+  <data name="preset4" xml:space="preserve">
+    <value>\n\t  7th column\n\t\t9th column\n\t\t\t13th col.\n\n\t\t\t 14th col.\n\n\t  7th column\n 2nd column\n\n</value>
+  </data>
+  <data name="preset5" xml:space="preserve">
+    <value>\n\t  Unaligned\n\t\tAligned\n\t\t\tAligned\n\n\t\t\t Unaligned\n\n\t  Unaligned\n Unaligned\n\n</value>
+  </data>
+  <data name="preset6" xml:space="preserve">
+    <value>\n\t  Blorg\n\t\tFrob\n\t\t\tGlob\n\n\t\t\t Resrov\n\n\t  Blob\n Fribble\n\n</value>
+  </data>
 </root>

@@ -26,6 +26,10 @@ namespace IndentGuide {
             return System.Windows.Media.Color.FromArgb(source.A, source.R, source.G, source.B);
         }
 
+        public static System.Drawing.Color AsInverted(this System.Drawing.Color source) {
+            return System.Drawing.Color.FromArgb(source.A, 255 - source.R, 255 - source.G, 255 - source.B);
+        }
+
         public static float[] ToFloatArray(this IEnumerable<double> source) {
             return source.Select(i => (float)i).ToArray();
         }

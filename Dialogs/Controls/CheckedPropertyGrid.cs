@@ -138,35 +138,36 @@ namespace IndentGuide {
 
         private void UpdateType() {
             SuspendLayout();
+            try {
+                var type = SelectableType;
+                if (type == null) {
+                    table.Controls.Clear();
+                    CheckBoxes.Clear();
+                    toolTip.RemoveAll();
+                    table.RowCount = 1;
+                } else {
+                    CheckBoxes.Clear();
+                    foreach (var prop in type.GetProperties()) {
+                        if (!prop.CanWrite || !prop.GetSetMethod().IsPublic) continue;
 
-            var type = SelectableType;
-            if (type == null) {
-                table.Controls.Clear();
-                CheckBoxes.Clear();
-                toolTip.RemoveAll();
-                table.RowCount = 1;
-            } else {
-                CheckBoxes.Clear();
-                foreach (var prop in type.GetProperties()) {
-                    if (!prop.CanWrite || !prop.GetSetMethod().IsPublic) continue;
+                        var check = new PropertyBox(prop);
+                        CheckBoxes.Add(check);
+                        check.CheckBox.CheckedChanged += new EventHandler(check_CheckedChanged);
+                    }
 
-                    var check = new PropertyBox(prop);
-                    CheckBoxes.Add(check);
-                    check.CheckBox.CheckedChanged += new EventHandler(check_CheckedChanged);
+                    table.Controls.Clear();
+                    toolTip.RemoveAll();
+                    table.RowCount = CheckBoxes.Count;
+                    int row = 0;
+                    foreach (var check in CheckBoxes.OrderBy(v => v.SortPriority)) {
+                        table.RowStyles[row].SizeType = SizeType.AutoSize;
+                        table.Controls.Add(check.CheckBox, 0, row++);
+                        toolTip.SetToolTip(check.CheckBox, check.Description);
+                    }
                 }
-
-                table.Controls.Clear();
-                toolTip.RemoveAll();
-                table.RowCount = CheckBoxes.Count;
-                int row = 0;
-                foreach (var check in CheckBoxes.OrderBy(v => v.SortPriority)) {
-                    table.RowStyles[row].SizeType = SizeType.AutoSize;
-                    table.Controls.Add(check.CheckBox, 0, row++);
-                    toolTip.SetToolTip(check.CheckBox, check.Description);
-                }
+            } finally {
+                ResumeLayout(true);
             }
-
-            ResumeLayout(true);
         }
 
         void check_CheckedChanged(object sender, EventArgs e) {

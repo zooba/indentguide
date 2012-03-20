@@ -25,14 +25,21 @@
         private void InitializeComponent() {
             this.tabTabs = new System.Windows.Forms.TabControl();
             this.tabPageQuick = new System.Windows.Forms.TabPage();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.preset1 = new IndentGuide.LineTextPreview();
+            this.preset2 = new IndentGuide.LineTextPreview();
+            this.preset3 = new IndentGuide.LineTextPreview();
+            this.preset4 = new IndentGuide.LineTextPreview();
+            this.preset5 = new IndentGuide.LineTextPreview();
+            this.preset6 = new IndentGuide.LineTextPreview();
             this.tabPageAdvanced = new System.Windows.Forms.TabPage();
             this.grpLineMode = new System.Windows.Forms.GroupBox();
             this.panelLineOverrides = new System.Windows.Forms.TableLayoutPanel();
             this.lineTextPreview = new IndentGuide.LineTextPreview();
             this.gridLineMode = new IndentGuide.CheckedPropertyGrid();
-            this.lstStyles = new System.Windows.Forms.ListView();
             this.tabTabs.SuspendLayout();
             this.tabPageQuick.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.tabPageAdvanced.SuspendLayout();
             this.grpLineMode.SuspendLayout();
             this.panelLineOverrides.SuspendLayout();
@@ -51,7 +58,7 @@
             // 
             // tabPageQuick
             // 
-            this.tabPageQuick.Controls.Add(this.lstStyles);
+            this.tabPageQuick.Controls.Add(this.tableLayoutPanel1);
             this.tabPageQuick.Location = new System.Drawing.Point(4, 22);
             this.tabPageQuick.Name = "tabPageQuick";
             this.tabPageQuick.Padding = new System.Windows.Forms.Padding(3);
@@ -59,6 +66,99 @@
             this.tabPageQuick.TabIndex = 0;
             this.tabPageQuick.Text = "tabPageQuick";
             this.tabPageQuick.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 3;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tableLayoutPanel1.Controls.Add(this.preset1, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.preset2, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.preset3, 2, 0);
+            this.tableLayoutPanel1.Controls.Add(this.preset4, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.preset5, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.preset6, 2, 1);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(459, 294);
+            this.tableLayoutPanel1.TabIndex = 0;
+            // 
+            // preset1
+            // 
+            this.preset1.BackColor = System.Drawing.SystemColors.Window;
+            this.preset1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset1.IndentSize = 4;
+            this.preset1.Location = new System.Drawing.Point(3, 3);
+            this.preset1.Name = "preset1";
+            this.preset1.Size = new System.Drawing.Size(147, 141);
+            this.preset1.TabIndex = 0;
+            this.preset1.Text = "Preset text";
+            this.preset1.Click += new System.EventHandler(this.Preset_Click);
+            // 
+            // preset2
+            // 
+            this.preset2.BackColor = System.Drawing.SystemColors.Window;
+            this.preset2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset2.IndentSize = 4;
+            this.preset2.Location = new System.Drawing.Point(156, 3);
+            this.preset2.Name = "preset2";
+            this.preset2.Size = new System.Drawing.Size(147, 141);
+            this.preset2.TabIndex = 0;
+            this.preset2.Text = "Preset text";
+            this.preset2.Click += new System.EventHandler(this.Preset_Click);
+            // 
+            // preset3
+            // 
+            this.preset3.BackColor = System.Drawing.SystemColors.Window;
+            this.preset3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset3.IndentSize = 4;
+            this.preset3.Location = new System.Drawing.Point(309, 3);
+            this.preset3.Name = "preset3";
+            this.preset3.Size = new System.Drawing.Size(147, 141);
+            this.preset3.TabIndex = 0;
+            this.preset3.Text = "Preset text";
+            this.preset3.Click += new System.EventHandler(this.Preset_Click);
+            // 
+            // preset4
+            // 
+            this.preset4.BackColor = System.Drawing.SystemColors.Window;
+            this.preset4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset4.IndentSize = 4;
+            this.preset4.Location = new System.Drawing.Point(3, 150);
+            this.preset4.Name = "preset4";
+            this.preset4.Size = new System.Drawing.Size(147, 141);
+            this.preset4.TabIndex = 0;
+            this.preset4.Text = "Preset text";
+            this.preset4.Click += new System.EventHandler(this.Preset_Click);
+            // 
+            // preset5
+            // 
+            this.preset5.BackColor = System.Drawing.SystemColors.Window;
+            this.preset5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset5.IndentSize = 4;
+            this.preset5.Location = new System.Drawing.Point(156, 150);
+            this.preset5.Name = "preset5";
+            this.preset5.Size = new System.Drawing.Size(147, 141);
+            this.preset5.TabIndex = 0;
+            this.preset5.Text = "Preset text";
+            this.preset5.Click += new System.EventHandler(this.Preset_Click);
+            // 
+            // preset6
+            // 
+            this.preset6.BackColor = System.Drawing.SystemColors.Window;
+            this.preset6.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset6.IndentSize = 4;
+            this.preset6.Location = new System.Drawing.Point(309, 150);
+            this.preset6.Name = "preset6";
+            this.preset6.Size = new System.Drawing.Size(147, 141);
+            this.preset6.TabIndex = 0;
+            this.preset6.Text = "Preset text";
+            this.preset6.Click += new System.EventHandler(this.Preset_Click);
             // 
             // tabPageAdvanced
             // 
@@ -124,25 +224,17 @@
             this.gridLineMode.TabIndex = 6;
             this.gridLineMode.PropertyValueChanged += new System.EventHandler(this.gridLineMode_PropertyValueChanged);
             // 
-            // lstStyles
-            // 
-            this.lstStyles.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lstStyles.Location = new System.Drawing.Point(3, 3);
-            this.lstStyles.MultiSelect = false;
-            this.lstStyles.Name = "lstStyles";
-            this.lstStyles.Size = new System.Drawing.Size(459, 294);
-            this.lstStyles.TabIndex = 0;
-            this.lstStyles.UseCompatibleStateImageBehavior = false;
-            // 
             // BehaviorOptionsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tabTabs);
+            this.DoubleBuffered = true;
             this.Name = "BehaviorOptionsControl";
             this.Size = new System.Drawing.Size(473, 326);
             this.tabTabs.ResumeLayout(false);
             this.tabPageQuick.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
             this.tabPageAdvanced.ResumeLayout(false);
             this.grpLineMode.ResumeLayout(false);
             this.panelLineOverrides.ResumeLayout(false);
@@ -159,6 +251,12 @@
         private System.Windows.Forms.TableLayoutPanel panelLineOverrides;
         private LineTextPreview lineTextPreview;
         private CheckedPropertyGrid gridLineMode;
-        private System.Windows.Forms.ListView lstStyles;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private LineTextPreview preset1;
+        private LineTextPreview preset2;
+        private LineTextPreview preset3;
+        private LineTextPreview preset4;
+        private LineTextPreview preset5;
+        private LineTextPreview preset6;
     }
 }

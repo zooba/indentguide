@@ -201,6 +201,7 @@
     <Compile Include="Settings\UpgradeSettings.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Utils\FakeSnapshot.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
