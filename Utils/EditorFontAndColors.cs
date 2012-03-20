@@ -9,6 +9,9 @@ namespace IndentGuide {
         public bool FontBold { get; private set; }
         public Color ForeColor { get; private set; }
         public Color BackColor { get; private set; }
+        public bool HighlightFontBold { get; private set; }
+        public Color HighlightForeColor { get; private set; }
+        public Color HighlightBackColor { get; private set; }
 
         public EditorFontAndColors() {
             FontFamily = "Consolas";
@@ -16,6 +19,9 @@ namespace IndentGuide {
             FontBold = false;
             ForeColor = Color.Black;
             BackColor = Color.White;
+            HighlightFontBold = false;
+            HighlightForeColor = Color.White;
+            HighlightBackColor = Color.Blue;
 
             try {
                 var dte = (EnvDTE.DTE)IndentGuidePackage.GetGlobalService(typeof(EnvDTE.DTE));
@@ -30,6 +36,12 @@ namespace IndentGuide {
                 FontBold = colors.Bold;
                 ForeColor = ColorTranslator.FromOle((int)colors.Foreground);
                 BackColor = ColorTranslator.FromOle((int)colors.Background);
+
+                colors = (EnvDTE.ColorableItems)fac.Item("Selected Text");
+
+                HighlightFontBold = colors.Bold;
+                HighlightForeColor = ColorTranslator.FromOle((int)colors.Foreground);
+                HighlightBackColor = ColorTranslator.FromOle((int)colors.Background);
             } catch (Exception ex) {
                 Trace.WriteLine("Error loading text editor font and colors");
                 Trace.WriteLine(ex.ToString());

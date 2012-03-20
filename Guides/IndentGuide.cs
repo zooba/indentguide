@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Microsoft.VisualStudio.Text;
@@ -21,7 +23,6 @@ namespace IndentGuide {
         string CaretHandlerTypeName;
 
         DocumentAnalyzer Analysis;
-        Dictionary<int, double> CachedLefts;
 
         /// <summary>
         /// Instantiates a new indent guide manager for a view.
@@ -29,7 +30,6 @@ namespace IndentGuide {
         /// <param name="view">The text view to provide guides for.</param>
         /// <param name="service">The Indent Guide service.</param>
         public IndentGuideView(IWpfTextView view, IIndentGuide service) {
-            CachedLefts = new Dictionary<int, double>();
             GuideBrushCache = new Dictionary<System.Drawing.Color, Brush>();
 
             View = view;
@@ -39,15 +39,18 @@ namespace IndentGuide {
 
             Layer = view.GetAdornmentLayer("IndentGuide");
 
-            if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme))
+            if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme)) {
                 Theme = service.DefaultTheme;
+            }
             Debug.Assert(Theme != null, "No themes loaded");
+            if (Theme == null) {
+                Theme = new IndentTheme();
+            }
             service.ThemesChanged += new EventHandler(Service_ThemesChanged);
 
             Analysis = new DocumentAnalyzer(view.TextSnapshot, Theme.Behavior,
                 View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
                 View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
-            Analysis.Reset();
 
             GlobalVisible = service.Visible;
             service.VisibleChanged += new EventHandler(Service_VisibleChanged);
@@ -69,8 +72,7 @@ namespace IndentGuide {
         /// </summary>
         void Service_VisibleChanged(object sender, EventArgs e) {
             GlobalVisible = ((IIndentGuide)sender).Visible;
-            InvalidateLines();
-            UpdateAdornments();
+            UpdateAdornments(Analysis.Reset());
         }
 
         /// <summary>
@@ -83,8 +85,7 @@ namespace IndentGuide {
                     View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
                 GuideBrushCache.Clear();
 
-                InvalidateLines();
-                UpdateAdornments();
+                UpdateAdornments(Analysis.Reset());
             }
         }
 
@@ -101,25 +102,34 @@ namespace IndentGuide {
                 View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
             GuideBrushCache.Clear();
 
-            InvalidateLines();
-            UpdateAdornments();
+            UpdateAdornments(Analysis.Reset());
         }
 
         /// <summary>
         /// Raised when the display changes.
         /// </summary>
         void View_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
-            Analysis.Update();
-            UpdateAdornments();
+            UpdateAdornments(Analysis.Update());
         }
 
         /// <summary>
-        /// Removes all lines from the line cache.
+        /// Schedules an update when the provided task completes.
         /// </summary>
-        void InvalidateLines() {
-            if (Layer != null) Layer.RemoveAllAdornments();
-            Analysis.Reset();
-            CachedLefts.Clear();
+        void UpdateAdornments(Task task) {
+            if (task != null) {
+                Trace.WriteLine("Update non-null");
+                task.ContinueWith(UpdateAdornmentsCallback,
+                    CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnRanToCompletion,
+                    TaskScheduler.FromCurrentSynchronizationContext());
+            } else {
+                Trace.WriteLine("Update null");
+                UpdateAdornments();
+            }
+        }
+
+        void UpdateAdornmentsCallback(Task task) {
+            UpdateAdornments();
         }
 
         /// <summary>
@@ -130,6 +140,10 @@ namespace IndentGuide {
             Debug.Assert(Layer != null);
             Debug.Assert(View.TextViewLines != null);
             if (View == null || Layer == null || View.TextViewLines == null) return;
+            if (Analysis == null) return;
+            
+            var analysisLines = Analysis.Lines;
+            if (Analysis.Snapshot != View.TextSnapshot || analysisLines == null) return;
 
             Layer.RemoveAllAdornments();
 
@@ -141,7 +155,8 @@ namespace IndentGuide {
 
             var caret = CaretHandlerBase.FromName(CaretHandlerTypeName, View.Caret.Position.VirtualBufferPosition, Analysis.TabSize);
 
-            foreach (var line in Analysis.Lines) {
+
+            foreach (var line in analysisLines) {
                 int linePos = line.Indent;
                 var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
                 var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
@@ -270,9 +285,11 @@ namespace IndentGuide {
         /// Raised when the caret position changes.
         /// </summary>
         void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e) {
+            var analysisLines = Analysis.Lines;
+            if (analysisLines == null) return;
             var caret = CaretHandlerBase.FromName(CaretHandlerTypeName, e.NewPosition.VirtualBufferPosition, Analysis.TabSize);
 
-            foreach (var line in Analysis.Lines) {
+            foreach (var line in analysisLines) {
                 int linePos = line.Indent;
                 if (!Analysis.Behavior.VisibleUnaligned && (linePos % Analysis.IndentSize) != 0)
                     continue;

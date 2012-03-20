@@ -7,17 +7,22 @@ using System.Windows.Forms;
 
 namespace IndentGuide {
     public partial class LineTextPreview : UserControl {
+        private DocumentAnalyzer Analysis;
+        
         public LineTextPreview() {
             SetStyle(ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.ResizeRedraw | ControlStyles.Opaque, true);
 
             InitializeComponent();
 
-            IndentSize = 4;
+            _IndentSize = 4;
             _Theme = null;
+            Analysis = null;
         }
 
         private bool _Checked;
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool Checked {
             get { return _Checked; }
             set {
@@ -29,6 +34,8 @@ namespace IndentGuide {
         }
 
         private bool _VisibleWhitespace;
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool VisibleWhitespace {
             get { return _VisibleWhitespace; }
             set {
@@ -39,26 +46,84 @@ namespace IndentGuide {
             }
         }
 
-        public int IndentSize { get; set; }
+        private int _IndentSize;
+        [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+        public int IndentSize {
+            get { return _IndentSize; }
+            set {
+                if (_IndentSize != value) {
+                    _IndentSize = value;
+                    Refresh();
+                }
+            }
+        }
+
+        private Color _HighlightBackColor;
+        public Color HighlightBackColor {
+            get { return _HighlightBackColor; }
+            set {
+                if (_HighlightBackColor != value) {
+                    _HighlightBackColor = value;
+                    Invalidate();
+                }
+            }
+        }
+
+        private bool ShouldSerializeHighlightBackColor() {
+            return !HighlightForeColor.IsSystemColor || HighlightBackColor != SystemColors.Highlight;
+        }
+        public void ResetHighlightBackColor() {
+            HighlightBackColor = SystemColors.Highlight;
+        }
+
+        private Color _HighlightForeColor;
+        public Color HighlightForeColor {
+            get { return _HighlightForeColor; }
+            set {
+                if (_HighlightForeColor != value) {
+                    _HighlightForeColor = value;
+                    Invalidate();
+                }
+            }
+        }
+
+        private bool ShouldSerializeHighlightForeColor() {
+            return !HighlightForeColor.IsSystemColor || HighlightForeColor != SystemColors.HighlightText;
+        }
+        public void ResetHighlightForeColor() {
+            HighlightForeColor = SystemColors.HighlightText;
+        }
+
 
         private IndentTheme _Theme;
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IndentTheme Theme {
             get { return _Theme; }
-            set { _Theme = value; Invalidate(); }
+            set { _Theme = value; Refresh(); }
         }
 
         [Browsable(true)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public override string Text {
             get { return base.Text; }
-            set { base.Text = (value ?? ""); Invalidate(); }
+            set { base.Text = (value ?? ""); }
         }
 
         protected override void OnTextChanged(EventArgs e) {
             base.OnTextChanged(e);
-            Invalidate();
+            Refresh();
+        }
+
+        public override void Refresh() {
+            base.Refresh();
+
+            if (Theme != null && Theme.Behavior != null) {
+                var snapshot = new FakeSnapshot(Text);
+                Analysis = new DocumentAnalyzer(snapshot, Theme.Behavior, IndentSize, IndentSize);
+                Analysis.Reset().ContinueWith(t => { BeginInvoke((Action)Invalidate); });
+            }
         }
 
         private Pen GetLinePen(int formatIndex) {
@@ -89,9 +154,9 @@ namespace IndentGuide {
         }
 
         protected override void OnPaint(PaintEventArgs e) {
-            e.Graphics.Clear(!Checked ? BackColor : BackColor.AsInverted());
+            e.Graphics.Clear(!Checked ? BackColor : HighlightBackColor);
 
-            Color foreColor = !Checked ? ForeColor : ForeColor.AsInverted();
+            Color foreColor = !Checked ? ForeColor : HighlightForeColor;
 
             double spaceLeft, spaceWidth;
             using (var sf = new StringFormat()) {
@@ -115,9 +180,12 @@ namespace IndentGuide {
             }
 
             try {
-                var snapshot = new FakeSnapshot(Text);
+                if (Analysis == null || Analysis.Snapshot == null) {
+                    return;
+                }
+
                 using (var brush = new SolidBrush(foreColor)) {
-                    foreach (var line in snapshot.Lines) {
+                    foreach (var line in Analysis.Snapshot.Lines) {
                         var text = line.GetText();
                         if (VisibleWhitespace) {
                             text = text.Replace(' ', '·');
@@ -126,24 +194,16 @@ namespace IndentGuide {
                     }
                 }
 
-                if (Theme == null) return;
+                if (Theme == null || Analysis.Lines == null) {
+                    return;
+                }
 
-                var analysis = new DocumentAnalyzer(snapshot, Theme.Behavior, IndentSize, IndentSize);
-
-                foreach (var line in analysis.Lines) {
-                    int linePos = line.Indent;
-                    if (!analysis.Behavior.VisibleUnaligned && (linePos % analysis.IndentSize) != 0)
-                        continue;
-
+                foreach (var line in Analysis.Lines) {
                     float top = line.FirstLine * Font.Height;
                     float bottom = (line.LastLine + 1) * Font.Height;
                     float left = (float)Math.Floor(line.Indent * spaceWidth + spaceLeft);
 
-                    int formatIndex = line.Indent / analysis.IndentSize;
-                    if (line.Indent % analysis.IndentSize != 0)
-                        formatIndex = IndentTheme.UnalignedFormatIndex;
-
-                    var pen = GetLinePen(formatIndex);
+                    var pen = GetLinePen(line.FormatIndex);
                     if (pen != null) {
                         e.Graphics.DrawLine(pen, left, top, left, bottom);
                         pen.Dispose();

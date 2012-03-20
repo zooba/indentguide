@@ -26,15 +26,15 @@
             this.tabTabs = new System.Windows.Forms.TabControl();
             this.tabPageQuick = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.tabPageAdvanced = new System.Windows.Forms.TabPage();
+            this.grpLineMode = new System.Windows.Forms.GroupBox();
+            this.panelLineOverrides = new System.Windows.Forms.TableLayoutPanel();
             this.preset1 = new IndentGuide.LineTextPreview();
             this.preset2 = new IndentGuide.LineTextPreview();
             this.preset3 = new IndentGuide.LineTextPreview();
             this.preset4 = new IndentGuide.LineTextPreview();
             this.preset5 = new IndentGuide.LineTextPreview();
             this.preset6 = new IndentGuide.LineTextPreview();
-            this.tabPageAdvanced = new System.Windows.Forms.TabPage();
-            this.grpLineMode = new System.Windows.Forms.GroupBox();
-            this.panelLineOverrides = new System.Windows.Forms.TableLayoutPanel();
             this.lineTextPreview = new IndentGuide.LineTextPreview();
             this.gridLineMode = new IndentGuide.CheckedPropertyGrid();
             this.tabTabs.SuspendLayout();
@@ -88,78 +88,6 @@
             this.tableLayoutPanel1.Size = new System.Drawing.Size(459, 294);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
-            // preset1
-            // 
-            this.preset1.BackColor = System.Drawing.SystemColors.Window;
-            this.preset1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.preset1.IndentSize = 4;
-            this.preset1.Location = new System.Drawing.Point(3, 3);
-            this.preset1.Name = "preset1";
-            this.preset1.Size = new System.Drawing.Size(147, 141);
-            this.preset1.TabIndex = 0;
-            this.preset1.Text = "Preset text";
-            this.preset1.Click += new System.EventHandler(this.Preset_Click);
-            // 
-            // preset2
-            // 
-            this.preset2.BackColor = System.Drawing.SystemColors.Window;
-            this.preset2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.preset2.IndentSize = 4;
-            this.preset2.Location = new System.Drawing.Point(156, 3);
-            this.preset2.Name = "preset2";
-            this.preset2.Size = new System.Drawing.Size(147, 141);
-            this.preset2.TabIndex = 0;
-            this.preset2.Text = "Preset text";
-            this.preset2.Click += new System.EventHandler(this.Preset_Click);
-            // 
-            // preset3
-            // 
-            this.preset3.BackColor = System.Drawing.SystemColors.Window;
-            this.preset3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.preset3.IndentSize = 4;
-            this.preset3.Location = new System.Drawing.Point(309, 3);
-            this.preset3.Name = "preset3";
-            this.preset3.Size = new System.Drawing.Size(147, 141);
-            this.preset3.TabIndex = 0;
-            this.preset3.Text = "Preset text";
-            this.preset3.Click += new System.EventHandler(this.Preset_Click);
-            // 
-            // preset4
-            // 
-            this.preset4.BackColor = System.Drawing.SystemColors.Window;
-            this.preset4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.preset4.IndentSize = 4;
-            this.preset4.Location = new System.Drawing.Point(3, 150);
-            this.preset4.Name = "preset4";
-            this.preset4.Size = new System.Drawing.Size(147, 141);
-            this.preset4.TabIndex = 0;
-            this.preset4.Text = "Preset text";
-            this.preset4.Click += new System.EventHandler(this.Preset_Click);
-            // 
-            // preset5
-            // 
-            this.preset5.BackColor = System.Drawing.SystemColors.Window;
-            this.preset5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.preset5.IndentSize = 4;
-            this.preset5.Location = new System.Drawing.Point(156, 150);
-            this.preset5.Name = "preset5";
-            this.preset5.Size = new System.Drawing.Size(147, 141);
-            this.preset5.TabIndex = 0;
-            this.preset5.Text = "Preset text";
-            this.preset5.Click += new System.EventHandler(this.Preset_Click);
-            // 
-            // preset6
-            // 
-            this.preset6.BackColor = System.Drawing.SystemColors.Window;
-            this.preset6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.preset6.IndentSize = 4;
-            this.preset6.Location = new System.Drawing.Point(309, 150);
-            this.preset6.Name = "preset6";
-            this.preset6.Size = new System.Drawing.Size(147, 141);
-            this.preset6.TabIndex = 0;
-            this.preset6.Text = "Preset text";
-            this.preset6.Click += new System.EventHandler(this.Preset_Click);
-            // 
             // tabPageAdvanced
             // 
             this.tabPageAdvanced.Controls.Add(this.grpLineMode);
@@ -196,15 +124,102 @@
             this.panelLineOverrides.Name = "panelLineOverrides";
             this.panelLineOverrides.RowCount = 1;
             this.panelLineOverrides.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.panelLineOverrides.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.panelLineOverrides.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 275F));
             this.panelLineOverrides.Size = new System.Drawing.Size(453, 275);
             this.panelLineOverrides.TabIndex = 0;
+            // 
+            // preset1
+            // 
+            this.preset1.BackColor = System.Drawing.SystemColors.Window;
+            this.preset1.Checked = false;
+            this.preset1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset1.IndentSize = 4;
+            this.preset1.Location = new System.Drawing.Point(3, 3);
+            this.preset1.Name = "preset1";
+            this.preset1.Size = new System.Drawing.Size(147, 141);
+            this.preset1.TabIndex = 0;
+            this.preset1.Text = "Preset text";
+            this.preset1.VisibleWhitespace = false;
+            this.preset1.Click += new System.EventHandler(this.Preset_Click);
+            // 
+            // preset2
+            // 
+            this.preset2.BackColor = System.Drawing.SystemColors.Window;
+            this.preset2.Checked = false;
+            this.preset2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset2.IndentSize = 4;
+            this.preset2.Location = new System.Drawing.Point(156, 3);
+            this.preset2.Name = "preset2";
+            this.preset2.Size = new System.Drawing.Size(147, 141);
+            this.preset2.TabIndex = 0;
+            this.preset2.Text = "Preset text";
+            this.preset2.VisibleWhitespace = false;
+            this.preset2.Click += new System.EventHandler(this.Preset_Click);
+            // 
+            // preset3
+            // 
+            this.preset3.BackColor = System.Drawing.SystemColors.Window;
+            this.preset3.Checked = false;
+            this.preset3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset3.IndentSize = 4;
+            this.preset3.Location = new System.Drawing.Point(309, 3);
+            this.preset3.Name = "preset3";
+            this.preset3.Size = new System.Drawing.Size(147, 141);
+            this.preset3.TabIndex = 0;
+            this.preset3.Text = "Preset text";
+            this.preset3.VisibleWhitespace = false;
+            this.preset3.Click += new System.EventHandler(this.Preset_Click);
+            // 
+            // preset4
+            // 
+            this.preset4.BackColor = System.Drawing.SystemColors.Window;
+            this.preset4.Checked = false;
+            this.preset4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset4.IndentSize = 4;
+            this.preset4.Location = new System.Drawing.Point(3, 150);
+            this.preset4.Name = "preset4";
+            this.preset4.Size = new System.Drawing.Size(147, 141);
+            this.preset4.TabIndex = 0;
+            this.preset4.Text = "Preset text";
+            this.preset4.VisibleWhitespace = false;
+            this.preset4.Click += new System.EventHandler(this.Preset_Click);
+            // 
+            // preset5
+            // 
+            this.preset5.BackColor = System.Drawing.SystemColors.Window;
+            this.preset5.Checked = false;
+            this.preset5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset5.IndentSize = 4;
+            this.preset5.Location = new System.Drawing.Point(156, 150);
+            this.preset5.Name = "preset5";
+            this.preset5.Size = new System.Drawing.Size(147, 141);
+            this.preset5.TabIndex = 0;
+            this.preset5.Text = "Preset text";
+            this.preset5.VisibleWhitespace = false;
+            this.preset5.Click += new System.EventHandler(this.Preset_Click);
+            // 
+            // preset6
+            // 
+            this.preset6.BackColor = System.Drawing.SystemColors.Window;
+            this.preset6.Checked = false;
+            this.preset6.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.preset6.IndentSize = 4;
+            this.preset6.Location = new System.Drawing.Point(309, 150);
+            this.preset6.Name = "preset6";
+            this.preset6.Size = new System.Drawing.Size(147, 141);
+            this.preset6.TabIndex = 0;
+            this.preset6.Text = "Preset text";
+            this.preset6.VisibleWhitespace = false;
+            this.preset6.Click += new System.EventHandler(this.Preset_Click);
             // 
             // lineTextPreview
             // 
             this.lineTextPreview.BackColor = System.Drawing.SystemColors.Window;
+            this.lineTextPreview.Checked = false;
             this.lineTextPreview.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lineTextPreview.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lineTextPreview.HighlightBackColor = System.Drawing.Color.Empty;
+            this.lineTextPreview.HighlightForeColor = System.Drawing.Color.Empty;
             this.lineTextPreview.IndentSize = 4;
             this.lineTextPreview.Location = new System.Drawing.Point(230, 4);
             this.lineTextPreview.Margin = new System.Windows.Forms.Padding(4);
@@ -212,6 +227,7 @@
             this.lineTextPreview.Size = new System.Drawing.Size(219, 267);
             this.lineTextPreview.TabIndex = 1;
             this.lineTextPreview.Text = "lineTextPreview";
+            this.lineTextPreview.VisibleWhitespace = false;
             // 
             // gridLineMode
             // 

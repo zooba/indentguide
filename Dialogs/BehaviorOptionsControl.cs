@@ -86,13 +86,15 @@ namespace IndentGuide {
         public void Activate() {
             var fac = new EditorFontAndColors();
 
-            lineTextPreview.Font = new Font(fac.FontFamily, fac.FontSize);
+            lineTextPreview.Font = new Font(fac.FontFamily, fac.FontSize, fac.FontBold ? FontStyle.Bold : FontStyle.Regular);
             lineTextPreview.ForeColor = fac.ForeColor;
             lineTextPreview.BackColor = fac.BackColor;
             foreach (var p in Presets.Zip(PresetThemes, (x, y) => new Tuple<LineTextPreview, IndentTheme>(x, y))) {
-                p.Item1.Font = new Font(fac.FontFamily, 8.0f);
+                p.Item1.Font = new Font(fac.FontFamily, 8.0f, fac.FontBold ? FontStyle.Bold : FontStyle.Regular);
                 p.Item1.ForeColor = fac.ForeColor;
                 p.Item1.BackColor = fac.BackColor;
+                p.Item1.HighlightBackColor = fac.HighlightBackColor;
+                p.Item1.HighlightForeColor = fac.HighlightForeColor;
                 p.Item1.VisibleWhitespace = true;
                 p.Item1.Theme = p.Item2;
             }
@@ -112,8 +114,10 @@ namespace IndentGuide {
         }
 
         private void OnThemeChanged(IndentTheme theme) {
-            var evt = ThemeChanged;
-            if (evt != null) evt(this, new ThemeEventArgs(theme));
+            if (theme != null) {
+                var evt = ThemeChanged;
+                if (evt != null) evt(this, new ThemeEventArgs(theme));
+            }
         }
 
         public event EventHandler<ThemeEventArgs> ThemeChanged;
