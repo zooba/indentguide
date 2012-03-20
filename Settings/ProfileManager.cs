@@ -12,9 +12,18 @@ namespace IndentGuide {
     partial class ProfileManager : Component, IProfileManager {
         private const string SUBKEY_NAME = "IndentGuide";
 
+        private IIndentGuide Service {
+            get {
+                if (Site != null) {
+                    return (IIndentGuide)Site.GetService(typeof(SIndentGuide));
+                } else {
+                    return (IIndentGuide)ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide));
+                }
+            }
+        }
+
         public void LoadSettingsFromStorage() {
-            var service = (IIndentGuide)Site.GetService(typeof(SIndentGuide));
-            LoadSettingsFromStorage(service);
+            LoadSettingsFromStorage(Service);
         }
 
         public void LoadSettingsFromStorage(IIndentGuide service) {
@@ -49,8 +58,7 @@ namespace IndentGuide {
         }
 
         public void LoadSettingsFromXml(IVsSettingsReader reader) {
-            var service = (IIndentGuide)Site.GetService(typeof(SIndentGuide));
-
+            var service = Service;
             string themeKeysString;
             reader.ReadSettingString("Themes", out themeKeysString);
 
@@ -77,8 +85,7 @@ namespace IndentGuide {
         }
 
         public void ResetSettings() {
-            var service = (IIndentGuide)Site.GetService(typeof(SIndentGuide));
-            ResetSettings(service);
+            ResetSettings(Service);
         }
 
         public void ResetSettings(IIndentGuide service) {
@@ -86,8 +93,7 @@ namespace IndentGuide {
         }
 
         public void SaveSettingsToStorage() {
-            var service = (IIndentGuide)Site.GetService(typeof(SIndentGuide));
-            SaveSettingsToStorage(service);
+            SaveSettingsToStorage(Service);
         }
 
         public void SaveSettingsToStorage(IIndentGuide service) {
@@ -123,7 +129,7 @@ namespace IndentGuide {
         }
 
         public void SaveSettingsToXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsWriter writer) {
-            var service = (IIndentGuide)Site.GetService(typeof(SIndentGuide));
+            var service = Service;
 
             var sb = new StringBuilder();
             if (service.DefaultTheme != null) {
@@ -145,8 +151,7 @@ namespace IndentGuide {
         }
 
         public void SaveVisibleSettingToStorage() {
-            var service = (IIndentGuide)Site.GetService(typeof(SIndentGuide));
-            SaveVisibleSettingToStorage(service);
+            SaveVisibleSettingToStorage(Service);
         }
 
         public void SaveVisibleSettingToStorage(IIndentGuide service) {
@@ -160,6 +165,65 @@ namespace IndentGuide {
 
             // Key doesn't exist, so save all settings.
             SaveSettingsToStorage(service);
+        }
+
+
+        static readonly object PreservedLock = new object();
+        static TemporarySettingStore Preserved = null;
+        static int PreservedCount = 0;
+
+        public bool PreserveSettings() {
+            lock (PreservedLock) {
+                if (Preserved == null) {
+                    var preserved = new TemporarySettingStore();
+                    SaveSettingsToXml(preserved);
+                    Preserved = preserved;
+                    PreservedCount += 1;
+                    return true;
+                } else {
+                    PreservedCount += 1;
+                    return false;
+                }
+            }
+        }
+
+        public bool AcceptSettings() {
+            lock (PreservedLock) {
+                if (PreservedCount == 0) {
+                    return false;
+                } else if (PreservedCount == 1) {
+                    Preserved = null;
+                    PreservedCount = 0;
+                    var service = Service as IndentGuideService;
+                    if (service != null) {
+                        service.OnThemesChanged();
+                    }
+                    return true;
+                } else {
+                    PreservedCount -= 1;
+                    return false;
+                }
+            }
+        }
+
+        public bool RollbackSettings() {
+            lock (PreservedLock) {
+                if (PreservedCount == 0) {
+                    return false;
+                } else if (Preserved != null) {
+                    LoadSettingsFromXml(Preserved);
+                    Preserved = null;
+                    PreservedCount -= 1;
+                    var service = Service as IndentGuideService;
+                    if (service != null) {
+                        service.OnThemesChanged();
+                    }
+                    return true;
+                } else {
+                    PreservedCount -= 1;
+                    return false;
+                }
+            }
         }
     }
 }

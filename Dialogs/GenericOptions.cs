@@ -5,11 +5,13 @@ using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide {
     public class GenericOptions<T> : DialogPage where T : Control, IThemeAwareDialog, new() {
-        private IIndentGuide Service;
+        private readonly ProfileManager ProfileManager;
+        private bool IsActivated;
+        private bool ShouldSave;
 
         public GenericOptions() {
-            var provider = ServiceProvider.GlobalProvider;
-            Service = (IIndentGuide)provider.GetService(typeof(SIndentGuide));
+            ProfileManager = new ProfileManager();
+            IsActivated = false;
         }
 
         private T _Control = null;
@@ -37,26 +39,31 @@ namespace IndentGuide {
         }
 
         public override void LoadSettingsFromStorage() {
-            Service.Load();
+            ProfileManager.LoadSettingsFromStorage();
         }
 
         public override void LoadSettingsFromXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsReader reader) {
-            Service.Load(reader);
+            ProfileManager.LoadSettingsFromXml(reader);
         }
 
         public override void SaveSettingsToStorage() {
-            Service.Save();
+            ProfileManager.SaveSettingsToStorage();
         }
 
         public override void SaveSettingsToXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsWriter writer) {
-            Service.Save(writer);
+            ProfileManager.SaveSettingsToXml(writer);
         }
 
         public override void ResetSettings() {
-            Service.Reset();
+            ProfileManager.ResetSettings();
         }
 
         protected override void OnActivate(CancelEventArgs e) {
+            if (IsActivated == false) {
+                ProfileManager.PreserveSettings();
+                IsActivated = true;
+                ShouldSave = false;
+            }
             base.OnActivate(e);
             Wrapper.Activate();
         }
@@ -64,9 +71,19 @@ namespace IndentGuide {
         protected override void OnApply(DialogPage.PageApplyEventArgs e) {
             Wrapper.Apply();
             base.OnApply(e);
+            ShouldSave = true;
         }
 
         protected override void OnClosed(EventArgs e) {
+            if (!IsActivated) {
+
+            } else if (ShouldSave) {
+                ProfileManager.AcceptSettings();
+            } else {
+                ProfileManager.RollbackSettings();
+            }
+            IsActivated = false;
+
             Wrapper.Close();
             base.OnClosed(e);
         }

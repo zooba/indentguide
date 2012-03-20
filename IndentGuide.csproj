@@ -164,6 +164,7 @@
     <Compile Include="Settings\ProfileManager.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Settings\TemporarySettingStore.cs" />
     <Compile Include="Utils\EditorFontAndColors.cs" />
     <Compile Include="Utils\ExtensionMethods.cs" />
     <Compile Include="Dialogs\GenericOptions.cs">
