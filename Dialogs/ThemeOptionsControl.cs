@@ -38,6 +38,8 @@ namespace IndentGuide {
             var componentModel = (IComponentModel)provider.GetService(typeof(SComponentModel));
             EditorAdapters = (IVsEditorAdaptersFactoryService)componentModel
                 .GetService<IVsEditorAdaptersFactoryService>();
+
+            ActiveThemeChanged += ActiveTheme_Changed;
         }
 
         internal void Activate() {
@@ -57,41 +59,61 @@ namespace IndentGuide {
 
             Child.Activate();
 
-            IndentTheme activeTheme;
-            if (CurrentContentType == null ||
-                !Service.Themes.TryGetValue(CurrentContentType, out activeTheme) || 
-                activeTheme == null) {
-                activeTheme = Service.DefaultTheme;
+            if (ActiveTheme == null) {
+                IndentTheme activeTheme;
+                if (CurrentContentType == null ||
+                    !Service.Themes.TryGetValue(CurrentContentType, out activeTheme) ||
+                    activeTheme == null) {
+                    activeTheme = Service.DefaultTheme;
+                }
+                if (activeTheme == null) {
+                    activeTheme = Service.DefaultTheme = new IndentTheme();
+                }
+                ActiveTheme = activeTheme;
             }
-            if (activeTheme == null) {
-                activeTheme = Service.DefaultTheme = new IndentTheme();
-            }
-            ActiveTheme = activeTheme;
 
             UpdateThemeList();
+            UpdateDisplay();
         }
 
         internal void Apply() {
             Child.Apply();
         }
 
-        internal void Close() { }
+        internal void Close() {
+            _ActiveTheme = null;
+        }
+
+        private class ActiveThemeChangedEventArgs : EventArgs {
+            public IndentTheme Previous { get; set; }
+            public IndentTheme Current { get; set; }
+        }
+
+        private static event EventHandler<ActiveThemeChangedEventArgs> ActiveThemeChanged;
 
         private static IndentTheme _ActiveTheme;
         protected IndentTheme ActiveTheme {
             get { return _ActiveTheme; }
             set {
+                var args = new ActiveThemeChangedEventArgs();
+                args.Previous = _ActiveTheme;
                 if (_ActiveTheme != value) {
-                    var old = _ActiveTheme;
                     _ActiveTheme = value;
-                    Child.ActiveTheme = value;
-                    if (cmbTheme.SelectedItem != value && cmbTheme.Items.Contains(value))
-                        cmbTheme.SelectedItem = value;
-                    UpdateDisplay(_ActiveTheme, old);
-                } else {
-                    UpdateDisplay(_ActiveTheme, _ActiveTheme);
                 }
+                args.Current = _ActiveTheme;
+                var evt = ActiveThemeChanged;
+                if (evt != null) evt(this, args);
             }
+        }
+
+        private void ActiveTheme_Changed(object sender, ActiveThemeChangedEventArgs e) {
+            var value = e.Current;
+            var old = e.Previous;
+            Child.ActiveTheme = value;
+            if (cmbTheme.SelectedItem != value && cmbTheme.Items.Contains(value)) {
+                cmbTheme.SelectedItem = value;
+            }
+            UpdateDisplay(value, old);
         }
 
         private string _CurrentContentType;
@@ -167,6 +189,11 @@ namespace IndentGuide {
         }
 
         protected void UpdateDisplay(IndentTheme active, IndentTheme previous) {
+            if (cmbTheme.Items.Contains(active)) {
+                cmbTheme.SelectedItem = active;
+            } else {
+                cmbTheme.SelectedItem = null;
+            }
             Child.Update(active, previous);
         }
 

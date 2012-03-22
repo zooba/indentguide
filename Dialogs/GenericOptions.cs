@@ -39,23 +39,23 @@ namespace IndentGuide {
         }
 
         public override void LoadSettingsFromStorage() {
-            ProfileManager.LoadSettingsFromStorage();
+            //ProfileManager.LoadSettingsFromStorage();
         }
 
         public override void LoadSettingsFromXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsReader reader) {
-            ProfileManager.LoadSettingsFromXml(reader);
+            //ProfileManager.LoadSettingsFromXml(reader);
         }
 
         public override void SaveSettingsToStorage() {
-            ProfileManager.SaveSettingsToStorage();
+            //ProfileManager.SaveSettingsToStorage();
         }
 
         public override void SaveSettingsToXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsWriter writer) {
-            ProfileManager.SaveSettingsToXml(writer);
+            //ProfileManager.SaveSettingsToXml(writer);
         }
 
         public override void ResetSettings() {
-            ProfileManager.ResetSettings();
+            //ProfileManager.ResetSettings();
         }
 
         protected override void OnActivate(CancelEventArgs e) {
@@ -76,12 +76,13 @@ namespace IndentGuide {
 
         protected override void OnClosed(EventArgs e) {
             if (!IsActivated) {
-
+                // Do nothing
             } else if (ShouldSave) {
                 ProfileManager.AcceptSettings();
             } else {
                 ProfileManager.RollbackSettings();
             }
+            // Settings are saved automatically by the final accept/rollback.
             IsActivated = false;
 
             Wrapper.Close();

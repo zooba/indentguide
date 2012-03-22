@@ -119,34 +119,31 @@ namespace IndentGuide {
         public override void Refresh() {
             base.Refresh();
 
-            if (Theme != null && Theme.Behavior != null) {
+            if (Theme != null && Theme.Behavior != null && IsHandleCreated) {
                 var snapshot = new FakeSnapshot(Text);
                 Analysis = new DocumentAnalyzer(snapshot, Theme.Behavior, IndentSize, IndentSize);
                 Analysis.Reset().ContinueWith(t => { BeginInvoke((Action)Invalidate); });
             }
         }
 
-        private Pen GetLinePen(int formatIndex) {
+        private Pen GetLinePen(int formatIndex, out bool isGlowing) {
             LineFormat format;
 
             if (!Theme.LineFormats.TryGetValue(formatIndex, out format))
                 format = Theme.DefaultLineFormat;
 
+            isGlowing = format.LineStyle.HasFlag(LineStyle.Glow);
+
             if (!format.Visible) return null;
 
-            Pen pen = null;
+            var pen = new Pen(format.LineColor, (float)format.LineStyle.GetStrokeThickness());
 
-            if (!Checked) {
-                pen = new Pen(format.LineColor, (float)format.LineStyle.GetStrokeThickness());
-            } else {
-                pen = new Pen(format.LineColor.AsInverted(), (float)format.LineStyle.GetStrokeThickness());
-            }
+            pen.StartCap = System.Drawing.Drawing2D.LineCap.Flat;
+            pen.EndCap = System.Drawing.Drawing2D.LineCap.Flat;
 
             var pattern = format.LineStyle.GetDashPattern();
             if (pattern == null) {
                 pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-                pen.StartCap = System.Drawing.Drawing2D.LineCap.Flat;
-                pen.EndCap = System.Drawing.Drawing2D.LineCap.Flat;
             } else {
                 pen.DashPattern = pattern;
             }
@@ -203,10 +200,18 @@ namespace IndentGuide {
                     float bottom = (line.LastLine + 1) * Font.Height;
                     float left = (float)Math.Floor(line.Indent * spaceWidth + spaceLeft);
 
-                    var pen = GetLinePen(line.FormatIndex);
-                    if (pen != null) {
-                        e.Graphics.DrawLine(pen, left, top, left, bottom);
-                        pen.Dispose();
+                    bool glow;
+                    using (var pen = GetLinePen(line.FormatIndex, out glow)) {
+                        if (pen != null) {
+                            if (glow) {
+                                using (var transparentBrush = new SolidBrush(Color.FromArgb(24, pen.Color))) {
+                                    for (int i = 1; i < LineStyle.Thick.GetStrokeThickness(); ++i) {
+                                        e.Graphics.FillRectangle(transparentBrush, left - i, top, i + i + 1, bottom - top);
+                                    }
+                                }
+                            }
+                            e.Graphics.DrawLine(pen, left, top, left, bottom);
+                        }
                     }
                 }
             } catch (Exception ex) {

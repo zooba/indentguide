@@ -107,8 +107,12 @@ namespace IndentGuide {
                 gridLineMode.SelectedObject = active.Behavior;
                 lineTextPreview.Theme = active;
                 foreach (var p in Presets) {
-                    p.Theme.DefaultLineFormat = active.DefaultLineFormat;
+                    p.Theme.LineFormats.Clear();
+                    foreach (var kv in active.LineFormats) {
+                        p.Theme.LineFormats[kv.Key] = kv.Value;
+                    }
                     p.Checked = p.Theme.Behavior.Equals(active.Behavior);
+                    p.Invalidate();
                 }
             }
         }

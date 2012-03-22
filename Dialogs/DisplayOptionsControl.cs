@@ -52,8 +52,11 @@ namespace IndentGuide {
 
         public void Update(IndentTheme active, IndentTheme previous) {
             if (active != null) {
-                if (previous != active) {
-                    lstOverrides.SelectedItem = null;    // ensure a change event occurs
+                int previousIndex = lstOverrides.SelectedIndex;
+                lstOverrides.SelectedItem = null;    // ensure a change event occurs
+                if (0 <= previousIndex && previousIndex < lstOverrides.Items.Count) {
+                    lstOverrides.SelectedIndex = previousIndex;
+                } else {
                     lstOverrides.SelectedIndex = 0;
                 }
             }
@@ -74,13 +77,14 @@ namespace IndentGuide {
             var format = gridLineStyle.SelectedObject as LineFormat;
             if (format != null) {
                 linePreview.ForeColor = format.LineColor;
+                linePreview.GlowColor = format.LineColor;
                 linePreview.Style = format.LineStyle;
-                linePreviewHighlight.ForeColor = format.HighlightColor;
+                linePreviewHighlight.ForeColor = format.HighlightStyle.HasFlag(LineStyle.Glow) ? format.LineColor : format.HighlightColor;
+                linePreviewHighlight.GlowColor = format.HighlightColor;
                 linePreviewHighlight.Style = format.HighlightStyle;
             }
 
             OnThemeChanged(ActiveTheme);
-            Update(ActiveTheme, ActiveTheme);
         }
 
         private void lstOverrides_SelectedIndexChanged(object sender, EventArgs e) {
@@ -89,11 +93,11 @@ namespace IndentGuide {
             Debug.Assert(oi != null);
             if (oi == null) return;
 
-            ActiveTheme.Apply();
             LineFormat format;
             if (oi.Pattern == null) {
-                if (!ActiveTheme.LineFormats.TryGetValue(oi.Index, out format))
+                if (!ActiveTheme.LineFormats.TryGetValue(oi.Index, out format)) {
                     ActiveTheme.LineFormats[oi.Index] = format = ActiveTheme.DefaultLineFormat.Clone();
+                }
             } else {
                 // TODO: Pattern based formatting
                 format = ActiveTheme.DefaultLineFormat.Clone();
@@ -101,8 +105,10 @@ namespace IndentGuide {
 
             gridLineStyle.SelectedObject = format;
             linePreview.ForeColor = format.LineColor;
+            linePreview.GlowColor = format.LineColor;
             linePreview.Style = format.LineStyle;
-            linePreviewHighlight.ForeColor = format.HighlightColor;
+            linePreviewHighlight.ForeColor = format.HighlightStyle.HasFlag(LineStyle.Glow) ? format.LineColor : format.HighlightColor;
+            linePreviewHighlight.GlowColor = format.HighlightColor;
             linePreviewHighlight.Style = format.HighlightStyle;
         }
 

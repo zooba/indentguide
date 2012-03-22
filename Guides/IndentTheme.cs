@@ -368,15 +368,11 @@ namespace IndentGuide {
     /// <summary>
     /// A theme for a particular language or document type.
     /// </summary>
-    public class IndentTheme : IComparable<IndentTheme> {
+    public class IndentTheme : IComparable<IndentTheme>, IEquatable<IndentTheme> {
         public static readonly string DefaultThemeName = ResourceLoader.LoadString("DefaultThemeName");
         public const int DefaultFormatIndex = int.MinValue;
         public const int UnalignedFormatIndex = -1;
         public const int CaretFormatIndex_Deprecated = -2;
-
-        public static LineFormat DefaultUnalignedFormat {
-            get { return new LineFormat(); }
-        }
 
         public event EventHandler Updated;
 
@@ -389,7 +385,6 @@ namespace IndentGuide {
             ContentType = null;
             LineFormats = new Dictionary<int, LineFormat>();
             DefaultLineFormat = new LineFormat();
-            LineFormats[UnalignedFormatIndex] = DefaultUnalignedFormat;
             Behavior = new LineBehavior();
         }
 
@@ -527,6 +522,9 @@ namespace IndentGuide {
                 int visible;
 
                 foreach (var item in LineFormats) {
+                    if (item.Value.Equals(DefaultLineFormat) && item.Key != DefaultFormatIndex) {
+                        continue;
+                    }
                     var subkeyName = FormatIndexToString(item.Key);
 
                     using (var subkey = key.CreateSubKey(subkeyName)) {
@@ -575,12 +573,26 @@ namespace IndentGuide {
             if (IsDefault && other.IsDefault) return 0;
             if (IsDefault) return -1;
             if (other.IsDefault) return 1;
-            return ContentType.CompareTo(other.ContentType);
+            return String.Compare(ContentType, other.ContentType, StringComparison.Ordinal);
+        }
+
+        public override bool Equals(object obj) {
+            return this.Equals(obj as IndentTheme);
+        }
+
+        public override int GetHashCode() {
+            return base.GetHashCode();
+        }
+
+        public bool Equals(IndentTheme other) {
+            if (other == null) return false;
+            if (IsDefault && other.IsDefault) return true;
+            return String.Equals(ContentType, other.ContentType, StringComparison.Ordinal);
         }
 
         internal void Apply() {
             var toRemove = LineFormats
-                .Where(kv => kv.Key >= 0)
+                .Where(kv => kv.Key != DefaultFormatIndex)
                 .Where(kv => DefaultLineFormat.Equals(kv.Value) || null == kv.Value)
                 .Select(kv => kv.Key)
                 .ToList();

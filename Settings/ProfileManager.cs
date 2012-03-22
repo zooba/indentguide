@@ -27,6 +27,11 @@ namespace IndentGuide {
         }
 
         public void LoadSettingsFromStorage(IIndentGuide service) {
+            lock (PreservedLock) {
+                if (Preserved != null) {
+                    return;
+                }
+            }
             service.Themes.Clear();
             RegistryKey reg = null;
             try {
@@ -97,8 +102,13 @@ namespace IndentGuide {
         }
 
         public void SaveSettingsToStorage(IIndentGuide service) {
-            RegistryKey reg = null;
+            lock (PreservedLock) {
+                if (Preserved != null) {
+                    return;
+                }
+            }
 
+            RegistryKey reg = null;
             try {
                 reg = service.Package.UserRegistryRoot.CreateSubKey(SUBKEY_NAME);
 

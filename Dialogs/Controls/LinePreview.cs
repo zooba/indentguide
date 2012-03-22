@@ -25,6 +25,21 @@ namespace IndentGuide {
             }
         }
 
+        private Color _GlowColor = SystemColors.ControlText;
+        public Color GlowColor {
+            get {
+                return _GlowColor;
+            }
+            set {
+                if (_GlowColor != value) {
+                    _GlowColor = value;
+                    Invalidate();
+                }
+            }
+        }
+        private bool ShouldSerializeGlowColor() { return _GlowColor != SystemColors.ControlText; }
+        public void ResetGlowColor() { GlowColor = SystemColors.ControlText; }
+
         protected override void OnForeColorChanged(EventArgs e) {
             base.OnForeColorChanged(e);
             LinePen = null;
@@ -53,6 +68,13 @@ namespace IndentGuide {
             }
 
             e.Graphics.DrawLine(LinePen, x, y1, x, y2);
+            if (Style.HasFlag(LineStyle.Glow)) {
+                using (var transparentBrush = new SolidBrush(Color.FromArgb(24, GlowColor))) {
+                    for (int i = 1; i < LineStyle.Thick.GetStrokeThickness(); ++i) {
+                        e.Graphics.FillRectangle(transparentBrush, x - i, y1, i + i + 1, y2 - y1);
+                    }
+                }
+            }
         }
     }
 }
