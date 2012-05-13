@@ -147,6 +147,12 @@
     <Compile Include="Dialogs\BehaviorOptionsControl.Designer.cs">
       <DependentUpon>BehaviorOptionsControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\CustomBehaviorOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Dialogs\CustomBehaviorOptionsControl.Designer.cs">
+      <DependentUpon>CustomBehaviorOptionsControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Guides\CaretHandlers.cs" />
     <Compile Include="Dialogs\Controls\CheckedPropertyGrid.cs">
       <SubType>UserControl</SubType>
@@ -230,6 +236,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\Controls\CheckedPropertyGrid.resx">
       <DependentUpon>CheckedPropertyGrid.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\CustomBehaviorOptionsControl.resx">
+      <DependentUpon>CustomBehaviorOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
