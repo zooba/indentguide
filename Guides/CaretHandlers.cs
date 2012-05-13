@@ -68,4 +68,41 @@ namespace IndentGuide {
             return Modified;
         }
     }
+
+    /// <summary>
+    /// Highlights any guide that is touched by the caret.
+    /// </summary>
+    class CaretAdjacent : CaretHandlerBase {
+        private readonly int MinimumLength;
+
+        public CaretAdjacent(VirtualSnapshotPoint location, int tabSize)
+            : this(location, tabSize, 1) { }
+
+        public CaretAdjacent(VirtualSnapshotPoint location, int tabSize, int minimumLength)
+            : base(location, tabSize) {
+            MinimumLength = minimumLength - 1;
+        }
+
+        public override void AddLine(LineSpan line, bool willUpdateImmediately) {
+            bool isTouching = false;
+            
+            if (line.FirstLine - 1 <= LineNumber &&
+                LineNumber <= line.LastLine + 1 &&
+                (line.LastLine - line.FirstLine) >= MinimumLength &&
+                line.Indent == Position) {
+                isTouching = true;
+            }
+
+            if (line.Highlight != isTouching) {
+                line.Highlight = isTouching;
+                if (!willUpdateImmediately) {
+                    Modified.Add(line);
+                }
+            }
+        }
+
+        public override IEnumerable<LineSpan> GetModified() {
+            return Modified;
+        }
+    }
 }
