@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace IndentGuide {
     [PackageRegistration(UseManagedResourcesOnly = true)]
@@ -91,6 +92,7 @@ namespace IndentGuide {
                 // Create the command for the tool window
                 CommandID viewIndentCommandID = new CommandID(guidIndentGuideCmdSet, cmdidViewIndentGuides);
                 var menuCmd = new MenuCommand(ToggleVisibility, viewIndentCommandID);
+                menuCmd.Enabled = true;
                 menuCmd.Checked = Service.Visible;
 
                 if (System.Threading.Interlocked.CompareExchange(ref _menuCommand, menuCmd, null) == null) {
@@ -106,7 +108,7 @@ namespace IndentGuide {
             var menuCmd = GetCommand();
             if (menuCmd == null) return;
 
-            menuCmd.Visible = menuCmd.Enabled = (GotFocus != null && GotFocus.Kind == "Document");
+            menuCmd.Visible = (GotFocus != null && GotFocus.Kind == "Document");
         }
 
         private void ToggleVisibility(object sender, EventArgs e) {
