@@ -30,29 +30,31 @@
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
 
-            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides2010" priority="0x6550" type="Button">
-                <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
+            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides2010" type="Button">
                 <Icon guid="guidIndentGuideBmp" id="bmpViewIndentGuides2010"/>
                 <CommandFlag>DefaultInvisible</CommandFlag>
+                <CommandFlag>DefaultDisabled</CommandFlag>
                 <CommandFlag>DynamicVisibility</CommandFlag>
                 <Strings>
                     <ButtonText>View Indent Guides</ButtonText>
                     <MenuText>View Indent &amp;Guides</MenuText>
                     <ToolTipText>Toggle the visibility of indentation guides.</ToolTipText>
                     <CommandName>View Indent Guides</CommandName>
+                    <CanonicalName>ViewIndentGuides2010</CanonicalName>
                 </Strings>
                 <!-- Add more Strings elements with language attribute and translations -->
             </Button>
-            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides11" priority="0x6550" type="Button">
-                <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
+            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides11" type="Button">
                 <Icon guid="guidIndentGuideBmp" id="bmpViewIndentGuides11"/>
                 <CommandFlag>DefaultInvisible</CommandFlag>
+                <CommandFlag>DefaultDisabled</CommandFlag>
                 <CommandFlag>DynamicVisibility</CommandFlag>
                 <Strings>
                     <ButtonText>View Indent Guides</ButtonText>
                     <MenuText>View Indent &amp;Guides</MenuText>
                     <ToolTipText>Toggle the visibility of indentation guides.</ToolTipText>
                     <CommandName>View Indent Guides</CommandName>
+                    <CanonicalName>ViewIndentGuides11</CanonicalName>
                 </Strings>
                 <!-- Add more Strings elements with language attribute and translations -->
             </Button>
@@ -65,6 +67,16 @@
     
     </Commands>
 
+    <CommandPlacements>
+        <CommandPlacement guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides2010" priority="0x6550">
+            <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
+        </CommandPlacement>
+        
+        <CommandPlacement guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides11" priority="0x6560">
+            <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
+        </CommandPlacement>
+    </CommandPlacements>
+    
     <Symbols>
         <!-- This is the package guid. -->
         <GuidSymbol name="guidIndentGuidePkg" value="{959BEB25-6C38-440A-A37F-5D6717E9A41B}" />
