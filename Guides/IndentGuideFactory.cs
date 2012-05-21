@@ -1,4 +1,5 @@
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
@@ -29,7 +30,11 @@ namespace IndentGuide {
         /// <param name="textView">The <see cref="IWpfTextView"/> upon which the adornment should be placed</param>
         public void TextViewCreated(IWpfTextView textView) {
             var service = ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide)) as IIndentGuide;
-            new IndentGuideView(textView, service);
+            Debug.Assert(textView != null, "No IWpfTextView instance provided");
+            Debug.Assert(service != null, "IndentGuide service is not running");
+            if (textView != null && service != null) {
+                new IndentGuideView(textView, service);
+            }
         }
     }
     #endregion //Adornment Factory
