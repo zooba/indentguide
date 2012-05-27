@@ -37,7 +37,7 @@ namespace IndentGuide {
         public static void AddAdornment(this IAdornmentLayer layer, LineSpan lineSpan) {
             UIElement guide;
             if (lineSpan != null && (guide = lineSpan.Adornment as System.Windows.Shapes.Line) != null) {
-                layer.AddAdornment(AdornmentPositioningBehavior.TextRelative, lineSpan.Span, lineSpan, guide, null);
+                layer.AddAdornment(AdornmentPositioningBehavior.ViewportRelative, null, lineSpan, guide, null);
             }
         }
     }

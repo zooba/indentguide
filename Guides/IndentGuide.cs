@@ -117,13 +117,17 @@ namespace IndentGuide {
         /// </summary>
         void UpdateAdornments(Task task) {
             if (task != null) {
-                Trace.WriteLine("Update non-null");
+#if DEBUG
+                Trace.TraceInformation("Update non-null");
+#endif
                 task.ContinueWith(UpdateAdornmentsCallback,
                     CancellationToken.None,
                     TaskContinuationOptions.OnlyOnRanToCompletion,
                     TaskScheduler.FromCurrentSynchronizationContext());
             } else {
-                Trace.WriteLine("Update null");
+#if DEBUG
+                Trace.TraceInformation("Update null");
+#endif
                 UpdateAdornments();
             }
         }
@@ -158,8 +162,14 @@ namespace IndentGuide {
 
             foreach (var line in analysisLines) {
                 int linePos = line.Indent;
-                var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
-                var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
+                ITextSnapshotLine firstLine, lastLine;
+                try {
+                    firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
+                    lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
+                } catch(Exception ex) {
+                    Trace.TraceError("In GetLineFromLineNumber:\n{0}", ex);
+                    continue;
+                }
 
                 caret.AddLine(line, willUpdateImmediately: true);
 
@@ -177,8 +187,7 @@ namespace IndentGuide {
                     firstView = View.GetTextViewLineContainingBufferPosition(firstLine.Start);
                     lastView = View.GetTextViewLineContainingBufferPosition(lastLine.End);
                 } catch (Exception ex) {
-                    Trace.WriteLine("UpdateAdornments GetTextViewLineContainingBufferPosition failed");
-                    Trace.WriteLine(" - Exception: " + ex.ToString());
+                    Trace.TraceError("UpdateAdornments GetTextViewLineContainingBufferPosition failed\n{0}", ex);
                     continue;
                 }
 
@@ -293,8 +302,6 @@ namespace IndentGuide {
                 int linePos = line.Indent;
                 if (!Analysis.Behavior.VisibleUnaligned && (linePos % Analysis.IndentSize) != 0)
                     continue;
-                var firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
-                var lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
 
                 int formatIndex = line.Indent / Analysis.IndentSize;
 
