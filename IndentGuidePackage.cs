@@ -12,8 +12,7 @@ namespace IndentGuide {
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, false)]
     [ProvideOptionPage(typeof(BehaviorOptions), "IndentGuide", "Behavior\\QuickSet", 110, 130, false)]
     [ProvideOptionPage(typeof(CustomBehaviorOptions), "IndentGuide", "Behavior\\Custom", 110, 140, false)]
-    [ProvideProfile(typeof(ProfileManager), "IndentGuide", "Styles", 110, 220, false,
-        MigrationType = ProfileMigrationType.PassThrough, DescriptionResourceID = 230)]
+    [ProvideProfile(typeof(ProfileManager), "IndentGuide", "Styles", 110, 220, false, DescriptionResourceID = 230)]
     [ProvideService(typeof(SIndentGuide))]
     [ResourceDescription("IndentGuidePackage")]
     [Guid(Guids.IndentGuidePackageGuid)]

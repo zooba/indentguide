@@ -17,8 +17,8 @@ namespace IndentGuide {
                 using (var reg = root.CreateSubKey(SUBKEY_NAME)) {
                     if (version >= 0x000B0900) {
                         // Nothing to upgrade
-                    } else if (version >= 0x000B0000) {
-                        UpgradeFrom_11_0_0(reg);
+                    } else if (version >= 0x000B0901) {
+                        UpgradeFrom_11_9_0(reg);
                     } else if (version >= 0x000A0901) {
                         UpgradeFrom_10_9_1(reg);
                     } else {
@@ -29,9 +29,9 @@ namespace IndentGuide {
         }
 
         /// <summary>
-        /// Upgrades from v11 through to v12 (Beta 1).
+        /// Upgrades from v12 (Beta 1).
         /// </summary>
-        static void UpgradeFrom_11_0_0(RegistryKey reg) {
+        static void UpgradeFrom_11_9_0(RegistryKey reg) {
             foreach (var themeName in reg.GetSubKeyNames()) {
                 using (var themeKey = reg.OpenSubKey(themeName, true)) {
                     if (themeKey == null) continue;

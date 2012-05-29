@@ -82,7 +82,7 @@ namespace IndentGuide {
             }
 
             int tempInt;
-            reader.ReadSettingBoolean("Visible", out tempInt);
+            reader.ReadSettingLong("Visible", out tempInt);
             service.Visible = (tempInt != 0);
             string tempString;
             reader.ReadSettingString("CaretHandler", out tempString);

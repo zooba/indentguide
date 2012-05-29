@@ -127,7 +127,7 @@ namespace IndentGuide {
 
             try {
                 inst.HighlightStyle = (LineStyle)TypeDescriptor.GetConverter(typeof(LineStyle))
-                    .ConvertFromInvariantString(highlightStyle);
+                    .ConvertFromInvariantString(highlightStyle ?? lineStyle);
             } catch (Exception ex) {
                 Trace.WriteLine("IndentGuide::Error parsing " + highlightStyle.ToString() + " into HighlightStyle");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
@@ -135,7 +135,7 @@ namespace IndentGuide {
 
             try {
                 inst.HighlightColor = (Color)TypeDescriptor.GetConverter(typeof(Color))
-                    .ConvertFromInvariantString(highlightColor);
+                    .ConvertFromInvariantString(highlightColor ?? lineColor);
             } catch (Exception ex) {
                 Trace.WriteLine("IndentGuide::Error parsing " + highlightColor.ToString() + " into HighlightColor");
                 Trace.WriteLine(" - Exception: " + ex.ToString());
