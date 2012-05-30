@@ -95,11 +95,8 @@ namespace IndentGuide {
             try {
                 Profile.Upgrade(this);
             } catch (Exception ex) {
-#if DEBUG
-                Debug.Assert(false);
-#endif
-                Trace.WriteLine("Error upgrading previous settings.");
-                Trace.WriteLine(" - " + ex.ToString());
+                Debug.Assert(false, "Error upgrading previous settings", ex.ToString());
+                Trace.TraceError("Error upgrading previous settings: {0}", ex);
                 Reset();
             }
             Load();

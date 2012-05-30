@@ -86,21 +86,30 @@ namespace IndentGuide {
         }
 
         public Task Reset() {
-            var cts = new CancellationTokenSource();
-            var snapshot = Snapshot.TextBuffer.CurrentSnapshot;
-            var worker = new Task<List<LineSpan>>(ResetImpl, snapshot, cts.Token);
-            var continuation = worker.ContinueWith(task => {
-                if (task.Result == null) {
-                    cts.Cancel();
-                } else {
-                    Lines = task.Result;
-                    Snapshot = snapshot;
-                }
-            }, cts.Token,
-            TaskContinuationOptions.OnlyOnRanToCompletion,
-            TaskScheduler.FromCurrentSynchronizationContext());
-            worker.Start();
-            return continuation;
+            try {
+                var context = TaskScheduler.FromCurrentSynchronizationContext();
+                var cts = new CancellationTokenSource();
+                var snapshot = Snapshot.TextBuffer.CurrentSnapshot;
+                var worker = new Task<List<LineSpan>>(ResetImpl, snapshot, cts.Token);
+                var continuation = worker.ContinueWith(task => {
+                    if (task.Result == null) {
+                        cts.Cancel();
+                    } else {
+                        Lines = task.Result;
+                        Snapshot = snapshot;
+                    }
+                }, cts.Token,
+                TaskContinuationOptions.OnlyOnRanToCompletion,
+                context);
+                worker.Start();
+                return continuation;
+            } catch (Exception ex) {
+                Trace.TraceWarning("Asynchronous Reset() failed; running synchronously:\n{0}", ex);
+                var snapshot = Snapshot.TextBuffer.CurrentSnapshot;
+                Lines = ResetImpl(snapshot);
+                Snapshot = snapshot;
+                return null;
+            }
         }
 
         private List<LineSpan> ResetImpl(object snapshot_obj) {

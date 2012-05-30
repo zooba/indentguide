@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide {
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [InstalledProductRegistration("#110", "#112", "12", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", "12.1", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, false)]
     [ProvideOptionPage(typeof(BehaviorOptions), "IndentGuide", "Behavior\\QuickSet", 110, 130, false)]
@@ -114,12 +114,10 @@ namespace IndentGuide {
                     .Select(p => int.Parse(p))
                     .Take(3)
                     .Aggregate(0, (acc, i) => acc << 8 | i);
-#if DEBUG
-                Trace.WriteLine(string.Format("IndentGuideService.CURRENT_VERSION == {0:X}", version));
-#endif
+                Trace.TraceInformation("IndentGuideService.CURRENT_VERSION == {0:X}", version);
                 return version;
             } catch (Exception ex) {
-                Trace.WriteLine(string.Format("IndentGuide::GetCurrentVersion: {0}", ex));
+                Trace.TraceError("IndentGuide::GetCurrentVersion: {0}", ex);
                 return DEFAULT_VERSION;
             }
         }

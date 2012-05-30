@@ -33,6 +33,7 @@ namespace IndentGuide {
                 }
             }
             service.Themes.Clear();
+            service.DefaultTheme = new IndentTheme(); 
             RegistryKey reg = null;
             try {
                 reg = service.Package.UserRegistryRoot.OpenSubKey(SUBKEY_NAME);
@@ -52,9 +53,6 @@ namespace IndentGuide {
                     service.Visible = true;
                     service.CaretHandler = null;
                 }
-
-                if (service.DefaultTheme == null)
-                    service.DefaultTheme = new IndentTheme();
             } catch (Exception ex) {
                 Trace.WriteLine(string.Format("IndentGuide::LoadSettingsFromStorage: {0}", ex));
             } finally {
@@ -64,6 +62,9 @@ namespace IndentGuide {
 
         public void LoadSettingsFromXml(IVsSettingsReader reader) {
             var service = Service;
+            service.Themes.Clear();
+            service.DefaultTheme = new IndentTheme();
+
             string themeKeysString;
             reader.ReadSettingString("Themes", out themeKeysString);
 

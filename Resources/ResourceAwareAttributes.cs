@@ -14,22 +14,18 @@ namespace IndentGuide {
         }
 
         internal static string LoadString(string id, CultureInfo culture = null) {
-#if DEBUG
             var str = ResourceManager.GetString(id, culture ?? CultureInfo.CurrentCulture);
-            Trace.WriteLineIf(string.IsNullOrEmpty(str), "No resource found for " + id);
+            if (string.IsNullOrEmpty(str)) {
+                Trace.TraceWarning("No resource found for {0}", id);
+            }
             return str;
-#else
-            return ResourceManager.GetString(id, culture ?? CultureInfo.CurrentCulture);
-#endif
         }
 
         internal static string LoadString(string id, string fallback, CultureInfo culture = null) {
             try {
                 return LoadString(id, culture);
             } catch {
-#if DEBUG
-                Trace.WriteLine("No resource found for " + id);
-#endif
+                Trace.TraceWarning("No resource found for {0}", id);
                 return fallback;
             }
         }
