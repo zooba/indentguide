@@ -30,8 +30,8 @@
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
 
-            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides2010" type="Button">
-                <Icon guid="guidIndentGuideBmp" id="bmpViewIndentGuides2010"/>
+            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" type="Button">
+                <Icon guid="guidIndentGuideBmp" id="bmpViewIndentGuides"/>
                 <CommandFlag>DefaultInvisible</CommandFlag>
                 <CommandFlag>DefaultDisabled</CommandFlag>
                 <CommandFlag>DynamicVisibility</CommandFlag>
@@ -40,21 +40,7 @@
                     <MenuText>View Indent &amp;Guides</MenuText>
                     <ToolTipText>Toggle the visibility of indentation guides.</ToolTipText>
                     <CommandName>View Indent Guides</CommandName>
-                    <CanonicalName>ViewIndentGuides2010</CanonicalName>
-                </Strings>
-                <!-- Add more Strings elements with language attribute and translations -->
-            </Button>
-            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides11" type="Button">
-                <Icon guid="guidIndentGuideBmp" id="bmpViewIndentGuides11"/>
-                <CommandFlag>DefaultInvisible</CommandFlag>
-                <CommandFlag>DefaultDisabled</CommandFlag>
-                <CommandFlag>DynamicVisibility</CommandFlag>
-                <Strings>
-                    <ButtonText>View Indent Guides</ButtonText>
-                    <MenuText>View Indent &amp;Guides</MenuText>
-                    <ToolTipText>Toggle the visibility of indentation guides.</ToolTipText>
-                    <CommandName>View Indent Guides</CommandName>
-                    <CanonicalName>ViewIndentGuides11</CanonicalName>
+                    <CanonicalName>ViewIndentGuides</CanonicalName>
                 </Strings>
                 <!-- Add more Strings elements with language attribute and translations -->
             </Button>
@@ -68,11 +54,7 @@
     </Commands>
 
     <CommandPlacements>
-        <CommandPlacement guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides2010" priority="0x6550">
-            <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
-        </CommandPlacement>
-        
-        <CommandPlacement guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides11" priority="0x6560">
+        <CommandPlacement guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" priority="0x6560">
             <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
         </CommandPlacement>
     </CommandPlacements>
@@ -83,13 +65,11 @@
 
         <!-- This is our command set GUID and associated commands -->
         <GuidSymbol name="guidIndentGuideCmdSet" value="{1AE9DCDB-7723-4651-ABDC-3D4BBAA0731F}">
-            <IDSymbol name="cmdidViewIndentGuides2010" value="0x0102" />
-            <IDSymbol name="cmdidViewIndentGuides11" value="0x0103" />
+            <IDSymbol name="cmdidViewIndentGuides" value="0x0103" />
         </GuidSymbol>
 
         <GuidSymbol name="guidIndentGuideBmp" value="{93270977-7E37-4A49-8314-182C6A5836FF}">
-            <IDSymbol name="bmpViewIndentGuides2010" value="1"/>
-            <IDSymbol name="bmpViewIndentGuides11" value="2"/>
+            <IDSymbol name="bmpViewIndentGuides" value="1"/>
         </GuidSymbol>
     </Symbols>
 

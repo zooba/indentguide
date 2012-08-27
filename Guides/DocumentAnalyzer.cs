@@ -189,15 +189,19 @@ namespace IndentGuide {
                         following = (nextLineIndex >= 0) ? lineInfo[nextLineIndex] : lineInfo.Last();
                     }
                     
-                    IEnumerable<int> newGuides = preceding.GuidesAt.Union(following.GuidesAt);
-                    if (curLine.HasText) {
-                        newGuides = newGuides.Where(i => i <= curLine.TextAt);
-                    } else if (Behavior.ExtendInwardsOnly) {
-                        newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
+                    if (curLine.HasText || curLine.TextAt == 0) {
+                        var newGuides = preceding.GuidesAt.Union(following.GuidesAt);
+                        if (curLine.HasText) {
+                            newGuides = newGuides.Where(i => i <= curLine.TextAt);
+                        } else if (Behavior.ExtendInwardsOnly) {
+                            newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
+                        }
+                        curLine.GuidesAt.UnionWith(newGuides);
                     }
-                    curLine.GuidesAt.UnionWith(newGuides);
-                    
-                    if (curLine.HasText) preceding = curLine;
+
+                    if (curLine.HasText) {
+                        preceding = curLine;
+                    }
                 }
 
                 preceding = following = lineInfo.Last();

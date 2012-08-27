@@ -90,7 +90,7 @@ namespace IndentGuide {
             LineStyle = LineStyle.Dotted;
             LineColor = Color.DimGray;
             HighlightStyle = LineStyle.DottedGlow;
-            HighlightColor = Color.Cyan;
+            HighlightColor = Color.DodgerBlue;
         }
 
         [ResourceDescription("VisibilityDescription")]

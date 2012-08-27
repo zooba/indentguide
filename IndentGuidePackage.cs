@@ -23,7 +23,7 @@ using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide {
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [InstalledProductRegistration("#110", "#112", "12.1", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", "13 (Beta 1)", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, false)]
     [ProvideOptionPage(typeof(BehaviorOptions), "IndentGuide", "Behavior\\QuickSet", 110, 130, false)]
@@ -47,9 +47,7 @@ namespace IndentGuide {
         }
 
         private static readonly Guid guidIndentGuideCmdSet = Guid.Parse(Guids.IndentGuideCmdSetGuid);
-        private const int cmdidViewIndentGuides2010 = 0x0102;
-        private const int cmdidViewIndentGuides11 = 0x0103;
-        private int cmdidViewIndentGuides = cmdidViewIndentGuides2010;
+        private const int cmdidViewIndentGuides = 0x0103;
 
         private EnvDTE.WindowEvents WindowEvents;
         private IIndentGuide Service;
@@ -61,10 +59,6 @@ namespace IndentGuide {
             // Prepare event
             var dte = GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
             if (dte != null) {
-                if (dte.Version.StartsWith("11.")) {
-                    cmdidViewIndentGuides = cmdidViewIndentGuides11;
-                }
-
                 CommandVisible = false;
                 WindowEvents = dte.Events.WindowEvents;
                 WindowEvents.WindowActivated +=
