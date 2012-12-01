@@ -26,7 +26,7 @@ namespace IndentGuide {
                     version = (reg == null) ? 0 : (int)reg.GetValue("Version", IndentGuidePackage.DEFAULT_VERSION);
                 }
 
-                if (version == IndentGuidePackage.Version) {
+                if (version == 0 || version == IndentGuidePackage.Version) {
                     return;
                 }
 
@@ -40,6 +40,10 @@ namespace IndentGuide {
                     } else {
                         UpgradeFrom_Earlier(reg);
                     }
+
+                    // Upgrading will make guides visible regardless of the
+                    // previous setting.
+                    reg.SetValue("Visible", 1);
                 }
             }
         }
