@@ -33,7 +33,7 @@ namespace IndentGuide {
     }
 
     [DebuggerDisplay("Indent {Indent} lines {FirstLine}-{LastLine}, {Type}")]
-    public sealed class LineSpan {
+    public sealed class LineSpan : IEquatable<LineSpan> {
         public int FirstLine;
         public int LastLine;
         public int Indent;
@@ -55,9 +55,32 @@ namespace IndentGuide {
             FormatIndex = 0;
             Highlight = false;
         }
+
+        public bool Equals(LineSpan other) {
+            if (other == null) {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other)) {
+                return true;
+            }
+
+            return FirstLine == other.FirstLine &&
+                LastLine == other.LastLine &&
+                Indent == other.Indent &&
+                Type == other.Type;
+        }
+
+        public override bool Equals(object obj) {
+            return Equals(obj as LineSpan);
+        }
+
+        public override int GetHashCode() {
+            return string.Format("{0};{1};{2};{3}", FirstLine, LastLine, Indent, Type).GetHashCode();
+        }
     }
 
-    class DocumentAnalyzer {
+    public class DocumentAnalyzer {
         private List<LineSpan> _Lines;
         public List<LineSpan> Lines {
             get {
@@ -212,15 +235,19 @@ namespace IndentGuide {
                         following = (nextLineIndex >= 0) ? lineInfo[nextLineIndex] : lineInfo.First();
                     }
 
-                    IEnumerable<int> newGuides = preceding.GuidesAt.Union(following.GuidesAt);
-                    if (curLine.HasText) {
-                        newGuides = newGuides.Where(i => i <= curLine.TextAt);
-                    } else if (Behavior.ExtendInwardsOnly) {
-                        newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
+                    if (curLine.HasText || curLine.TextAt == 0) {
+                        IEnumerable<int> newGuides = preceding.GuidesAt.Union(following.GuidesAt);
+                        if (curLine.HasText) {
+                            newGuides = newGuides.Where(i => i <= curLine.TextAt);
+                        } else if (Behavior.ExtendInwardsOnly) {
+                            newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
+                        }
+                        curLine.GuidesAt.UnionWith(newGuides);
                     }
-                    curLine.GuidesAt.UnionWith(newGuides);
 
-                    if (curLine.HasText) preceding = curLine;
+                    if (curLine.HasText) {
+                        preceding = curLine;
+                    }
                 }
             }
 
