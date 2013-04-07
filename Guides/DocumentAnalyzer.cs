@@ -43,7 +43,7 @@ namespace IndentGuide {
         public SnapshotSpan? Span;
         public int FormatIndex;
         public bool Highlight;
-
+        
         public LineSpan(int first, int last, int indent, LineSpanType type) {
             FirstLine = first;
             LastLine = last;
@@ -153,9 +153,12 @@ namespace IndentGuide {
 
         private List<LineSpan> ResetImpl(object snapshot_obj) {
             var snapshot = snapshot_obj as ITextSnapshot;
-            var contentType = snapshot.ContentType.TypeName;
-            bool isCSharp = string.Equals(contentType, "csharp", StringComparison.OrdinalIgnoreCase);
-            bool isCPlusPlus = string.Equals(contentType, "c/c++", StringComparison.OrdinalIgnoreCase);
+            bool isCSharp = false, isCPlusPlus = false;
+            if (snapshot.ContentType != null) {
+                var contentType = snapshot.ContentType.TypeName;
+                isCSharp = string.Equals(contentType, "csharp", StringComparison.OrdinalIgnoreCase);
+                isCPlusPlus = string.Equals(contentType, "c/c++", StringComparison.OrdinalIgnoreCase);
+            }
 
             // Maps every line number to the amount of leading whitespace on that line.
             var lineInfo = new List<LineInfo>(snapshot.LineCount + 2);
