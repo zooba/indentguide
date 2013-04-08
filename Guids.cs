@@ -17,7 +17,7 @@
 namespace IndentGuide {
     class Guids {
         public const string IIndentGuideGuid = "A65F346F-3F88-4949-BFC1-F5DD3848754F";
-        public const string IIndentGuide2Guid = "4D190278-5C87-4BEA-95F3-518342B77EDE";
+        public const string IIndentGuide2Guid = "5D1E63D1-BFB2-457C-AA9F-8141E1D87DEA";
         public const string SIndentGuideGuid = "46A005F6-0E33-47A8-9791-190D4121678E";
 
         public const string IndentGuidePackageGuid = "959BEB25-6C38-440A-A37F-5D6717E9A41B";

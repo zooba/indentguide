@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.Text;
 
@@ -50,23 +51,25 @@ namespace IndentGuide {
         protected readonly int Position;
 
         protected CaretHandlerBase(VirtualSnapshotPoint location, int tabSize) {
-            var line = location.Position.GetContainingLine();
-            LineNumber = line.LineNumber;
-            Position = location.Position - line.Start.Position + location.VirtualSpaces;
+            if (location.Position.Snapshot != null) {
+                var line = location.Position.GetContainingLine();
+                LineNumber = line.LineNumber;
+                Position = location.Position - line.Start.Position + location.VirtualSpaces;
 
-            int bufferIndent = 0;
-            int visualIndent = 0;
-            foreach (var c in line.GetText().Take(Position)) {
-                if (c == '\t')
-                    bufferIndent += tabSize - (bufferIndent % tabSize);
-                else if (c == ' ')
-                    bufferIndent += 1;
-                else
-                    break;
-                visualIndent += 1;
+                int bufferIndent = 0;
+                int visualIndent = 0;
+                foreach (var c in line.GetText().Take(Position)) {
+                    if (c == '\t')
+                        bufferIndent += tabSize - (bufferIndent % tabSize);
+                    else if (c == ' ')
+                        bufferIndent += 1;
+                    else
+                        break;
+                    visualIndent += 1;
+                }
+                Position += bufferIndent - visualIndent;
+                Modified = new List<LineSpan>();
             }
-            Position += bufferIndent - visualIndent;
-            Modified = new List<LineSpan>();
         }
 
         private static Dictionary<string, Type> LoadedCaretHandlers = new Dictionary<string, Type>();
@@ -90,5 +93,38 @@ namespace IndentGuide {
                 return new CaretNearestLeft(location, tabSize);
             }
         }
+
+        internal static ICaretHandlerMetadata MetadataFromName(string name) {
+            Type type;
+            if (name == null) {
+                return null;
+            }
+            try {
+                if (!LoadedCaretHandlers.TryGetValue(name, out type)) {
+                    type = Type.GetType(name);
+                    LoadedCaretHandlers[name] = type;
+                    Trace.WriteLine("Loaded caret handler " + type.AssemblyQualifiedName);
+                }
+
+                return type.InvokeMember(null, System.Reflection.BindingFlags.CreateInstance, null, null,
+                    new object[] { default(VirtualSnapshotPoint), 0 }) as ICaretHandlerMetadata;
+            } catch (Exception ex) {
+                Trace.WriteLine(string.Format("CaretHandler::MetadataFromName: {0}", ex));
+                return null;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Provides metadata for a caret handler.
+    /// </summary>
+    /// <remarks>
+    /// Classes implementing this method must support the normal two parameter
+    /// constructor and gracefully handle being passed a null snapshot.
+    /// </remarks>
+    public interface ICaretHandlerMetadata {
+        int GetSortOrder(CultureInfo culture);
+        string GetDisplayName(CultureInfo culture);
+        string GetDocumentation(CultureInfo culture);
     }
 }

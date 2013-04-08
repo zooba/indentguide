@@ -97,6 +97,7 @@ namespace IndentGuide {
         }
 
         internal void Close() {
+            Child.Close();
             _ActiveTheme = null;
         }
 
@@ -205,7 +206,7 @@ namespace IndentGuide {
         }
 
         protected void UpdateDisplay(IndentTheme active, IndentTheme previous) {
-            if (cmbTheme.Items.Contains(active)) {
+            if (active != null && cmbTheme.Items.Contains(active)) {
                 cmbTheme.SelectedItem = active;
             } else {
                 cmbTheme.SelectedItem = null;

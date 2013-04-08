@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -69,6 +70,7 @@ namespace IndentGuide {
         /// <summary>
         /// The name of the caret handler to use.
         /// </summary>
+        [Obsolete("CaretHandler has been moved to IndentTheme")]
         string CaretHandler { get; set; }
         /// <summary>
         /// The loaded themes.
@@ -90,7 +92,23 @@ namespace IndentGuide {
         /// <summary>
         /// Raised when the caret handler changes.
         /// </summary>
+        [Obsolete("CaretHandler has been moved to IndentTheme")]
         event EventHandler CaretHandlerChanged;
+    }
+
+    class CaretHandlerInfo {
+        public string DisplayName;
+        public string Documentation;
+        public string TypeName;
+    }
+
+    /// <summary>
+    /// Provides a list of registered caret handlers.
+    /// </summary>
+    [Guid(Guids.IIndentGuide2Guid)]
+    [ComVisible(true)]
+    interface IIndentGuide2 : IIndentGuide {
+        IEnumerable<CaretHandlerInfo> CaretHandlerNames { get; }
     }
 
     /// <summary>
@@ -102,7 +120,7 @@ namespace IndentGuide {
     /// <summary>
     /// Implementation of the service supporting Indent Guides.
     /// </summary>
-    class IndentGuideService : SIndentGuide, IIndentGuide {
+    class IndentGuideService : SIndentGuide, IIndentGuide2 {
         public IndentGuideService(IndentGuidePackage package) {
             _Themes = new Dictionary<string, IndentTheme>();
             _Package = package;
@@ -117,8 +135,6 @@ namespace IndentGuide {
             }
             Load();
         }
-
-        #region IIndentGuide Members
 
         public int Version {
             get { return IndentGuidePackage.Version; }
@@ -147,20 +163,12 @@ namespace IndentGuide {
 
         public event EventHandler VisibleChanged;
 
-        private string _CaretHandler;
         public string CaretHandler {
-            get { return _CaretHandler; }
-            set {
-                if (!String.Equals(_CaretHandler, value, StringComparison.Ordinal)) {
-                    _CaretHandler = value;
-
-                    var evt = CaretHandlerChanged;
-                    if (evt != null) evt(this, EventArgs.Empty);
-                }
-            }
+            get { return null; }
+            set { }
         }
 
-        public event EventHandler CaretHandlerChanged;
+        public event EventHandler CaretHandlerChanged { add { } remove { } }
 
         private readonly ProfileManager Profile;
 
@@ -202,6 +210,25 @@ namespace IndentGuide {
             Load();
         }
 
-        #endregion
+        private SortedList<int, CaretHandlerInfo> _CaretHandlerNames;
+        public IEnumerable<CaretHandlerInfo> CaretHandlerNames {
+            get {
+                if (_CaretHandlerNames == null) {
+                    _CaretHandlerNames = new SortedList<int, CaretHandlerInfo>();
+                    foreach (var name in Profile.LoadRegisteredCaretHandlers(this)) {
+                        var obj = CaretHandlerBase.MetadataFromName(name);
+                        if (obj != null) {
+                            _CaretHandlerNames.Add(obj.GetSortOrder(CultureInfo.CurrentUICulture),
+                                new CaretHandlerInfo {
+                                    DisplayName = obj.GetDisplayName(CultureInfo.CurrentUICulture),
+                                    Documentation = obj.GetDocumentation(CultureInfo.CurrentUICulture),
+                                    TypeName = name
+                                });
+                        }
+                    }
+                }
+                return _CaretHandlerNames.Values;
+            }
+        }
     }
 }

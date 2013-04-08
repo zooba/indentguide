@@ -15,8 +15,10 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio.Shell;
@@ -35,6 +37,19 @@ namespace IndentGuide {
                 } else {
                     return (IIndentGuide)ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide));
                 }
+            }
+        }
+
+        internal List<string> LoadRegisteredCaretHandlers(IIndentGuide service) {
+            RegistryKey reg = null;
+            try {
+                reg = service.Package.UserRegistryRoot.OpenSubKey(SUBKEY_NAME);
+                return ((reg.GetValue("CaretHandlers") as string) ?? "")
+                    .Split(';')
+                    .Where(n => !string.IsNullOrWhiteSpace(n))
+                    .ToList();
+            } finally {
+                reg.Close();
             }
         }
 
@@ -57,17 +72,16 @@ namespace IndentGuide {
                 if (reg != null) {
                     foreach (var themeName in reg.GetSubKeyNames()) {
                         var theme = IndentTheme.Load(reg, themeName);
-                        if (theme.IsDefault)
+                        if (theme.IsDefault) {
                             service.DefaultTheme = theme;
-                        else
+                        } else {
                             service.Themes[theme.ContentType] = theme;
+                        }
                     }
 
                     service.Visible = (int)reg.GetValue("Visible", 1) != 0;
-                    service.CaretHandler = (string)reg.GetValue("CaretHandler");
                 } else {
                     service.Visible = true;
-                    service.CaretHandler = null;
                 }
             } catch (Exception ex) {
                 Trace.WriteLine(string.Format("IndentGuide::LoadSettingsFromStorage: {0}", ex));
@@ -89,10 +103,11 @@ namespace IndentGuide {
 
                 try {
                     var theme = IndentTheme.Load(reader, key);
-                    if (theme.IsDefault)
+                    if (theme.IsDefault) {
                         service.DefaultTheme = theme;
-                    else
+                    } else {
                         service.Themes[theme.ContentType] = theme;
+                    }
                 } catch (Exception ex) {
                     Trace.WriteLine(string.Format("IndentGuide::LoadSettingsFromXML: {0}", ex));
                 }
@@ -101,9 +116,6 @@ namespace IndentGuide {
             int tempInt;
             reader.ReadSettingLong("Visible", out tempInt);
             service.Visible = (tempInt != 0);
-            string tempString;
-            reader.ReadSettingString("CaretHandler", out tempString);
-            service.CaretHandler = string.IsNullOrEmpty(tempString) ? null : tempString;
         }
 
         public void ResetSettings() {
@@ -131,11 +143,6 @@ namespace IndentGuide {
 
                 reg.SetValue("Version", service.Version);
                 reg.SetValue("Visible", service.Visible ? 1 : 0);
-                if (string.IsNullOrEmpty(service.CaretHandler)) {
-                    reg.DeleteValue("CaretHandler", false);
-                } else {
-                    reg.SetValue("CaretHandler", service.CaretHandler);
-                }
 
                 foreach (var key in reg.GetSubKeyNames()) {
                     reg.DeleteSubKeyTree(key);
@@ -172,9 +179,6 @@ namespace IndentGuide {
             writer.WriteSettingLong("Version", service.Version);
             writer.WriteSettingString("Themes", sb.ToString());
             writer.WriteSettingLong("Visible", service.Visible ? 1 : 0);
-            if (!string.IsNullOrEmpty(service.CaretHandler)) {
-                writer.WriteSettingString("CaretHandler", service.CaretHandler);
-            }
         }
 
         public void SaveVisibleSettingToStorage() {

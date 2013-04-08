@@ -36,7 +36,6 @@ namespace IndentGuide {
         IDictionary<System.Drawing.Color, Brush> GuideBrushCache;
         IndentTheme Theme;
         bool GlobalVisible;
-        string CaretHandlerTypeName;
 
         DocumentAnalyzer Analysis;
 
@@ -70,17 +69,6 @@ namespace IndentGuide {
 
             GlobalVisible = service.Visible;
             service.VisibleChanged += new EventHandler(Service_VisibleChanged);
-
-            CaretHandlerTypeName = service.CaretHandler;
-            service.CaretHandlerChanged += new EventHandler(Service_CaretHandlerChanged);
-        }
-
-        /// <summary>
-        /// Raised when the caret handler is changed.
-        /// </summary>
-        void Service_CaretHandlerChanged(object sender, EventArgs e) {
-            CaretHandlerTypeName = ((IIndentGuide)sender).CaretHandler;
-            UpdateAdornments();
         }
 
         /// <summary>
@@ -136,10 +124,7 @@ namespace IndentGuide {
 #if DEBUG
                 Trace.TraceInformation("Update non-null");
 #endif
-                task.ContinueWith(UpdateAdornmentsCallback,
-                    CancellationToken.None,
-                    TaskContinuationOptions.OnlyOnRanToCompletion,
-                    TaskScheduler.FromCurrentSynchronizationContext());
+                task.ContinueWith(UpdateAdornmentsCallback, TaskContinuationOptions.OnlyOnRanToCompletion);
             } else {
 #if DEBUG
                 Trace.TraceInformation("Update null");
@@ -161,9 +146,34 @@ namespace IndentGuide {
             Debug.Assert(View.TextViewLines != null);
             if (View == null || Layer == null || View.TextViewLines == null) return;
             if (Analysis == null) return;
-            
+
             var analysisLines = Analysis.Lines;
-            if (Analysis.Snapshot != View.TextSnapshot || analysisLines == null) return;
+            if (Analysis.Snapshot != View.TextSnapshot) {
+                var task = Analysis.Update();
+                if (task != null) {
+                    UpdateAdornments(task);
+                    return;
+                }
+                return;
+            } else if (analysisLines == null) {
+                UpdateAdornments(Analysis.Reset());
+                return;
+            }
+
+            if (!View.VisualElement.Dispatcher.CheckAccess()) {
+                View.VisualElement.Dispatcher.InvokeAsync(UpdateAdornments);
+                return;
+            }
+
+            // Re-check snapshot in case we had to reinvoke on the UI thread
+            // and raced.
+            if (Analysis.Snapshot != View.TextSnapshot) {
+                var task = Analysis.Update();
+                if (task != null) {
+                    UpdateAdornments(task);
+                    return;
+                }
+            }
 
             Layer.RemoveAllAdornments();
 
@@ -173,7 +183,7 @@ namespace IndentGuide {
             double spaceWidth = View.TextViewLines.Select(line => line.VirtualSpaceWidth).FirstOrDefault();
             if (spaceWidth <= 0.0) return;
 
-            var caret = CaretHandlerBase.FromName(CaretHandlerTypeName, View.Caret.Position.VirtualBufferPosition, Analysis.TabSize);
+            var caret = CaretHandlerBase.FromName(Theme.CaretHandler, View.Caret.Position.VirtualBufferPosition, Analysis.TabSize);
 
 
             foreach (var line in analysisLines) {
@@ -312,7 +322,7 @@ namespace IndentGuide {
         void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e) {
             var analysisLines = Analysis.Lines;
             if (analysisLines == null) return;
-            var caret = CaretHandlerBase.FromName(CaretHandlerTypeName, e.NewPosition.VirtualBufferPosition, Analysis.TabSize);
+            var caret = CaretHandlerBase.FromName(Theme.CaretHandler, e.NewPosition.VirtualBufferPosition, Analysis.TabSize);
 
             foreach (var line in analysisLines) {
                 int linePos = line.Indent;

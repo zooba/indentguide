@@ -402,6 +402,7 @@ namespace IndentGuide {
             LineFormats = new Dictionary<int, LineFormat>();
             DefaultLineFormat = new LineFormat();
             Behavior = new LineBehavior();
+            CaretHandler = typeof(CaretNearestLeft).FullName;
         }
 
         public IndentTheme Clone() {
@@ -410,6 +411,7 @@ namespace IndentGuide {
             foreach (var item in LineFormats)
                 inst.LineFormats[item.Key] = item.Value.Clone();
             inst.Behavior = Behavior.Clone();
+            inst.CaretHandler = CaretHandler;
             return inst;
         }
 
@@ -462,12 +464,16 @@ namespace IndentGuide {
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public LineBehavior Behavior { get; set; }
 
+        [Browsable(false)]
+        public string CaretHandler { get; set; }
+
         public static IndentTheme Load(RegistryKey reg, string themeKey) {
             var theme = new IndentTheme();
 
             using (var key = reg.OpenSubKey(themeKey)) {
                 theme.ContentType = (themeKey == DefaultThemeName) ? null : themeKey;
                 theme.Behavior.Load(key);
+                theme.CaretHandler = (string)key.GetValue("CaretHandler");
 
                 foreach (var subkeyName in key.GetSubKeyNames()) {
                     LineFormat format;
@@ -481,10 +487,11 @@ namespace IndentGuide {
                     }
 
                     int? i = FormatIndexFromString(subkeyName);
-                    if (i.HasValue)
+                    if (i.HasValue) {
                         theme.LineFormats[i.Value] = format;
-                    else
+                    } else {
                         Trace.WriteLine(string.Format("IndentGuide::Unable to parse {0}", subkeyName));
+                    }
                 }
             }
 
@@ -496,6 +503,9 @@ namespace IndentGuide {
 
             theme.ContentType = (key == DefaultThemeName) ? null : key;
             theme.Behavior.Load(reader, key);
+            string caretHandler;
+            reader.ReadSettingString("CaretHandler", out caretHandler);
+            theme.CaretHandler = caretHandler;
 
             string lineStyle, lineColor, highlightStyle, highlightColor, visible;
             string subkeys;
@@ -516,10 +526,11 @@ namespace IndentGuide {
 
                     var keypart = subkey.Substring(i + 1);
                     int? formatIndex = FormatIndexFromString(keypart);
-                    if (formatIndex.HasValue)
+                    if (formatIndex.HasValue) {
                         theme.LineFormats[formatIndex.Value] = format;
-                    else
+                    } else {
                         Trace.WriteLine(string.Format("IndentGuide::Unable to parse {0}", keypart));
+                    }
                 }
             }
 
@@ -529,6 +540,7 @@ namespace IndentGuide {
         public string Save(RegistryKey reg) {
             using (var key = reg.CreateSubKey(ContentType ?? DefaultThemeName)) {
                 Behavior.Save(key);
+                key.SetValue("CaretHandler", CaretHandler);
 
                 foreach (var subkey in key.GetSubKeyNames()) {
                     key.DeleteSubKeyTree(subkey, false);
@@ -562,6 +574,7 @@ namespace IndentGuide {
             writer.WriteSettingString(key, subkeys);
 
             Behavior.Save(writer, key);
+            writer.WriteSettingString("CaretHandler", CaretHandler);
 
             string lineStyle, lineColor, highlightStyle, highlightColor, visible;
             foreach (var item in LineFormats) {
@@ -613,8 +626,9 @@ namespace IndentGuide {
                 .Select(kv => kv.Key)
                 .ToList();
 
-            foreach (var key in toRemove)
+            foreach (var key in toRemove) {
                 LineFormats.Remove(key);
+            }
         }
     }
 }

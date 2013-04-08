@@ -44,6 +44,8 @@ namespace IndentGuide {
 
         public void Apply() { }
 
+        public void Close() { }
+
         public void Update(IndentTheme active, IndentTheme previous) {
             if (active != null) {
                 gridLineMode.SelectedObject = active.Behavior;

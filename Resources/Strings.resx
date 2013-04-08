@@ -306,4 +306,31 @@
   <data name="preset6" xml:space="preserve">
     <value>\n\t  Blorg\n\t\tFrob\n\t\t\tGlob\n\n\t\t\t Resrov\n\n\t  Blob\n Fribble\n\n</value>
   </data>
+  <data name="NoDocumentationHtml" xml:space="preserve">
+    <value>&lt;p&gt;(No documentation)&lt;/p&gt;</value>
+  </data>
+  <data name="CaretAdjacentDocumentation" xml:space="preserve">
+    <value>&lt;p&gt;Any guide touching the current caret location is highlighted.&lt;/p&gt;</value>
+  </data>
+  <data name="CaretAdjacentDisplayName" xml:space="preserve">
+    <value>Adjacent guides</value>
+  </data>
+  <data name="CaretNearestLeft2Documentation" xml:space="preserve">
+    <value>&lt;p&gt;The rightmost guide for the current line is highlighted.&lt;/p&gt;</value>
+  </data>
+  <data name="CaretNearestLeft2DisplayName" xml:space="preserve">
+    <value>Current line</value>
+  </data>
+  <data name="CaretNearestLeftDocumentation" xml:space="preserve">
+    <value>&lt;p&gt;The rightmost guide for the block containing the current caret location is highlighted.&lt;/p&gt;&lt;p&gt;Blocks are two or more adjacent lines of text.&lt;/p&gt;</value>
+  </data>
+  <data name="CaretNearestLeftDisplayName" xml:space="preserve">
+    <value>Current block</value>
+  </data>
+  <data name="CaretNoneDocumentation" xml:space="preserve">
+    <value>&lt;p&gt;Guides are not highlighted as the current caret location changes.&lt;/p&gt;</value>
+  </data>
+  <data name="CaretNoneDisplayName" xml:space="preserve">
+    <value>None</value>
+  </data>
 </root>

@@ -114,6 +114,8 @@ namespace IndentGuide {
 
         public void Apply() { }
 
+        public void Close() { }
+
         public void Update(IndentTheme active, IndentTheme previous) {
             if (active != null) {
                 foreach (var p in Presets) {

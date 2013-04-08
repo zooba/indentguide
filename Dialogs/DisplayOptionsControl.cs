@@ -66,14 +66,18 @@ namespace IndentGuide {
 
         public void Apply() { }
 
+        public void Close() { }
+
         public void Update(IndentTheme active, IndentTheme previous) {
             if (active != null) {
                 int previousIndex = lstOverrides.SelectedIndex;
                 lstOverrides.SelectedItem = null;    // ensure a change event occurs
                 if (0 <= previousIndex && previousIndex < lstOverrides.Items.Count) {
                     lstOverrides.SelectedIndex = previousIndex;
-                } else {
+                } else if (lstOverrides.Items.Count > 0) {
                     lstOverrides.SelectedIndex = 0;
+                } else {
+                    lstOverrides.SelectedIndex = -1;
                 }
             }
         }

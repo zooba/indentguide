@@ -35,6 +35,7 @@ namespace IndentGuide {
 
         void Activate();
         void Apply();
+        void Close();
 
         void Update(IndentTheme active, IndentTheme previous);
 
