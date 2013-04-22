@@ -164,6 +164,12 @@
     <Compile Include="Dialogs\CaretOptionsControl.Designer.cs">
       <DependentUpon>CaretOptionsControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\PageWidthOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Dialogs\PageWidthOptionsControl.Designer.cs">
+      <DependentUpon>PageWidthOptionsControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\CustomBehaviorOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -256,6 +262,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\CaretOptionsControl.resx">
       <DependentUpon>CaretOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\PageWidthOptionsControl.resx">
+      <DependentUpon>PageWidthOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\CustomBehaviorOptionsControl.resx">
       <DependentUpon>CustomBehaviorOptionsControl.cs</DependentUpon>

@@ -389,6 +389,10 @@ namespace IndentGuide {
         public const int DefaultFormatIndex = int.MinValue;
         public const int UnalignedFormatIndex = -1;
         public const int CaretFormatIndex_Deprecated = -2;
+        public const int InvalidFormatIndex = int.MaxValue;
+
+        public const int FirstIndentFormatIndex = UnalignedFormatIndex, LastIndentFormatIndex = 999;
+        public const int FirstPageWidthIndex = 1000, LastPageWidthIndex = 1999;
 
         public event EventHandler Updated;
 
@@ -400,6 +404,7 @@ namespace IndentGuide {
         public IndentTheme() {
             ContentType = null;
             LineFormats = new Dictionary<int, LineFormat>();
+            PageWidthMarkers = new Dictionary<int, LineFormat>();
             DefaultLineFormat = new LineFormat();
             Behavior = new LineBehavior();
             CaretHandler = typeof(CaretNearestLeft).FullName;
@@ -408,36 +413,42 @@ namespace IndentGuide {
         public IndentTheme Clone() {
             var inst = new IndentTheme();
             inst.ContentType = ContentType;
-            foreach (var item in LineFormats)
+            foreach (var item in LineFormats) {
                 inst.LineFormats[item.Key] = item.Value.Clone();
+            }
+            foreach (var item in PageWidthMarkers) {
+                inst.PageWidthMarkers[item.Key] = item.Value.Clone();
+            }
             inst.Behavior = Behavior.Clone();
             inst.CaretHandler = CaretHandler;
             return inst;
         }
 
         public static string FormatIndexToString(int formatIndex) {
-            if (formatIndex == DefaultFormatIndex)
+            if (formatIndex == DefaultFormatIndex) {
                 return "Default";
-            else if (formatIndex == UnalignedFormatIndex)
+            } else if (formatIndex == UnalignedFormatIndex) {
                 return "Unaligned";
-            else if (formatIndex == CaretFormatIndex_Deprecated)
+            } else if (formatIndex == CaretFormatIndex_Deprecated) {
                 throw new NotImplementedException("Caret format index has been removed");
-            else
+            } else {
                 return formatIndex.ToString(CultureInfo.InvariantCulture);
+            }
         }
 
-        public static int? FormatIndexFromString(string source) {
+        public static int FormatIndexFromString(string source) {
             int result;
-            if (source == "Default")
+            if (source == "Default") {
                 return DefaultFormatIndex;
-            else if (source == "Unaligned")
+            } else if (source == "Unaligned") {
                 return UnalignedFormatIndex;
-            else if (source == "Caret")
+            } else if (source == "Caret") {
                 throw new NotImplementedException("Caret format index has been removed");
-            else if (int.TryParse(source, out result))
+            } else if (int.TryParse(source, out result)) {
                 return result;
-            else
-                return null;
+            } else {
+                return InvalidFormatIndex;
+            }
         }
 
         [ResourceDisplayName("ContentTypeDisplayName")]
@@ -460,6 +471,20 @@ namespace IndentGuide {
 
         [Browsable(false)]
         public IDictionary<int, LineFormat> LineFormats { get; private set; }
+
+        [Browsable(false)]
+        public IDictionary<int, LineFormat> PageWidthMarkers { get; private set; }
+
+        private IEnumerable<KeyValuePair<int, LineFormat>> AllLineFormats {
+            get {
+                foreach (var keyValue in LineFormats) {
+                    yield return keyValue;
+                }
+                foreach (var keyValue in PageWidthMarkers) {
+                    yield return new KeyValuePair<int, LineFormat>(keyValue.Key + FirstPageWidthIndex, keyValue.Value);
+                }
+            }
+        }
 
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public LineBehavior Behavior { get; set; }
@@ -486,9 +511,11 @@ namespace IndentGuide {
                             (int)subkey.GetValue("Visible", 1));
                     }
 
-                    int? i = FormatIndexFromString(subkeyName);
-                    if (i.HasValue) {
-                        theme.LineFormats[i.Value] = format;
+                    int formatIndex = FormatIndexFromString(subkeyName);
+                    if (formatIndex >= FirstIndentFormatIndex && formatIndex <= LastIndentFormatIndex) {
+                        theme.LineFormats[formatIndex] = format;
+                    } else if (formatIndex >= FirstPageWidthIndex && formatIndex <= LastPageWidthIndex) {
+                        theme.PageWidthMarkers[formatIndex - FirstPageWidthIndex] = format;
                     } else {
                         Trace.WriteLine(string.Format("IndentGuide::Unable to parse {0}", subkeyName));
                     }
@@ -525,9 +552,11 @@ namespace IndentGuide {
                     var format = LineFormat.FromInvariantStrings(lineStyle, lineColor, highlightStyle, highlightColor, visible);
 
                     var keypart = subkey.Substring(i + 1);
-                    int? formatIndex = FormatIndexFromString(keypart);
-                    if (formatIndex.HasValue) {
-                        theme.LineFormats[formatIndex.Value] = format;
+                    int formatIndex = FormatIndexFromString(keypart);
+                    if (formatIndex >= FirstIndentFormatIndex && formatIndex <= LastIndentFormatIndex) {
+                        theme.LineFormats[formatIndex] = format;
+                    } else if (formatIndex >= FirstPageWidthIndex && formatIndex <= LastPageWidthIndex) {
+                        theme.PageWidthMarkers[formatIndex - FirstPageWidthIndex] = format;
                     } else {
                         Trace.WriteLine(string.Format("IndentGuide::Unable to parse {0}", keypart));
                     }
@@ -549,8 +578,8 @@ namespace IndentGuide {
                 string lineStyle, lineColor, highlightStyle, highlightColor;
                 int visible;
 
-                foreach (var item in LineFormats) {
-                    if (item.Value.Equals(DefaultLineFormat) && item.Key != DefaultFormatIndex) {
+                foreach (var item in AllLineFormats) {
+                    if (item.Key >= FirstIndentFormatIndex && item.Key < LastIndentFormatIndex && item.Value.Equals(DefaultLineFormat)) {
                         continue;
                     }
                     var subkeyName = FormatIndexToString(item.Key);
@@ -577,7 +606,7 @@ namespace IndentGuide {
             writer.WriteSettingString("CaretHandler", CaretHandler);
 
             string lineStyle, lineColor, highlightStyle, highlightColor, visible;
-            foreach (var item in LineFormats) {
+            foreach (var item in AllLineFormats) {
                 var subkeyName = key + "." + FormatIndexToString(item.Key);
 
                 writer.WriteSettingString(subkeyName, "");
@@ -602,7 +631,7 @@ namespace IndentGuide {
             if (IsDefault && other.IsDefault) return 0;
             if (IsDefault) return -1;
             if (other.IsDefault) return 1;
-            return String.Compare(ContentType, other.ContentType, StringComparison.Ordinal);
+            return String.Compare(ContentType, other.ContentType, StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool Equals(object obj) {
@@ -616,7 +645,7 @@ namespace IndentGuide {
         public bool Equals(IndentTheme other) {
             if (other == null) return false;
             if (IsDefault && other.IsDefault) return true;
-            return String.Equals(ContentType, other.ContentType, StringComparison.Ordinal);
+            return String.Equals(ContentType, other.ContentType, StringComparison.OrdinalIgnoreCase);
         }
 
         internal void Apply() {

@@ -23,12 +23,13 @@ using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide {
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [InstalledProductRegistration("#110", "#112", "13 (Beta 2)", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", "13 (Beta 3)", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, false)]
     [ProvideOptionPage(typeof(BehaviorOptions), "IndentGuide", "Behavior\\QuickSet", 110, 130, false)]
     [ProvideOptionPage(typeof(CustomBehaviorOptions), "IndentGuide", "Behavior\\Custom", 110, 140, false)]
     [ProvideOptionPage(typeof(CaretOptions), "IndentGuide", "Highlighting", 110, 150, false)]
+    [ProvideOptionPage(typeof(PageWidthOptions), "IndentGuide", "PageWidth", 110, 160, false)]
     [ProvideProfile(typeof(ProfileManager), "IndentGuide", "Styles", 110, 220, false, DescriptionResourceID = 230)]
     [ProvideService(typeof(SIndentGuide))]
     [ResourceDescription("IndentGuidePackage")]

@@ -67,7 +67,6 @@ namespace IndentGuide {
             if (line.FirstLine <= LineNumber &&
                 LineNumber <= line.LastLine &&
                 (line.LastLine - line.FirstLine) >= MinimumLength &&
-                !line.Type.HasFlag(LineSpanType.AtText) &&
                 line.Indent <= Position &&
                 (Nearest == null || line.Indent > Nearest.Indent)) {
                 Nearest = line;

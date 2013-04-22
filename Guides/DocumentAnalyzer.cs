@@ -23,13 +23,10 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 
 namespace IndentGuide {
-    [Flags]
     public enum LineSpanType {
-        None = 0,
-        Normal = 1,
-        AtText = 2,
-        EmptyLine = 4,
-        EmptyLineAtText = EmptyLine | AtText
+        None,
+        Normal,
+        PageWidthMarker
     }
 
     [DebuggerDisplay("Indent {Indent} lines {FirstLine}-{LastLine}, {Type}")]
@@ -94,6 +91,8 @@ namespace IndentGuide {
 
         public ITextSnapshot Snapshot { get; private set; }
 
+        public int LongestLine { get; private set; }
+
         public readonly LineBehavior Behavior;
         public readonly int IndentSize;
         public readonly int TabSize;
@@ -101,6 +100,7 @@ namespace IndentGuide {
         public DocumentAnalyzer(ITextSnapshot snapshot, LineBehavior behavior, int indentSize, int tabSize) {
             Snapshot = snapshot;
             Lines = null;
+            LongestLine = 0;
             Behavior = behavior.Clone();
             IndentSize = indentSize;
             TabSize = tabSize;
@@ -160,6 +160,8 @@ namespace IndentGuide {
                 isCPlusPlus = string.Equals(contentType, "c/c++", StringComparison.OrdinalIgnoreCase);
             }
 
+            LongestLine = 0;
+
             // Maps every line number to the amount of leading whitespace on that line.
             var lineInfo = new List<LineInfo>(snapshot.LineCount + 2);
 
@@ -172,8 +174,13 @@ namespace IndentGuide {
                 }
 
                 var text = line.GetText();
-                if (string.IsNullOrWhiteSpace(text))
+                if (string.IsNullOrWhiteSpace(text)) {
                     continue;
+                }
+
+                if (line.Length > LongestLine) {
+                    LongestLine = line.Length;
+                }
 
                 int spaces = text.LeadingWhitespace(TabSize);
                 lineInfo[lineNumber].HasText = true;

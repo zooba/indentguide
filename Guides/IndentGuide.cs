@@ -137,6 +137,11 @@ namespace IndentGuide {
             UpdateAdornments();
         }
 
+        private IEnumerable<LineSpan> GetPageWidthLines() {
+            return Theme.PageWidthMarkers.Keys
+                .Select(i => new LineSpan(int.MinValue, int.MaxValue, i, LineSpanType.PageWidthMarker));
+        }
+
         /// <summary>
         /// Recreates all adornments.
         /// </summary>
@@ -152,7 +157,6 @@ namespace IndentGuide {
                 var task = Analysis.Update();
                 if (task != null) {
                     UpdateAdornments(task);
-                    return;
                 }
                 return;
             } else if (analysisLines == null) {
@@ -177,58 +181,74 @@ namespace IndentGuide {
 
             Layer.RemoveAllAdornments();
 
-            if (!GlobalVisible)
+            if (!GlobalVisible) {
                 return;
+            }
 
             double spaceWidth = View.TextViewLines.Select(line => line.VirtualSpaceWidth).FirstOrDefault();
             if (spaceWidth <= 0.0) return;
+            double horizontalOffset = View.TextViewLines.FirstVisibleLine.TextLeft;
 
             var caret = CaretHandlerBase.FromName(Theme.CaretHandler, View.Caret.Position.VirtualBufferPosition, Analysis.TabSize);
 
+            foreach (var line in analysisLines.Concat(GetPageWidthLines())) {
+                double top, bottom;
+                double left = line.Indent * spaceWidth + horizontalOffset;
 
-            foreach (var line in analysisLines) {
-                int linePos = line.Indent;
-                ITextSnapshotLine firstLine, lastLine;
-                try {
-                    firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
-                    lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
-                } catch(Exception ex) {
-                    Trace.TraceError("In GetLineFromLineNumber:\n{0}", ex);
-                    continue;
+                if (line.Type == LineSpanType.PageWidthMarker) {
+                    line.Highlight = (Analysis.LongestLine >= line.Indent);
+
+                    top = View.ViewportTop;
+                    bottom = View.ViewportBottom;
+                } else {
+                    caret.AddLine(line, willUpdateImmediately: true);
+
+                    top = View.TextViewLines.FirstVisibleLine.Top;
+                    bottom = View.TextViewLines.LastVisibleLine.Bottom;
                 }
 
-                caret.AddLine(line, willUpdateImmediately: true);
+                if (line.FirstLine >= 0 && line.LastLine < int.MaxValue) {
+                    ITextSnapshotLine firstLine, lastLine;
+                    try {
+                        firstLine = View.TextSnapshot.GetLineFromLineNumber(line.FirstLine);
+                        lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
+                    } catch (Exception ex) {
+                        Trace.TraceError("In GetLineFromLineNumber:\n{0}", ex);
+                        continue;
+                    }
 
-                var viewModel = View.TextViewModel;
-                if ((viewModel == null ||
-                    !viewModel.IsPointInVisualBuffer(firstLine.End, PositionAffinity.Successor) ||
-                    !viewModel.IsPointInVisualBuffer(lastLine.Start - (line.LastLine == 0 ? 0 : 1), PositionAffinity.Predecessor)) ||
-                    firstLine.Start > View.TextViewLines.LastVisibleLine.Start ||
-                    lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) {
-                    continue;
+                    var viewModel = View.TextViewModel;
+                    if ((viewModel == null ||
+                        !viewModel.IsPointInVisualBuffer(firstLine.End, PositionAffinity.Successor) ||
+                        !viewModel.IsPointInVisualBuffer(lastLine.Start - (line.LastLine == 0 ? 0 : 1), PositionAffinity.Predecessor)) ||
+                        firstLine.Start > View.TextViewLines.LastVisibleLine.Start ||
+                        lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) {
+                        continue;
+                    }
+
+                    IWpfTextViewLine firstView, lastView;
+                    try {
+                        firstView = View.GetTextViewLineContainingBufferPosition(firstLine.Start);
+                        lastView = View.GetTextViewLineContainingBufferPosition(lastLine.End);
+                    } catch (Exception ex) {
+                        Trace.TraceError("UpdateAdornments GetTextViewLineContainingBufferPosition failed\n{0}", ex);
+                        continue;
+                    }
+
+                    if (firstView.VisibilityState != VisibilityState.Unattached) {
+                        top = firstView.Top;
+                    }
+                    if (lastView.VisibilityState != VisibilityState.Unattached) {
+                        bottom = lastView.Bottom;
+                    }
+                    if (firstView.VisibilityState == VisibilityState.FullyVisible) {
+                        left = line.Indent * spaceWidth + firstView.TextLeft;
+                    }
+
+                    line.Span = new SnapshotSpan(firstLine.Start, lastLine.End);
                 }
-
-                IWpfTextViewLine firstView, lastView;
-                try {
-                    firstView = View.GetTextViewLineContainingBufferPosition(firstLine.Start);
-                    lastView = View.GetTextViewLineContainingBufferPosition(lastLine.End);
-                } catch (Exception ex) {
-                    Trace.TraceError("UpdateAdornments GetTextViewLineContainingBufferPosition failed\n{0}", ex);
-                    continue;
-                }
-
-                double top = (firstView.VisibilityState != VisibilityState.Unattached) ?
-                    firstView.Top :
-                    View.TextViewLines.FirstVisibleLine.Top;
-                double bottom = (lastView.VisibilityState != VisibilityState.Unattached) ?
-                    lastView.Bottom :
-                    View.TextViewLines.LastVisibleLine.Bottom;
-                double left = line.Indent * spaceWidth +
-                    ((firstView.VisibilityState == VisibilityState.FullyVisible) ?
-                    firstView.TextLeft : View.TextViewLines.FirstVisibleLine.TextLeft);
 
                 line.Adornment = CreateGuide(top, bottom, left);
-                line.Span = new SnapshotSpan(firstLine.Start, lastLine.End);
                 UpdateGuide(line);
 
                 Layer.AddAdornment(line);
@@ -245,7 +265,6 @@ namespace IndentGuide {
         /// <param name="firstLine">The line to start the guide at.</param>
         /// <param name="lastLine">The line to end the guide at.</param>
         /// <param name="indent">The indent number.</param>
-        /// </param>
         /// <returns>The added line.</returns>
         private Line CreateGuide(double top, double bottom, double left) {
             if (left == 0 || left > View.ViewportWidth) return null;
@@ -279,8 +298,13 @@ namespace IndentGuide {
             if (guide == null) return;
 
             LineFormat format;
-            if (!Theme.LineFormats.TryGetValue(lineSpan.FormatIndex, out format))
+            if (lineSpan.Type == LineSpanType.PageWidthMarker) {
+                if (!Theme.PageWidthMarkers.TryGetValue(lineSpan.Indent, out format)) {
+                    format = Theme.DefaultLineFormat;
+                }
+            } else if (!Theme.LineFormats.TryGetValue(lineSpan.FormatIndex, out format)) {
                 format = Theme.DefaultLineFormat;
+            }
 
             if (!format.Visible) {
                 guide.Visibility = System.Windows.Visibility.Hidden;
@@ -331,8 +355,9 @@ namespace IndentGuide {
 
                 int formatIndex = line.Indent / Analysis.IndentSize;
 
-                if (line.Indent % Analysis.IndentSize != 0)
+                if (line.Indent % Analysis.IndentSize != 0) {
                     formatIndex = IndentTheme.UnalignedFormatIndex;
+                }
 
                 caret.AddLine(line, willUpdateImmediately: false);
             }

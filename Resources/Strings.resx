@@ -333,4 +333,10 @@
   <data name="CaretNoneDisplayName" xml:space="preserve">
     <value>None</value>
   </data>
+  <data name="PageWidthExists" xml:space="preserve">
+    <value>A page width marker already exists at that column.</value>
+  </data>
+  <data name="PageWidthPosition" xml:space="preserve">
+    <value>Column</value>
+  </data>
 </root>
