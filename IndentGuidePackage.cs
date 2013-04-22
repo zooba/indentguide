@@ -62,8 +62,8 @@ namespace IndentGuide {
             if (dte != null) {
                 CommandVisible = false;
                 WindowEvents = dte.Events.WindowEvents;
-                WindowEvents.WindowActivated +=
-                    new EnvDTE._dispWindowEvents_WindowActivatedEventHandler(WindowEvents_WindowActivated);
+                WindowEvents.WindowActivated += WindowEvents_WindowActivated;
+                WindowEvents.WindowClosing += WindowEvents_WindowClosing;
             }
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
@@ -91,6 +91,12 @@ namespace IndentGuide {
 
         void WindowEvents_WindowActivated(EnvDTE.Window GotFocus, EnvDTE.Window LostFocus) {
             CommandVisible = (GotFocus != null && GotFocus.Kind == "Document");
+        }
+
+        void WindowEvents_WindowClosing(EnvDTE.Window Window) {
+            if (Window.DTE.ActiveWindow == Window) {
+                CommandVisible = false;
+            }
         }
 
         void BeforeQueryStatus(object sender, EventArgs e) {
