@@ -127,7 +127,9 @@ namespace IndentGuide {
             var value = e.Current;
             var old = e.Previous;
             Child.ActiveTheme = value;
-            if (cmbTheme.SelectedItem != value && cmbTheme.Items.Contains(value)) {
+            if (value == null) {
+                cmbTheme.SelectedIndex = (cmbTheme.Items.Count == 0) ? -1 : 0;
+            } else if (cmbTheme.SelectedItem != value && cmbTheme.Items.Contains(value)) {
                 cmbTheme.SelectedItem = value;
             }
             UpdateDisplay(value, old);

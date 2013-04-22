@@ -104,6 +104,7 @@ namespace IndentGuide {
                 }
             } finally {
                 lstLocations.EndUpdate();
+                gridLineStyle.SelectedObject = null;
                 lstLocations.SelectedIndex = (lstLocations.Items.Count > 0) ? 0 : -1;
             }
         }
@@ -131,7 +132,8 @@ namespace IndentGuide {
                         format.PreviousPosition = format.Position;
                         ActiveTheme.PageWidthMarkers[format.Position] = format.Format;
                     }
-                    lstLocations.Refresh();
+                    lstLocations.FormattingEnabled = false;
+                    lstLocations.FormattingEnabled = true;
                 }
 
                 linePreview.ForeColor = format.LineColor;
@@ -146,10 +148,11 @@ namespace IndentGuide {
         }
 
         private void lstLocations_SelectedIndexChanged(object sender, EventArgs e) {
-            if (lstLocations.SelectedItem == null) return;
             var format = lstLocations.SelectedItem as LineFormatAndPosition;
-            Debug.Assert(format != null);
-            if (format == null) return;
+            if (format == null) {
+                gridLineStyle.SelectedObject = null;
+                return;
+            }
 
             gridLineStyle.SelectedObject = format;
             linePreview.ForeColor = format.LineColor;

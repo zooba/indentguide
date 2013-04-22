@@ -192,19 +192,20 @@ namespace IndentGuide {
             var caret = CaretHandlerBase.FromName(Theme.CaretHandler, View.Caret.Position.VirtualBufferPosition, Analysis.TabSize);
 
             foreach (var line in analysisLines.Concat(GetPageWidthLines())) {
-                double top, bottom;
-                double left = line.Indent * spaceWidth + horizontalOffset;
+                double top, bottom, left;
 
                 if (line.Type == LineSpanType.PageWidthMarker) {
-                    line.Highlight = (Analysis.LongestLine >= line.Indent);
+                    line.Highlight = (Analysis.LongestLine > line.Indent);
 
                     top = View.ViewportTop;
                     bottom = View.ViewportBottom;
+                    left = (line.Indent - 1) * spaceWidth + horizontalOffset;
                 } else {
                     caret.AddLine(line, willUpdateImmediately: true);
 
                     top = View.TextViewLines.FirstVisibleLine.Top;
                     bottom = View.TextViewLines.LastVisibleLine.Bottom;
+                    left = line.Indent * spaceWidth + horizontalOffset;
                 }
 
                 if (line.FirstLine >= 0 && line.LastLine < int.MaxValue) {
