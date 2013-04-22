@@ -201,8 +201,8 @@ namespace IndentGuide {
 
                 var viewModel = View.TextViewModel;
                 if ((viewModel == null ||
-                    !viewModel.IsPointInVisualBuffer(firstLine.Start, PositionAffinity.Successor) ||
-                    !viewModel.IsPointInVisualBuffer(lastLine.End, PositionAffinity.Predecessor)) ||
+                    !viewModel.IsPointInVisualBuffer(firstLine.End, PositionAffinity.Successor) ||
+                    !viewModel.IsPointInVisualBuffer(lastLine.Start - (line.LastLine == 0 ? 0 : 1), PositionAffinity.Predecessor)) ||
                     firstLine.Start > View.TextViewLines.LastVisibleLine.Start ||
                     lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) {
                     continue;
