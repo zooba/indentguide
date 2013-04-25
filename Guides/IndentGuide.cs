@@ -267,7 +267,7 @@ namespace IndentGuide {
         /// <param name="indent">The indent number.</param>
         /// <returns>The added line.</returns>
         private Line CreateGuide(double top, double bottom, double left) {
-            if (left == 0 || left > View.ViewportWidth) return null;
+            if (left < View.ViewportLeft || left > View.ViewportRight) return null;
 
             var guide = new Line() {
 #if DEBUG
