@@ -512,7 +512,7 @@ namespace IndentGuide {
                     }
 
                     int formatIndex = FormatIndexFromString(subkeyName);
-                    if (formatIndex >= FirstIndentFormatIndex && formatIndex <= LastIndentFormatIndex) {
+                    if (formatIndex <= LastIndentFormatIndex) {
                         theme.LineFormats[formatIndex] = format;
                     } else if (formatIndex >= FirstPageWidthIndex && formatIndex <= LastPageWidthIndex) {
                         theme.PageWidthMarkers[formatIndex - FirstPageWidthIndex] = format;
@@ -539,7 +539,7 @@ namespace IndentGuide {
             reader.ReadSettingString(key, out subkeys);
             if (!string.IsNullOrEmpty(subkeys)) {
                 foreach (var subkey in subkeys.Split(';')) {
-                    if (string.IsNullOrEmpty(subkeys)) continue;
+                    if (string.IsNullOrEmpty(subkey)) continue;
 
                     int i = subkey.LastIndexOf('.');
                     if (i < 0) continue;
@@ -553,7 +553,7 @@ namespace IndentGuide {
 
                     var keypart = subkey.Substring(i + 1);
                     int formatIndex = FormatIndexFromString(keypart);
-                    if (formatIndex >= FirstIndentFormatIndex && formatIndex <= LastIndentFormatIndex) {
+                    if (formatIndex <= LastIndentFormatIndex) {
                         theme.LineFormats[formatIndex] = format;
                     } else if (formatIndex >= FirstPageWidthIndex && formatIndex <= LastPageWidthIndex) {
                         theme.PageWidthMarkers[formatIndex - FirstPageWidthIndex] = format;
@@ -579,7 +579,7 @@ namespace IndentGuide {
                 int visible;
 
                 foreach (var item in AllLineFormats) {
-                    if (item.Key >= FirstIndentFormatIndex && item.Key < LastIndentFormatIndex && item.Value.Equals(DefaultLineFormat)) {
+                    if (item.Key >= FirstIndentFormatIndex && item.Key <= LastIndentFormatIndex && item.Value.Equals(DefaultLineFormat)) {
                         continue;
                     }
                     var subkeyName = FormatIndexToString(item.Key);
@@ -599,7 +599,7 @@ namespace IndentGuide {
 
         public string Save(IVsSettingsWriter writer) {
             var key = ContentType ?? DefaultThemeName;
-            var subkeys = string.Join(";", LineFormats.Select(item => key + "." + FormatIndexToString(item.Key)));
+            var subkeys = string.Join(";", AllLineFormats.Select(item => key + "." + FormatIndexToString(item.Key)));
             writer.WriteSettingString(key, subkeys);
 
             Behavior.Save(writer, key);
