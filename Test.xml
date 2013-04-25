@@ -1,0 +1,16 @@
+<root>
+  <el1>
+    <el2>
+      <el3 attr1="1"
+           attr2="2"
+           attr3="3"
+           >
+        
+      </el3>
+
+      <el4>
+        Plain text.
+      </el4>
+    </el2>
+  </el1>
+</root>

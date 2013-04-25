@@ -208,10 +208,15 @@ namespace IndentGuide {
         }
 
         protected void UpdateDisplay(IndentTheme active, IndentTheme previous) {
-            if (active != null && cmbTheme.Items.Contains(active)) {
-                cmbTheme.SelectedItem = active;
-            } else {
-                cmbTheme.SelectedItem = null;
+            Suppress_cmbTheme_SelectedIndexChanged = true;
+            try {
+                if (active != null && cmbTheme.Items.Contains(active)) {
+                    cmbTheme.SelectedItem = active;
+                } else {
+                    cmbTheme.SelectedItem = null;
+                }
+            } finally {
+                Suppress_cmbTheme_SelectedIndexChanged = false;
             }
             Child.Update(active, previous);
         }
@@ -221,7 +226,11 @@ namespace IndentGuide {
             toolTip.SetToolTip(btnCustomizeThisContentType, ResourceLoader.LoadString("tooltipCustomizeThisContentType"));
         }
 
+        private bool Suppress_cmbTheme_SelectedIndexChanged = false;
         private void cmbTheme_SelectedIndexChanged(object sender, EventArgs e) {
+            if (Suppress_cmbTheme_SelectedIndexChanged) {
+                return;
+            }
             ActiveTheme = cmbTheme.SelectedItem as IndentTheme;
 
             if (ActiveTheme != null) {

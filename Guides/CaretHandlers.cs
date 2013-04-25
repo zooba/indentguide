@@ -179,4 +179,46 @@ namespace IndentGuide {
             return ResourceLoader.LoadString("CaretAdjacentDocumentation", culture);
         }
     }
+
+    /// <summary>
+    /// Highlights guides that start or end on the lines above or below the
+    /// caret.
+    /// </summary>
+    class CaretAboveBelowEnds : CaretHandlerBase, ICaretHandlerMetadata {
+        public int GetSortOrder(CultureInfo culture) {
+            return 80;
+        }
+
+        public CaretAboveBelowEnds(VirtualSnapshotPoint location, int tabSize)
+            : base(location, tabSize) {
+        }
+
+        public override void AddLine(LineSpan line, bool willUpdateImmediately) {
+            bool isTouching = false;
+
+            if (line.FirstLine - 1 == LineNumber ||
+                line.LastLine + 1 == LineNumber) {
+                isTouching = true;
+            }
+
+            if (line.Highlight != isTouching) {
+                line.Highlight = isTouching;
+                if (!willUpdateImmediately) {
+                    Modified.Add(line);
+                }
+            }
+        }
+
+        public override IEnumerable<LineSpan> GetModified() {
+            return Modified;
+        }
+
+        public string GetDisplayName(CultureInfo culture) {
+            return ResourceLoader.LoadString("CaretAboveBelowEndsDisplayName", culture);
+        }
+
+        public string GetDocumentation(CultureInfo culture) {
+            return ResourceLoader.LoadString("CaretAboveBelowEndsDocumentation", culture);
+        }
+    }
 }

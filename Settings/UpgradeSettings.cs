@@ -22,22 +22,20 @@ namespace IndentGuide {
         public void Upgrade(IIndentGuide service) {
             using (var root = service.Package.UserRegistryRoot) {
                 int version;
-                bool addCaretHandlers;
                 using (var reg = root.OpenSubKey(SUBKEY_NAME, false)) {
                     version = (reg == null) ? 0 : (int)reg.GetValue("Version", IndentGuidePackage.DEFAULT_VERSION);
-                    addCaretHandlers = (reg == null) ? true : string.IsNullOrEmpty(reg.GetValue("CaretHandlers") as string);
                 }
 
                 if (version == 0 || version == IndentGuidePackage.Version) {
-                    using (var reg = root.CreateSubKey(SUBKEY_NAME)) {
-                        if (addCaretHandlers) {
-                            AddCaretHandlers(reg);
-                        }
-                    } return;
+                    return;
                 }
 
                 using (var reg = root.CreateSubKey(SUBKEY_NAME)) {
-                    if (version >= 0x000C0000) {
+                    if (version >= 0x000C0903) {
+                        // Nothing to upgrade
+                    } else if (version == 0x000C0902) {
+                        UpgradeFrom_12_9_2(reg);
+                    } else if (version >= 0x000C0000) {
                         // Nothing to upgrade
                     } else if (version >= 0x000B0901) {
                         UpgradeFrom_11_9_0(reg);
@@ -50,24 +48,15 @@ namespace IndentGuide {
                     // Upgrading will make guides visible regardless of the
                     // previous setting.
                     reg.SetValue("Visible", 1);
-
-                    if (addCaretHandlers) {
-                        AddCaretHandlers(reg);
-                    }
                 }
             }
         }
 
         /// <summary>
-        /// Adds the default set of caret handlers.
+        /// Upgrades from v13 (Beta 3).
         /// </summary>
-        static void AddCaretHandlers(RegistryKey reg) {
-            reg.SetValue("CaretHandlers", string.Join(";",
-                typeof(CaretNone).FullName,
-                typeof(CaretNearestLeft).FullName,
-                typeof(CaretNearestLeft2).FullName,
-                typeof(CaretAdjacent).FullName
-            ));
+        static void UpgradeFrom_12_9_2(RegistryKey reg) {
+            reg.DeleteValue("CaretHandlers", false);
         }
 
         /// <summary>

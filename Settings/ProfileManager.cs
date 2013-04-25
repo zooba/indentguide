@@ -29,6 +29,7 @@ namespace IndentGuide {
     [Guid("6443B4D2-311B-41B6-AEC3-1DC34DF670FA")]
     partial class ProfileManager : Component, IProfileManager {
         private const string SUBKEY_NAME = "IndentGuide";
+        private const string CARETHANDLERS_SUBKEY_NAME = "Caret Handlers";
 
         private IIndentGuide Service {
             get {
@@ -41,16 +42,25 @@ namespace IndentGuide {
         }
 
         internal List<string> LoadRegisteredCaretHandlers(IIndentGuide service) {
-            RegistryKey reg = null;
-            try {
-                reg = service.Package.UserRegistryRoot.OpenSubKey(SUBKEY_NAME);
-                return ((reg.GetValue("CaretHandlers") as string) ?? "")
-                    .Split(';')
-                    .Where(n => !string.IsNullOrWhiteSpace(n))
-                    .ToList();
-            } finally {
-                reg.Close();
+            var result = new List<string>();
+            result.Add(typeof(CaretNone).FullName);
+            result.Add(typeof(CaretNearestLeft).FullName);
+            result.Add(typeof(CaretNearestLeft2).FullName);
+            result.Add(typeof(CaretAdjacent).FullName);
+            result.Add(typeof(CaretAboveBelowEnds).FullName);
+
+            using (var reg = service.Package.UserRegistryRoot.OpenSubKey(SUBKEY_NAME)) {
+                if (reg != null) {
+                    using (var subreg = reg.OpenSubKey(CARETHANDLERS_SUBKEY_NAME)) {
+                        if (subreg != null) {
+                            foreach (var name in subreg.GetValueNames()) {
+                                result.Add((subreg.GetValue(name) as string) ?? name);
+                            }
+                        }
+                    }
+                }
             }
+            return result;
         }
 
         public void LoadSettingsFromStorage() {
@@ -71,6 +81,9 @@ namespace IndentGuide {
 
                 if (reg != null) {
                     foreach (var themeName in reg.GetSubKeyNames()) {
+                        if (CARETHANDLERS_SUBKEY_NAME.Equals(themeName, StringComparison.InvariantCulture)) {
+                            continue;
+                        }
                         var theme = IndentTheme.Load(reg, themeName);
                         if (theme.IsDefault) {
                             service.DefaultTheme = theme;
@@ -145,6 +158,9 @@ namespace IndentGuide {
                 reg.SetValue("Visible", service.Visible ? 1 : 0);
 
                 foreach (var key in reg.GetSubKeyNames()) {
+                    if (CARETHANDLERS_SUBKEY_NAME.Equals(key, StringComparison.InvariantCulture)) {
+                        continue;
+                    }
                     reg.DeleteSubKeyTree(key);
                 }
 
