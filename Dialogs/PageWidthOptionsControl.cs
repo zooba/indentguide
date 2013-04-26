@@ -46,6 +46,10 @@ namespace IndentGuide {
             [ResourceCategory("Appearance")]
             public bool Visible { get { return Format.Visible; } set { Format.Visible = value; } }
 
+            bool ShouldSerializeVisible() {
+                return Format.Visible != Format.BaseFormat.Visible;
+            }
+
             class LineStyleConverter : EnumResourceTypeConverter<LineStyle> { }
 
             [ResourceDisplayName("LineStyleDisplayName")]
@@ -54,11 +58,19 @@ namespace IndentGuide {
             [TypeConverter(typeof(LineStyleConverter))]
             public LineStyle LineStyle { get { return Format.LineStyle; } set { Format.LineStyle = value; } }
 
+            bool ShouldSerializeLineStyle() {
+                return Format.LineStyle != Format.BaseFormat.LineStyle;
+            }
+
             [ResourceDisplayName("LineColorDisplayName")]
             [ResourceDescription("LineColorDescription")]
             [ResourceCategory("Appearance")]
             [TypeConverter(typeof(ColorConverter))]
             public Color LineColor { get { return Format.LineColor; } set { Format.LineColor = value; } }
+
+            bool ShouldSerializeLineColor() {
+                return Format.LineColor != Format.BaseFormat.LineColor;
+            }
 
             [ResourceDisplayName("HighlightStyleDisplayName")]
             [ResourceDescription("HighlightStyleDescription")]
@@ -66,11 +78,19 @@ namespace IndentGuide {
             [TypeConverter(typeof(LineStyleConverter))]
             public LineStyle HighlightStyle { get { return Format.HighlightStyle; } set { Format.HighlightStyle = value; } }
 
+            bool ShouldSerializeHighlightStyle() {
+                return Format.HighlightStyle != Format.BaseFormat.HighlightStyle;
+            }
+
             [ResourceDisplayName("HighlightColorDisplayName")]
             [ResourceDescription("HighlightColorDescription")]
             [ResourceCategory("Appearance")]
             [TypeConverter(typeof(ColorConverter))]
             public Color HighlightColor { get { return Format.HighlightColor; } set { Format.HighlightColor = value; } }
+
+            bool ShouldSerializeHighlightColor() {
+                return Format.HighlightColor != Format.BaseFormat.HighlightColor;
+            }
         }
 
         public PageWidthOptionsControl() {
@@ -174,7 +194,7 @@ namespace IndentGuide {
         private void btnAddLocation_Click(object sender, EventArgs e) {
             if (ActiveTheme == null) return;
 
-            var format = new LineFormatAndPosition(80, ActiveTheme.DefaultLineFormat.Clone());
+            var format = new LineFormatAndPosition(80, ActiveTheme.DefaultLineFormat.Clone(ActiveTheme));
             var existing = lstLocations.SelectedItem as LineFormatAndPosition;
             if (existing != null) {
                 format.Position = existing.Position + 10;

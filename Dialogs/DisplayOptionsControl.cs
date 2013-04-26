@@ -116,11 +116,11 @@ namespace IndentGuide {
             LineFormat format;
             if (oi.Pattern == null) {
                 if (!ActiveTheme.LineFormats.TryGetValue(oi.Index, out format)) {
-                    ActiveTheme.LineFormats[oi.Index] = format = ActiveTheme.DefaultLineFormat.Clone();
+                    ActiveTheme.LineFormats[oi.Index] = format = ActiveTheme.DefaultLineFormat.Clone(ActiveTheme);
                 }
             } else {
                 // TODO: Pattern based formatting
-                format = ActiveTheme.DefaultLineFormat.Clone();
+                format = ActiveTheme.DefaultLineFormat.Clone(ActiveTheme);
             }
 
             gridLineStyle.SelectedObject = format;
