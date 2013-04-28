@@ -15,6 +15,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Globalization;
 using Microsoft.Win32;
 
 namespace IndentGuide {
@@ -57,6 +58,26 @@ namespace IndentGuide {
         /// </summary>
         static void UpgradeFrom_12_9_2(RegistryKey reg) {
             reg.DeleteValue("CaretHandlers", false);
+
+            foreach (var themeName in reg.GetSubKeyNames()) {
+                using (var themeKey = reg.OpenSubKey(themeName, true)) {
+                    if (themeKey == null) continue;
+
+                    foreach (var keyName in themeKey.GetSubKeyNames()) {
+                        int value;
+                        if (!int.TryParse(keyName, out value) || value < PageWidthMarkerFormat.FirstPageWidthIndex) {
+                            continue;
+                        }
+
+                        using (var key = themeKey.OpenSubKey(keyName, true)) {
+                            if (key == null) continue;
+
+                            key.SetValue("TypeName", typeof(PageWidthMarkerFormat).FullName);
+                            key.SetValue("Position", (value - PageWidthMarkerFormat.FirstPageWidthIndex).ToString(CultureInfo.InvariantCulture));
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -157,8 +178,8 @@ namespace IndentGuide {
 
                         // Copy the default color/style to Default, Unaligned and Caret themes.
                         // Change the Caret theme color to Red, or Teal if it was already red.
-                        using (var subKey1 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.DefaultFormatIndex)))
-                        using (var subKey2 = newKey.CreateSubKey(IndentTheme.FormatIndexToString(IndentTheme.UnalignedFormatIndex))) {
+                        using (var subKey1 = newKey.CreateSubKey("Default"))
+                        using (var subKey2 = newKey.CreateSubKey("Unaligned")) {
                             var visible = !string.Equals("False", themeKey.GetValue("Visible") as string, StringComparison.InvariantCultureIgnoreCase);
                             var color = themeKey.GetValue("LineColor") as string ?? "Teal";
                             var style = themeKey.GetValue("LineStyle") as string ?? "Dotted";

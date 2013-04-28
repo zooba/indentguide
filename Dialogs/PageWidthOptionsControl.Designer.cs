@@ -31,13 +31,13 @@
             this.components = new System.ComponentModel.Container();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.linePreviewHighlight = new IndentGuide.LinePreview();
             this.lstLocations = new System.Windows.Forms.ListBox();
+            this.linePreview = new IndentGuide.LinePreview();
             this.gridLineStyle = new System.Windows.Forms.PropertyGrid();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnAddLocation = new System.Windows.Forms.Button();
             this.btnRemoveLocation = new System.Windows.Forms.Button();
-            this.linePreviewHighlight = new IndentGuide.LinePreview();
-            this.linePreview = new IndentGuide.LinePreview();
             this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -66,6 +66,18 @@
             this.tableLayoutPanel2.Size = new System.Drawing.Size(607, 390);
             this.tableLayoutPanel2.TabIndex = 1;
             // 
+            // linePreviewHighlight
+            // 
+            this.linePreviewHighlight.BackColor = System.Drawing.SystemColors.Window;
+            this.linePreviewHighlight.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.linePreviewHighlight.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.linePreviewHighlight.Location = new System.Drawing.Point(188, 172);
+            this.linePreviewHighlight.Margin = new System.Windows.Forms.Padding(4);
+            this.linePreviewHighlight.Name = "linePreviewHighlight";
+            this.linePreviewHighlight.Size = new System.Drawing.Size(45, 76);
+            this.linePreviewHighlight.Style = IndentGuide.LineStyle.Solid;
+            this.linePreviewHighlight.TabIndex = 5;
+            // 
             // lstLocations
             // 
             this.lstLocations.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -80,6 +92,18 @@
             this.lstLocations.TabIndex = 0;
             this.lstLocations.SelectedIndexChanged += new System.EventHandler(this.lstLocations_SelectedIndexChanged);
             this.lstLocations.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.lstLocations_Format);
+            // 
+            // linePreview
+            // 
+            this.linePreview.BackColor = System.Drawing.SystemColors.Window;
+            this.linePreview.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.linePreview.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.linePreview.Location = new System.Drawing.Point(188, 88);
+            this.linePreview.Margin = new System.Windows.Forms.Padding(4);
+            this.linePreview.Name = "linePreview";
+            this.linePreview.Size = new System.Drawing.Size(45, 76);
+            this.linePreview.Style = IndentGuide.LineStyle.Solid;
+            this.linePreview.TabIndex = 0;
             // 
             // gridLineStyle
             // 
@@ -122,12 +146,12 @@
             this.btnAddLocation.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.btnAddLocation.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnAddLocation.Font = new System.Drawing.Font("Segoe UI Symbol", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAddLocation.Location = new System.Drawing.Point(41, 3);
+            this.btnAddLocation.Location = new System.Drawing.Point(20, 3);
             this.btnAddLocation.Name = "btnAddLocation";
             this.btnAddLocation.Padding = new System.Windows.Forms.Padding(3);
-            this.btnAddLocation.Size = new System.Drawing.Size(43, 42);
+            this.btnAddLocation.Size = new System.Drawing.Size(57, 42);
             this.btnAddLocation.TabIndex = 1;
-            this.btnAddLocation.Text = "";
+            this.btnAddLocation.Text = "&Add";
             this.btnAddLocation.UseVisualStyleBackColor = true;
             this.btnAddLocation.Click += new System.EventHandler(this.btnAddLocation_Click);
             // 
@@ -137,38 +161,14 @@
             this.btnRemoveLocation.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.btnRemoveLocation.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnRemoveLocation.Font = new System.Drawing.Font("Segoe UI Symbol", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnRemoveLocation.Location = new System.Drawing.Point(90, 3);
+            this.btnRemoveLocation.Location = new System.Drawing.Point(83, 3);
             this.btnRemoveLocation.Name = "btnRemoveLocation";
             this.btnRemoveLocation.Padding = new System.Windows.Forms.Padding(3);
-            this.btnRemoveLocation.Size = new System.Drawing.Size(47, 42);
+            this.btnRemoveLocation.Size = new System.Drawing.Size(75, 42);
             this.btnRemoveLocation.TabIndex = 0;
-            this.btnRemoveLocation.Text = "";
+            this.btnRemoveLocation.Text = "&Delete";
             this.btnRemoveLocation.UseVisualStyleBackColor = true;
             this.btnRemoveLocation.Click += new System.EventHandler(this.btnRemoveLocation_Click);
-            // 
-            // linePreviewHighlight
-            // 
-            this.linePreviewHighlight.BackColor = System.Drawing.SystemColors.Window;
-            this.linePreviewHighlight.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.linePreviewHighlight.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.linePreviewHighlight.Location = new System.Drawing.Point(188, 172);
-            this.linePreviewHighlight.Margin = new System.Windows.Forms.Padding(4);
-            this.linePreviewHighlight.Name = "linePreviewHighlight";
-            this.linePreviewHighlight.Size = new System.Drawing.Size(45, 76);
-            this.linePreviewHighlight.Style = IndentGuide.LineStyle.Solid;
-            this.linePreviewHighlight.TabIndex = 5;
-            // 
-            // linePreview
-            // 
-            this.linePreview.BackColor = System.Drawing.SystemColors.Window;
-            this.linePreview.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.linePreview.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.linePreview.Location = new System.Drawing.Point(188, 88);
-            this.linePreview.Margin = new System.Windows.Forms.Padding(4);
-            this.linePreview.Name = "linePreview";
-            this.linePreview.Size = new System.Drawing.Size(45, 76);
-            this.linePreview.Style = IndentGuide.LineStyle.Solid;
-            this.linePreview.TabIndex = 0;
             // 
             // PageWidthOptionsControl
             // 

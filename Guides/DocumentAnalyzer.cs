@@ -296,7 +296,7 @@ namespace IndentGuide {
 
                 int formatIndex = indent / IndentSize;
                 if (indent % IndentSize != 0) {
-                    formatIndex = IndentTheme.UnalignedFormatIndex;
+                    formatIndex = LineFormat.UnalignedFormatIndex;
                 }
 
                 result.Add(new LineSpan(lineNumber - 1, lastLineNumber - 2, indent, LineSpanType.Normal) {

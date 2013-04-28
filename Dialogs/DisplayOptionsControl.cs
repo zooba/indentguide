@@ -35,11 +35,11 @@ namespace IndentGuide {
             lstOverrides.BeginUpdate();
             lstOverrides.Items.Clear();
             lstOverrides.Items.Add(new OverrideInfo {
-                Index = IndentTheme.DefaultFormatIndex,
+                Index = LineFormat.DefaultFormatIndex,
                 Text = ResourceLoader.LoadString("DefaultFormatName")
             });
             lstOverrides.Items.Add(new OverrideInfo {
-                Index = IndentTheme.UnalignedFormatIndex,
+                Index = LineFormat.UnalignedFormatIndex,
                 Text = ResourceLoader.LoadString("UnalignedFormatName")
             });
             for (int key = 1; key <= 30; ++key) {

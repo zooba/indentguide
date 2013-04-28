@@ -26,7 +26,7 @@ namespace UnitTests {
             if (ver.Minor < 9) {
                 verStr = ver.Major.ToString();
             } else {
-                verStr = string.Format("{0} (Beta {1})", ver.Major + 1, ver.Revision + 1);
+                verStr = string.Format("{0} (Beta {1})", ver.Major + 1, ver.Build + 1);
             }
             Assert.AreEqual(verStr, packageVersion.ProductId, "Version in package registration is incorrect");
 

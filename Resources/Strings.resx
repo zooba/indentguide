@@ -336,13 +336,19 @@
   <data name="PageWidthExists" xml:space="preserve">
     <value>A page width marker already exists at that column.</value>
   </data>
-  <data name="PageWidthPosition" xml:space="preserve">
-    <value>Column</value>
-  </data>
   <data name="CaretAboveBelowEndsDisplayName" xml:space="preserve">
     <value>Above or below</value>
   </data>
   <data name="CaretAboveBelowEndsDocumentation" xml:space="preserve">
     <value>&lt;p&gt;Highlights any guide that starts or ends on the lines above or below the current line.&lt;/p&gt;&lt;p&gt;This works best for languages like HTML and XML.&lt;/p&gt;</value>
+  </data>
+  <data name="PageWidthPositionDescription" xml:space="preserve">
+    <value>The column to display the marker after</value>
+  </data>
+  <data name="PageWidthPositionDisplayName" xml:space="preserve">
+    <value>Column</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Indent Guides</value>
   </data>
 </root>

@@ -15,10 +15,7 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -26,75 +23,10 @@ using System.Windows.Forms;
 
 namespace IndentGuide {
     public partial class PageWidthOptionsControl : UserControl, IThemeAwareDialog {
-        class LineFormatAndPosition {
-            public LineFormatAndPosition(int position, LineFormat format) {
-                Position = PreviousPosition = position;
-                Format = format;
-            }
-
-            [Browsable(false)]
-            public readonly LineFormat Format;
-
-            [Browsable(false)]
-            public int PreviousPosition { get; set; }
-
-            [ResourceDescription("PageWidthPosition")]
-            [ResourceCategory("Appearance")]
-            public int Position { get; set; }
-
-            [ResourceDescription("VisibilityDescription")]
-            [ResourceCategory("Appearance")]
-            public bool Visible { get { return Format.Visible; } set { Format.Visible = value; } }
-
-            bool ShouldSerializeVisible() {
-                return Format.Visible != Format.BaseFormat.Visible;
-            }
-
-            class LineStyleConverter : EnumResourceTypeConverter<LineStyle> { }
-
-            [ResourceDisplayName("LineStyleDisplayName")]
-            [ResourceDescription("LineStyleDescription")]
-            [ResourceCategory("Appearance")]
-            [TypeConverter(typeof(LineStyleConverter))]
-            public LineStyle LineStyle { get { return Format.LineStyle; } set { Format.LineStyle = value; } }
-
-            bool ShouldSerializeLineStyle() {
-                return Format.LineStyle != Format.BaseFormat.LineStyle;
-            }
-
-            [ResourceDisplayName("LineColorDisplayName")]
-            [ResourceDescription("LineColorDescription")]
-            [ResourceCategory("Appearance")]
-            [TypeConverter(typeof(ColorConverter))]
-            public Color LineColor { get { return Format.LineColor; } set { Format.LineColor = value; } }
-
-            bool ShouldSerializeLineColor() {
-                return Format.LineColor != Format.BaseFormat.LineColor;
-            }
-
-            [ResourceDisplayName("HighlightStyleDisplayName")]
-            [ResourceDescription("HighlightStyleDescription")]
-            [ResourceCategory("Appearance")]
-            [TypeConverter(typeof(LineStyleConverter))]
-            public LineStyle HighlightStyle { get { return Format.HighlightStyle; } set { Format.HighlightStyle = value; } }
-
-            bool ShouldSerializeHighlightStyle() {
-                return Format.HighlightStyle != Format.BaseFormat.HighlightStyle;
-            }
-
-            [ResourceDisplayName("HighlightColorDisplayName")]
-            [ResourceDescription("HighlightColorDescription")]
-            [ResourceCategory("Appearance")]
-            [TypeConverter(typeof(ColorConverter))]
-            public Color HighlightColor { get { return Format.HighlightColor; } set { Format.HighlightColor = value; } }
-
-            bool ShouldSerializeHighlightColor() {
-                return Format.HighlightColor != Format.BaseFormat.HighlightColor;
-            }
-        }
-
         public PageWidthOptionsControl() {
             InitializeComponent();
+            btnAddLocation.Text = "\uE109";
+            btnRemoveLocation.Text = "\uE10A";
         }
 
         #region IThemeAwareDialog Members
@@ -118,8 +50,8 @@ namespace IndentGuide {
             try {
                 lstLocations.Items.Clear();
                 if (active != null) {
-                    foreach (var keyValue in active.PageWidthMarkers.OrderBy(kv => kv.Key)) {
-                        lstLocations.Items.Add(new LineFormatAndPosition(keyValue.Key, keyValue.Value));
+                    foreach (var item in active.PageWidthMarkers.OrderBy(i => i.Position)) {
+                        lstLocations.Items.Add(item);
                     }
                 }
             } finally {
@@ -141,16 +73,18 @@ namespace IndentGuide {
         #endregion
 
         private void gridLineStyle_PropertyValueChanged(object s, PropertyValueChangedEventArgs e) {
-            var format = gridLineStyle.SelectedObject as LineFormatAndPosition;
+            var format = gridLineStyle.SelectedObject as PageWidthMarkerFormat;
             if (format != null) {
-                if (format.Position != format.PreviousPosition) {
+                if (e.ChangedItem.PropertyDescriptor.Name == "Position") {
                     if (ActiveTheme != null) {
-                        if (ActiveTheme.PageWidthMarkers.ContainsKey(format.Position)) {
-                            throw new ArgumentException(ResourceLoader.LoadString("PageWidthExists"));
+                        if (ActiveTheme.LineFormats.ContainsKey(format.GetFormatIndex())) {
+                            format.Position = (int)e.OldValue;
+                            MessageBox.Show(ResourceLoader.LoadString("PageWidthExists"), ResourceLoader.LoadString("Title"));
+                            return;
                         }
-                        ActiveTheme.PageWidthMarkers.Remove(format.PreviousPosition);
-                        format.PreviousPosition = format.Position;
-                        ActiveTheme.PageWidthMarkers[format.Position] = format.Format;
+                        ActiveTheme.LineFormats.Remove(format.FormatIndex.Value);
+                        format.FormatIndex = format.GetFormatIndex();
+                        ActiveTheme.LineFormats[format.FormatIndex.Value] = format;
                     }
                     lstLocations.FormattingEnabled = false;
                     lstLocations.FormattingEnabled = true;
@@ -168,7 +102,7 @@ namespace IndentGuide {
         }
 
         private void lstLocations_SelectedIndexChanged(object sender, EventArgs e) {
-            var format = lstLocations.SelectedItem as LineFormatAndPosition;
+            var format = lstLocations.SelectedItem as PageWidthMarkerFormat;
             if (format == null) {
                 gridLineStyle.SelectedObject = null;
                 return;
@@ -184,7 +118,7 @@ namespace IndentGuide {
         }
 
         private void lstLocations_Format(object sender, ListControlConvertEventArgs e) {
-            var format = e.ListItem as LineFormatAndPosition;
+            var format = e.ListItem as PageWidthMarkerFormat;
             Debug.Assert(format != null);
             if (format == null) return;
 
@@ -194,16 +128,22 @@ namespace IndentGuide {
         private void btnAddLocation_Click(object sender, EventArgs e) {
             if (ActiveTheme == null) return;
 
-            var format = new LineFormatAndPosition(80, ActiveTheme.DefaultLineFormat.Clone(ActiveTheme));
-            var existing = lstLocations.SelectedItem as LineFormatAndPosition;
+            var existing = lstLocations.SelectedItem as PageWidthMarkerFormat;
+            PageWidthMarkerFormat format;
+            if (existing != null) {
+                format = (PageWidthMarkerFormat)existing.Clone(ActiveTheme);
+            } else {
+                format = new PageWidthMarkerFormat(ActiveTheme);
+            }
+            
             if (existing != null) {
                 format.Position = existing.Position + 10;
-                while (ActiveTheme.PageWidthMarkers.ContainsKey(format.Position)) {
+                while (ActiveTheme.LineFormats.ContainsKey(format.GetFormatIndex())) {
                     format.Position += 10;
                 }
-                format.PreviousPosition = format.Position;
             }
-            ActiveTheme.PageWidthMarkers[format.Position] = format.Format;
+            format.FormatIndex = format.GetFormatIndex();
+            ActiveTheme.LineFormats[format.FormatIndex.Value] = format;
             OnThemeChanged(ActiveTheme);
             lstLocations.Items.Add(format);
             lstLocations.SelectedItem = format;
@@ -213,9 +153,9 @@ namespace IndentGuide {
             if (ActiveTheme == null) return;
 
             int index = lstLocations.SelectedIndex;
-            var existing = lstLocations.SelectedItem as LineFormatAndPosition;
+            var existing = lstLocations.SelectedItem as PageWidthMarkerFormat;
             if (existing != null) {
-                ActiveTheme.PageWidthMarkers.Remove(existing.Position);
+                ActiveTheme.LineFormats.Remove(existing.FormatIndex.Value);
                 OnThemeChanged(ActiveTheme);
                 lstLocations.Items.Remove(existing);
             }

@@ -138,8 +138,8 @@ namespace IndentGuide {
         }
 
         private IEnumerable<LineSpan> GetPageWidthLines() {
-            return Theme.PageWidthMarkers.Keys
-                .Select(i => new LineSpan(int.MinValue, int.MaxValue, i, LineSpanType.PageWidthMarker));
+            return Theme.PageWidthMarkers
+                .Select(i => new LineSpan(int.MinValue, int.MaxValue, i.Position, LineSpanType.PageWidthMarker));
         }
 
         /// <summary>
@@ -350,13 +350,14 @@ namespace IndentGuide {
 
             foreach (var line in analysisLines) {
                 int linePos = line.Indent;
-                if (!Analysis.Behavior.VisibleUnaligned && (linePos % Analysis.IndentSize) != 0)
+                if (!Analysis.Behavior.VisibleUnaligned && (linePos % Analysis.IndentSize) != 0) {
                     continue;
+                }
 
                 int formatIndex = line.Indent / Analysis.IndentSize;
 
                 if (line.Indent % Analysis.IndentSize != 0) {
-                    formatIndex = IndentTheme.UnalignedFormatIndex;
+                    formatIndex = LineFormat.UnalignedFormatIndex;
                 }
 
                 caret.AddLine(line, willUpdateImmediately: false);
