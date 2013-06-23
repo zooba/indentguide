@@ -317,9 +317,9 @@ namespace IndentGuide {
 
             Brush brush;
             if (!GuideBrushCache.TryGetValue(lineColor, out brush)) {
-                    brush = new SolidColorBrush(lineColor.ToSWMC());
-                    if (brush.CanFreeze) brush.Freeze();
-                    GuideBrushCache[lineColor] = brush;
+                brush = new SolidColorBrush(lineColor.ToSWMC());
+                if (brush.CanFreeze) brush.Freeze();
+                GuideBrushCache[lineColor] = brush;
             }
 
             guide.Visibility = System.Windows.Visibility.Visible;

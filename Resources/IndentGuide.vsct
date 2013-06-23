@@ -5,31 +5,8 @@
     <Extern href="VSDbgCmd.h"/>
     <Extern href="VsDebugGuids.h"/>
 
-    <!--<KeyBindings>
-    <KeyBinding guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" mod1="Control" key1="R" mod2="Control" key2="G" editor="guidVSStd97"/>
-  </KeyBindings>-->
-
-    <!--The Commands section is where we the commands, menus and menu groups are defined.
-      This section uses a Guid to identify the package that provides the command defined inside it. -->
     <Commands package="guidIndentGuidePkg">
-        <!-- Inside this section we have different sub-sections: one for the menus, another  
-    for the menu groups, one for the buttons (the actual commands), one for the combos 
-    and the last one for the bitmaps used. Each element is identified by a command id that  
-    is a unique pair of guid and numeric identifier; the guid part of the identifier is usually  
-    called "command set" and is used to group different command inside a logically related  
-    group; your package should define its own command set in order to avoid collisions  
-    with command ids defined by other packages. -->
-
-        <!--Buttons section: buttons include both buttons on toolbars as well as individual menu items -->
         <Buttons>
-            <!--To define a menu group you have to specify its ID, the parent menu and its display priority. 
-          The command is visible and enabled by default. If you need to change the visibility, status, etc, you can use
-          the CommandFlag node.
-          You can add more than one CommandFlag node e.g.:
-              <CommandFlag>DefaultInvisible</CommandFlag>
-              <CommandFlag>DynamicVisibility</CommandFlag>
-          If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
-
             <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" type="Button">
                 <Icon guid="guidIndentGuideBmp" id="bmpViewIndentGuides"/>
                 <CommandFlag>DefaultInvisible</CommandFlag>

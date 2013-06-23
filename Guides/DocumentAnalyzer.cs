@@ -178,8 +178,9 @@ namespace IndentGuide {
                     continue;
                 }
 
-                if (line.Length > LongestLine) {
-                    LongestLine = line.Length;
+                var normalizedLength = text.ActualLength(TabSize);
+                if (normalizedLength > LongestLine) {
+                    LongestLine = normalizedLength;
                 }
 
                 int spaces = text.LeadingWhitespace(TabSize);

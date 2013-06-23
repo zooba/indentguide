@@ -117,6 +117,7 @@ namespace IndentGuide {
             if (oi.Pattern == null) {
                 if (!ActiveTheme.LineFormats.TryGetValue(oi.Index, out format)) {
                     ActiveTheme.LineFormats[oi.Index] = format = ActiveTheme.DefaultLineFormat.Clone(ActiveTheme);
+                    format.FormatIndex = oi.Index;
                 }
             } else {
                 // TODO: Pattern based formatting

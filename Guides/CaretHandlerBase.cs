@@ -54,7 +54,7 @@ namespace IndentGuide {
             if (location.Position.Snapshot != null) {
                 var line = location.Position.GetContainingLine();
                 LineNumber = line.LineNumber;
-                Position = location.Position - line.Start.Position + location.VirtualSpaces;
+                Position = location.Position.Position - line.Start.Position + location.VirtualSpaces;
 
                 int bufferIndent = 0;
                 int visualIndent = 0;

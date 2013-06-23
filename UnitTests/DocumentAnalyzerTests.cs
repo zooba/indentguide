@@ -154,6 +154,23 @@ namespace UnitTests {
         }
 
         [TestMethod]
+        public void LineLength() {
+            var text = " a b c d";
+            Assert.AreEqual(8, text.ActualLength(4));
+            Assert.AreEqual(8, text.ActualLength(8));
+
+            text = "\ta\tb\tc\td";
+            Assert.AreEqual(8, text.ActualLength(1));
+            Assert.AreEqual(9, text.ActualLength(2));
+            Assert.AreEqual(17, text.ActualLength(4));
+
+            text = "   \t123\t456\t789";
+            Assert.AreEqual(15, text.ActualLength(1));
+            Assert.AreEqual(15, text.ActualLength(4));
+            Assert.AreEqual(27, text.ActualLength(8));
+        }
+
+        [TestMethod]
         public void UpdateSnapshot() {
             var buffer = new MockTextBuffer("");
 

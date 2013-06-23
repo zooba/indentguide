@@ -487,6 +487,7 @@ namespace IndentGuide {
     /// </summary>
     public class IndentTheme : IComparable<IndentTheme>, IEquatable<IndentTheme> {
         public static readonly string DefaultThemeName = ResourceLoader.LoadString("DefaultThemeName");
+        public static readonly string DefaultCaretHandler = typeof(CaretNearestLeft).FullName;
 
         public event EventHandler Updated;
 
@@ -501,7 +502,7 @@ namespace IndentGuide {
             PageWidthMarkers = new PageWidthMarkerGetter(this);
             DefaultLineFormat = new LineFormat(this);
             Behavior = new LineBehavior();
-            CaretHandler = typeof(CaretNearestLeft).FullName;
+            CaretHandler = DefaultCaretHandler;
         }
 
         public IndentTheme Clone() {
@@ -552,7 +553,7 @@ namespace IndentGuide {
             using (var key = reg.OpenSubKey(themeKey)) {
                 theme.ContentType = (themeKey == DefaultThemeName) ? null : themeKey;
                 theme.Behavior.Load(key);
-                theme.CaretHandler = (string)key.GetValue("CaretHandler");
+                theme.CaretHandler = (string)key.GetValue("CaretHandler") ?? DefaultCaretHandler;
 
                 foreach (var subkeyName in key.GetSubKeyNames()) {
                     Dictionary<string, string> values;
@@ -579,8 +580,8 @@ namespace IndentGuide {
             theme.ContentType = (themeKey == DefaultThemeName) ? null : themeKey;
             theme.Behavior.Load(reader, themeKey);
             string caretHandler;
-            ErrorHandler.ThrowOnFailure(reader.ReadSettingString("CaretHandler", out caretHandler));
-            theme.CaretHandler = caretHandler;
+            reader.ReadSettingString("CaretHandler", out caretHandler);
+            theme.CaretHandler = caretHandler ?? DefaultCaretHandler;
 
             string subkeyNames, settingNames;
             ErrorHandler.ThrowOnFailure(reader.ReadSettingString(themeKey, out subkeyNames));
@@ -621,7 +622,7 @@ namespace IndentGuide {
         public string Save(RegistryKey reg) {
             using (var key = reg.CreateSubKey(ContentType ?? DefaultThemeName)) {
                 Behavior.Save(key);
-                key.SetValue("CaretHandler", CaretHandler);
+                key.SetValue("CaretHandler", CaretHandler ?? DefaultCaretHandler);
 
                 foreach (var subkey in key.GetSubKeyNames()) {
                     key.DeleteSubKeyTree(subkey, false);
@@ -646,7 +647,7 @@ namespace IndentGuide {
             writer.WriteSettingString(key, subkeys);
 
             Behavior.Save(writer, key);
-            writer.WriteSettingString("CaretHandler", CaretHandler);
+            writer.WriteSettingString("CaretHandler", CaretHandler ?? DefaultCaretHandler);
 
             foreach (var item in LineFormats.Values.Where(item => item.ShouldSerialize())) {
                 var subkeyName = key + "." + item.FormatIndexName;
