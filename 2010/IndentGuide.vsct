@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <Extern href="stdidcmd.h"/>
+    <Extern href="vsshlids.h"/>
+    <Extern href="VSDbgCmd.h"/>
+    <Extern href="VsDebugGuids.h"/>
+
+    <Commands package="guidIndentGuidePkg">
+        <Buttons>
+            <Button guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" type="Button">
+                <Icon guid="guidIndentGuideBmp" id="bmpViewIndentGuides"/>
+                <CommandFlag>DefaultInvisible</CommandFlag>
+                <CommandFlag>DefaultDisabled</CommandFlag>
+                <CommandFlag>DynamicVisibility</CommandFlag>
+                <Strings>
+                    <ButtonText>View Indent Guides</ButtonText>
+                    <MenuText>View Indent &amp;Guides</MenuText>
+                    <ToolTipText>Toggle the visibility of indentation guides.</ToolTipText>
+                    <CommandName>View Indent Guides</CommandName>
+                    <CanonicalName>ViewIndentGuides</CanonicalName>
+                </Strings>
+                <!-- Add more Strings elements with language attribute and translations -->
+            </Button>
+
+        </Buttons>
+        
+        <Bitmaps>
+            <Bitmap guid="guidIndentGuideBmp" href="menu.png" />
+        </Bitmaps>
+    
+    </Commands>
+
+    <CommandPlacements>
+        <CommandPlacement guid="guidIndentGuideCmdSet" id="cmdidViewIndentGuides" priority="0x6560">
+            <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
+        </CommandPlacement>
+    </CommandPlacements>
+    
+    <Symbols>
+        <!-- This is the package guid. -->
+        <GuidSymbol name="guidIndentGuidePkg" value="{959BEB25-6C38-440A-A37F-5D6717E9A41B}" />
+
+        <!-- This is our command set GUID and associated commands -->
+        <GuidSymbol name="guidIndentGuideCmdSet" value="{1AE9DCDB-7723-4651-ABDC-3D4BBAA0731F}">
+            <IDSymbol name="cmdidViewIndentGuides" value="0x0103" />
+        </GuidSymbol>
+
+        <GuidSymbol name="guidIndentGuideBmp" value="{93270977-7E37-4A49-8314-182C6A5836FF}">
+            <IDSymbol name="bmpViewIndentGuides" value="1"/>
+        </GuidSymbol>
+    </Symbols>
+
+</CommandTable>
