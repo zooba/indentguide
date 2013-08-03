@@ -37,7 +37,6 @@ namespace IndentGuide {
         public LineSpanType Type;
         public bool Changed;
         public object Adornment;
-        public SnapshotSpan? Span;
         public int FormatIndex;
         public bool Highlight;
         
@@ -48,7 +47,6 @@ namespace IndentGuide {
             Type = type;
             Changed = true;
             Adornment = null;
-            Span = null;
             FormatIndex = 0;
             Highlight = false;
         }

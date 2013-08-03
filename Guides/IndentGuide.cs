@@ -20,6 +20,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Microsoft.VisualStudio.Text;
@@ -32,12 +34,15 @@ namespace IndentGuide {
     /// </summary>
     public class IndentGuideView {
         IAdornmentLayer Layer;
+        Canvas Canvas;
         IWpfTextView View;
         IDictionary<System.Drawing.Color, Brush> GuideBrushCache;
         IndentTheme Theme;
         bool GlobalVisible;
 
         DocumentAnalyzer Analysis;
+        private List<LineSpan> CurrentAnalysisLines;
+        private List<LineSpan> CurrentLines;
 
         /// <summary>
         /// Instantiates a new indent guide manager for a view.
@@ -53,6 +58,9 @@ namespace IndentGuide {
             View.Options.OptionChanged += View_OptionChanged;
 
             Layer = view.GetAdornmentLayer("IndentGuide");
+            Canvas = new Canvas();
+
+            Layer.AddAdornment(AdornmentPositioningBehavior.OwnerControlled, null, null, Canvas, CanvasRemoved);
 
             if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme)) {
                 Theme = service.DefaultTheme;
@@ -72,6 +80,13 @@ namespace IndentGuide {
         }
 
         /// <summary>
+        /// Raised when the canvas is removed.
+        /// </summary>
+        private void CanvasRemoved(object tag, System.Windows.UIElement element) {
+            Layer.AddAdornment(AdornmentPositioningBehavior.OwnerControlled, null, null, Canvas, CanvasRemoved);
+        }
+
+        /// <summary>
         /// Raised when the global visibility property is updated.
         /// </summary>
         void Service_VisibleChanged(object sender, EventArgs e) {
@@ -88,6 +103,7 @@ namespace IndentGuide {
                     View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
                     View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
                 GuideBrushCache.Clear();
+                CurrentLines = null;
 
                 UpdateAdornments(Analysis.Reset());
             }
@@ -105,6 +121,7 @@ namespace IndentGuide {
                 View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
                 View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
             GuideBrushCache.Clear();
+            CurrentLines = null;
 
             UpdateAdornments(Analysis.Reset());
         }
@@ -146,10 +163,12 @@ namespace IndentGuide {
         /// Recreates all adornments.
         /// </summary>
         void UpdateAdornments() {
-            Debug.Assert(View != null);
-            Debug.Assert(Layer != null);
-            Debug.Assert(View.TextViewLines != null);
-            if (View == null || Layer == null || View.TextViewLines == null) return;
+            if (View == null || Layer == null) return;
+            try {
+                if (View.TextViewLines == null) return;
+            } catch (InvalidOperationException) {
+                return;
+            }
             if (Analysis == null) return;
 
             var analysisLines = Analysis.Lines;
@@ -179,10 +198,22 @@ namespace IndentGuide {
                 }
             }
 
-            Layer.RemoveAllAdornments();
-
             if (!GlobalVisible) {
+                Canvas.Visibility = Visibility.Collapsed;
                 return;
+            }
+            Canvas.Visibility = Visibility.Visible;
+
+            if (CurrentAnalysisLines != analysisLines || CurrentLines == null) {
+                if (CurrentAnalysisLines != null) {
+                    foreach (var line in CurrentAnalysisLines) {
+                        line.Adornment = null;
+                    }
+                    Canvas.Children.Clear();
+                }
+
+                CurrentAnalysisLines = analysisLines;
+                CurrentLines = analysisLines.Concat(GetPageWidthLines()).ToList();
             }
 
             double spaceWidth = View.TextViewLines.Select(line => line.VirtualSpaceWidth).FirstOrDefault();
@@ -191,21 +222,21 @@ namespace IndentGuide {
 
             var caret = CaretHandlerBase.FromName(Theme.CaretHandler, View.Caret.Position.VirtualBufferPosition, Analysis.TabSize);
 
-            foreach (var line in analysisLines.Concat(GetPageWidthLines())) {
-                double top, bottom;
+            foreach (var line in CurrentLines) {
+                double top = 0;
+                double bottom = View.ViewportBottom;
                 double left = line.Indent * spaceWidth + horizontalOffset;
 
                 if (line.Type == LineSpanType.PageWidthMarker) {
                     line.Highlight = (Analysis.LongestLine > line.Indent);
-
-                    top = View.ViewportTop;
-                    bottom = View.ViewportBottom;
-                } else {
-                    caret.AddLine(line, willUpdateImmediately: true);
-
-                    top = View.TextViewLines.FirstVisibleLine.Top;
-                    bottom = View.TextViewLines.LastVisibleLine.Bottom;
+                    if (Show(line, top, bottom, left)) {
+                        Canvas.Children.Add((Line)line.Adornment);
+                    }
+                    UpdateGuide(line);
+                    continue;
                 }
+
+                caret.AddLine(line, willUpdateImmediately: true);
 
                 if (line.FirstLine >= 0 && line.LastLine < int.MaxValue) {
                     ITextSnapshotLine firstLine, lastLine;
@@ -214,6 +245,7 @@ namespace IndentGuide {
                         lastLine = View.TextSnapshot.GetLineFromLineNumber(line.LastLine);
                     } catch (Exception ex) {
                         Trace.TraceError("In GetLineFromLineNumber:\n{0}", ex);
+                        Hide(line);
                         continue;
                     }
 
@@ -223,6 +255,7 @@ namespace IndentGuide {
                         !viewModel.IsPointInVisualBuffer(lastLine.Start - (line.LastLine == 0 ? 0 : 1), PositionAffinity.Predecessor)) ||
                         firstLine.Start > View.TextViewLines.LastVisibleLine.Start ||
                         lastLine.Start < View.TextViewLines.FirstVisibleLine.Start) {
+                        Hide(line);
                         continue;
                     }
 
@@ -232,6 +265,7 @@ namespace IndentGuide {
                         lastView = View.GetTextViewLineContainingBufferPosition(lastLine.End);
                     } catch (Exception ex) {
                         Trace.TraceError("UpdateAdornments GetTextViewLineContainingBufferPosition failed\n{0}", ex);
+                        Hide(line);
                         continue;
                     }
 
@@ -241,17 +275,12 @@ namespace IndentGuide {
                     if (lastView.VisibilityState != VisibilityState.Unattached) {
                         bottom = lastView.Bottom;
                     }
-                    if (firstView.VisibilityState == VisibilityState.FullyVisible) {
-                        left = line.Indent * spaceWidth + firstView.TextLeft;
-                    }
-
-                    line.Span = new SnapshotSpan(firstLine.Start, lastLine.End);
                 }
 
-                line.Adornment = CreateGuide(top, bottom, left);
+                if (Show(line, top, bottom, left)) {
+                    Canvas.Children.Add((Line)line.Adornment);
+                }
                 UpdateGuide(line);
-
-                Layer.AddAdornment(line);
             }
 
             foreach (var line in caret.GetModified()) {
@@ -259,32 +288,31 @@ namespace IndentGuide {
             }
         }
 
-        /// <summary>
-        /// Adds a guideline at the specified location.
-        /// </summary>
-        /// <param name="firstLine">The line to start the guide at.</param>
-        /// <param name="lastLine">The line to end the guide at.</param>
-        /// <param name="indent">The indent number.</param>
-        /// <returns>The added line.</returns>
-        private Line CreateGuide(double top, double bottom, double left) {
-            if (left < View.ViewportLeft || left > View.ViewportRight) return null;
+        public void Hide(LineSpan line) {
+            var guide = line.Adornment as UIElement;
+            if (guide != null) {
+                guide.Visibility = Visibility.Hidden;
+            }
+        }
 
-            var guide = new Line() {
+        public bool Show(LineSpan line, double top, double bottom, double left) {
+            bool added = false;
+            var guide = line.Adornment as Line;
+            if (guide == null) {
+                line.Adornment = guide = new Line();
+                added = true;
+            }
+            guide.Visibility = Visibility.Visible;
+            guide.X1 = left;
 #if DEBUG
-                X1 = left - 1,
-                X2 = left + 1,
+            guide.X2 = left + 1;
 #else
-                X1 = left,
-                X2 = left,
+            line.X2 = left;
 #endif
-                Y1 = top,
-                Y2 = bottom,
-                StrokeThickness = 1.0,
-                StrokeDashOffset = top,
-                SnapsToDevicePixels = true,
-            };
-
-            return guide;
+            guide.Y1 = top;
+            guide.Y2 = bottom;
+            guide.StrokeDashOffset = top;
+            return added;
         }
 
         /// <summary>
@@ -307,12 +335,12 @@ namespace IndentGuide {
             }
 
             if (!format.Visible) {
-                guide.Visibility = System.Windows.Visibility.Hidden;
+                guide.Visibility = Visibility.Hidden;
                 return;
             }
 
             var lineStyle = lineSpan.Highlight ? format.HighlightStyle : format.LineStyle;
-            var lineColor = (lineSpan.Highlight && !lineStyle.HasFlag(LineStyle.Glow)) ? 
+            var lineColor = (lineSpan.Highlight && !lineStyle.HasFlag(LineStyle.Glow)) ?
                 format.HighlightColor : format.LineColor;
 
             Brush brush;
@@ -322,7 +350,7 @@ namespace IndentGuide {
                 GuideBrushCache[lineColor] = brush;
             }
 
-            guide.Visibility = System.Windows.Visibility.Visible;
+            guide.Visibility = Visibility.Visible;
             guide.Stroke = brush;
             guide.StrokeThickness = lineStyle.GetStrokeThickness();
             guide.StrokeDashArray = lineStyle.GetStrokeDashArray();
