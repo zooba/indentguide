@@ -56,9 +56,9 @@ namespace Namespace
         {
 
             if (true) {
-
+#if DEBUG
 				// Do something
-
+#endif
             } else {
 
 				// Do something

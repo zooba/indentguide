@@ -5,7 +5,7 @@ using System;
 namespace Namespace
 
 {
-    
+
     class Class
     
     {
@@ -72,3 +72,20 @@ namespace Namespace
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

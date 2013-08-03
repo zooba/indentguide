@@ -23,7 +23,7 @@ using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide {
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [InstalledProductRegistration("#110", "#112", "13", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", "14 (Beta 1)", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, false)]
     [ProvideOptionPage(typeof(BehaviorOptions), "IndentGuide", "Behavior\\QuickSet", 110, 130, false)]

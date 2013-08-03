@@ -36,7 +36,6 @@ namespace IndentGuide {
         public int Indent;
         public LineSpanType Type;
         public bool Changed;
-        public object Adornment;
         public int FormatIndex;
         public bool Highlight;
         
@@ -46,7 +45,6 @@ namespace IndentGuide {
             Indent = indent;
             Type = type;
             Changed = true;
-            Adornment = null;
             FormatIndex = 0;
             Highlight = false;
         }
@@ -71,7 +69,7 @@ namespace IndentGuide {
         }
 
         public override int GetHashCode() {
-            return string.Format("{0};{1};{2};{3}", FirstLine, LastLine, Indent, Type).GetHashCode();
+            return new { FirstLine, LastLine, Indent, Type }.GetHashCode();
         }
     }
 

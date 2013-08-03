@@ -248,6 +248,10 @@ namespace IndentGuide {
             }
 
             foreach (var kv in values) {
+                if (kv.Key == "TypeName") {
+                    continue;
+                }
+
                 var prop = subclass.GetProperty(kv.Key);
                 if (prop != null) {
                     try {
