@@ -354,6 +354,7 @@ namespace IndentGuide {
                 adornment.Y1 = top;
                 adornment.Y2 = bottom;
                 adornment.StrokeDashOffset = top;
+                adornment.Visibility = Visibility.Visible;
                 UpdateGuide(lineSpan, adornment);
             }
         }
@@ -391,10 +392,15 @@ namespace IndentGuide {
                 GuideBrushCache[lineColor] = brush;
             }
 
-            adornment.Visibility = Visibility.Visible;
             adornment.Stroke = brush;
             adornment.StrokeThickness = lineStyle.GetStrokeThickness();
             adornment.StrokeDashArray = lineStyle.GetStrokeDashArray();
+
+            if (lineStyle.HasFlag(LineStyle.Dotted) || lineStyle.HasFlag(LineStyle.Dashed)) {
+                adornment.SetValue(RenderOptions.EdgeModeProperty, EdgeMode.Unspecified);
+            } else {
+                adornment.SetValue(RenderOptions.EdgeModeProperty, EdgeMode.Aliased);
+            }
 
             if (lineStyle.HasFlag(LineStyle.Glow)) {
                 adornment.Effect = new DropShadowEffect {
