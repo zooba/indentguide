@@ -1,5 +1,5 @@
 ﻿/* ****************************************************************************
- * Copyright 2012 Steve Dower
+ * Copyright 2013 Steve Dower
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy 
@@ -38,6 +38,7 @@ namespace IndentGuide {
         public bool Changed;
         public int FormatIndex;
         public bool Highlight;
+        private HashSet<LineSpan> _linkedLines;
         
         public LineSpan(int first, int last, int indent, LineSpanType type) {
             FirstLine = first;
@@ -47,6 +48,49 @@ namespace IndentGuide {
             Changed = true;
             FormatIndex = 0;
             Highlight = false;
+        }
+
+        public IEnumerable<LineSpan> LinkedLines {
+            get {
+                if (_linkedLines == null) {
+                    return Enumerable.Empty<LineSpan>();
+                } else {
+                    return _linkedLines.AsEnumerable();
+                }
+            }
+        }
+
+        private static IEnumerable<LineSpan> LinkedLinesInternal(LineSpan line) {
+            var result = new HashSet<LineSpan>();
+            var queue = new Queue<LineSpan>();
+            queue.Enqueue(line);
+            while (queue.Any()) {
+                var ls = queue.Dequeue();
+                if (result.Add(ls)) {
+                    if (ls._linkedLines != null) {
+                        foreach (var ls2 in ls._linkedLines) {
+                            queue.Enqueue(ls2);
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+        public static void Link(LineSpan existingLine, LineSpan newLine) {
+            foreach (var line in LinkedLinesInternal(existingLine)) {
+                if (line._linkedLines == null) {
+                    line._linkedLines = new HashSet<LineSpan> { newLine };
+                } else {
+                    line._linkedLines.Add(newLine);
+                }
+
+                if (newLine._linkedLines == null) {
+                    newLine._linkedLines = new HashSet<LineSpan> { line };
+                } else {
+                    newLine._linkedLines.Add(line);
+                }
+            }
         }
 
         public bool Equals(LineSpan other) {
@@ -259,6 +303,8 @@ namespace IndentGuide {
             }
 
             var result = new List<LineSpan>();
+            LineSpan linkToLine;
+            var linkTo = new Dictionary<int, LineSpan>();
 
             for (int lineNumber = 1; lineNumber < lineInfo.Count - 1; ) {
                 var curLine = lineInfo[lineNumber];
@@ -269,6 +315,12 @@ namespace IndentGuide {
 
                 int indent = curLine.GuidesAt.Min();
                 curLine.GuidesAt.Remove(indent);
+
+                if (linkTo.TryGetValue(indent, out linkToLine)) {
+                    linkTo.Remove(indent);
+                } else {
+                    linkToLine = null;
+                }
 
                 if (!curLine.GuidesAt.Any()) {
                     if (!Behavior.VisibleEmptyAtEnd && !curLine.HasText ||
@@ -296,9 +348,18 @@ namespace IndentGuide {
                     formatIndex = LineFormat.UnalignedFormatIndex;
                 }
 
-                result.Add(new LineSpan(lineNumber - 1, lastLineNumber - 2, indent, LineSpanType.Normal) {
+                var ls = new LineSpan(lineNumber - 1, lastLineNumber - 2, indent, LineSpanType.Normal) {
                     FormatIndex = formatIndex
-                });
+                };
+                result.Add(ls);
+
+                if (linkToLine != null) {
+                    LineSpan.Link(linkToLine, ls);
+                }
+
+                if (lineInfo[lastLineNumber].TextAt == int.MaxValue) {
+                    linkTo[indent] = ls;
+                }
             }
 
             if (snapshot != snapshot.TextBuffer.CurrentSnapshot) {

@@ -1,5 +1,5 @@
 /* ****************************************************************************
- * Copyright 2012 Steve Dower
+ * Copyright 2013 Steve Dower
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy 
@@ -381,8 +381,10 @@ namespace IndentGuide {
                 return;
             }
 
-            var lineStyle = lineSpan.Highlight ? format.HighlightStyle : format.LineStyle;
-            var lineColor = (lineSpan.Highlight && !lineStyle.HasFlag(LineStyle.Glow)) ?
+            bool highlight = lineSpan.Highlight || lineSpan.LinkedLines.Any(ls => ls.Highlight);
+
+            var lineStyle = highlight ? format.HighlightStyle : format.LineStyle;
+            var lineColor = (highlight && !lineStyle.HasFlag(LineStyle.Glow)) ?
                 format.HighlightColor : format.LineColor;
 
             Brush brush;
@@ -404,7 +406,7 @@ namespace IndentGuide {
 
             if (lineStyle.HasFlag(LineStyle.Glow)) {
                 adornment.Effect = new DropShadowEffect {
-                    Color = (lineSpan.Highlight ? format.HighlightColor : format.LineColor).ToSWMC(),
+                    Color = (highlight ? format.HighlightColor : format.LineColor).ToSWMC(),
                     BlurRadius = LineStyle.Thick.GetStrokeThickness(),
                     Opacity = 1.0,
                     ShadowDepth = 0.0,

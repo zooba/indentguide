@@ -1,5 +1,5 @@
 ﻿/* ****************************************************************************
- * Copyright 2012 Steve Dower
+ * Copyright 2013 Steve Dower
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy 
@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Microsoft.VisualStudio.Text;
 
 namespace IndentGuide {
@@ -66,7 +67,7 @@ namespace IndentGuide {
         public override void AddLine(LineSpan line, bool willUpdateImmediately) {
             if (line.FirstLine <= LineNumber &&
                 LineNumber <= line.LastLine &&
-                (line.LastLine - line.FirstLine) >= MinimumLength &&
+                ((line.LastLine - line.FirstLine) >= MinimumLength || line.LinkedLines.Any()) &&
                 line.Indent <= Position &&
                 (Nearest == null || line.Indent > Nearest.Indent)) {
                 Nearest = line;
@@ -77,6 +78,7 @@ namespace IndentGuide {
                 if (!willUpdateImmediately) {
                     Modified.Add(line);
                 }
+                Modified.AddRange(line.LinkedLines);
             }
         }
 
@@ -85,6 +87,7 @@ namespace IndentGuide {
                 while (Modified.Remove(Nearest)) { }
                 Nearest.Highlight = true;
                 Modified.Add(Nearest);
+                Modified.AddRange(Nearest.LinkedLines);
                 Nearest = null;
             }
             return Modified;
@@ -164,6 +167,7 @@ namespace IndentGuide {
                 if (!willUpdateImmediately) {
                     Modified.Add(line);
                 }
+                Modified.AddRange(line.LinkedLines);
             }
         }
 
@@ -206,6 +210,7 @@ namespace IndentGuide {
                 if (!willUpdateImmediately) {
                     Modified.Add(line);
                 }
+                Modified.AddRange(line.LinkedLines);
             }
         }
 

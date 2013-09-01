@@ -1,4 +1,21 @@
-﻿using System;
+﻿/* ****************************************************************************
+ * Copyright 2013 Steve Dower
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy 
+ * of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ * ***************************************************************************/
+
+using System;
+using System.Linq;
 using IndentGuide;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -7,21 +24,28 @@ using TestUtilities.Mocks;
 namespace UnitTests {
     [TestClass]
     public class DocumentAnalyzerTests {
-        static private DocumentAnalyzer MakeAnalyzer(ITextSnapshot text, LineBehavior behavior, int indentSize, int tabSize) {
+        internal static DocumentAnalyzer MakeAnalyzer(ITextSnapshot text, LineBehavior behavior, int indentSize, int tabSize) {
             return new DocumentAnalyzer(text, behavior, indentSize, tabSize);
         }
 
-        static private DocumentAnalyzer MakeAnalyzer(string text, LineBehavior behavior, int indentSize, int tabSize, string contentType) {
+        internal static DocumentAnalyzer MakeAnalyzer(string text, LineBehavior behavior, int indentSize, int tabSize, string contentType) {
             var buffer = new MockTextBuffer(text);
             buffer.ContentType = new MockContentType(contentType, null);
             return MakeAnalyzer(buffer.CurrentSnapshot, behavior, indentSize, tabSize);
         }
 
-        static private DocumentAnalyzer MakeAnalyzer(string text, 
-            bool ExtendInwardsOnly = true, bool VisibleAligned = true, bool VisibleUnaligned = false,
-            bool VisibleAtTextEnd = false, bool VisibleEmpty = true, bool VisibleEmptyAtEnd = true,
-            int indentSize = 4, int tabSize = 4,
-            string contentType = "plaintext") {
+        internal static DocumentAnalyzer MakeAnalyzer(
+            string text, 
+            bool ExtendInwardsOnly = true,
+            bool VisibleAligned = true,
+            bool VisibleUnaligned = false,
+            bool VisibleAtTextEnd = false,
+            bool VisibleEmpty = true,
+            bool VisibleEmptyAtEnd = true,
+            int indentSize = 4,
+            int tabSize = 4,
+            string contentType = "plaintext"
+        ) {
 
             return MakeAnalyzer(text.Replace("\\t", "\t"), new LineBehavior {
                 ExtendInwardsOnly = ExtendInwardsOnly,
@@ -229,6 +253,11 @@ namespace UnitTests {
                 new LineSpan(7, 7, 4, LineSpanType.Normal)
             );
 
+            Assert.AreEqual(2, da.Lines.First(ls => ls.FirstLine == 3).LinkedLines.Count());
+            Assert.AreEqual(2, da.Lines.First(ls => ls.FirstLine == 5 && ls.Indent == 4).LinkedLines.Count());
+            Assert.AreEqual(0, da.Lines.First(ls => ls.FirstLine == 5 && ls.Indent == 8).LinkedLines.Count());
+            Assert.AreEqual(2, da.Lines.First(ls => ls.FirstLine == 7).LinkedLines.Count());
+
             ((MockTextSnapshot)da.Snapshot).ContentType = new MockContentType("c/c++", null);
             da.ResetAndWait();
 
@@ -239,6 +268,11 @@ namespace UnitTests {
                 new LineSpan(7, 7, 4, LineSpanType.Normal)
             );
 
+            Assert.AreEqual(2, da.Lines.First(ls => ls.FirstLine == 3).LinkedLines.Count());
+            Assert.AreEqual(2, da.Lines.First(ls => ls.FirstLine == 5 && ls.Indent == 4).LinkedLines.Count());
+            Assert.AreEqual(0, da.Lines.First(ls => ls.FirstLine == 5 && ls.Indent == 8).LinkedLines.Count());
+            Assert.AreEqual(2, da.Lines.First(ls => ls.FirstLine == 7).LinkedLines.Count());
+
             ((MockTextSnapshot)da.Snapshot).ContentType = new MockContentType("not treating pragmas specially", null);
             da.ResetAndWait();
 
@@ -246,6 +280,8 @@ namespace UnitTests {
                 new LineSpan(3, 3, 4, LineSpanType.Normal),
                 new LineSpan(7, 7, 4, LineSpanType.Normal)
             );
+
+            Assert.AreEqual(0, da.Lines.Sum(ls => ls.LinkedLines.Count()));
         }
     }
 }
