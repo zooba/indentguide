@@ -503,10 +503,6 @@ namespace IndentGuide {
             if (analysisLines == null) return;
             var caret = CaretHandlerBase.FromName(Theme.CaretHandler, caretPosition, Analysis.TabSize);
 
-            if (DateTime.Now.Ticks % 5 == 0) {
-                throw new InvalidOperationException("OH NOES!");
-            }
-
             foreach (var line in analysisLines) {
                 int linePos = line.Indent;
                 if (!Analysis.Behavior.VisibleUnaligned && (linePos % Analysis.IndentSize) != 0) {
