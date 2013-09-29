@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,21 +29,58 @@ using System.Windows.Shapes;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
+using IOPath = System.IO.Path;
 
 namespace IndentGuide {
     /// <summary>
     /// Manages indent guides for a particular text view.
     /// </summary>
     public class IndentGuideView {
-        IAdornmentLayer Layer;
-        Canvas Canvas;
-        IWpfTextView View;
-        IDictionary<System.Drawing.Color, Brush> GuideBrushCache;
-        IndentTheme Theme;
-        bool GlobalVisible;
+        private readonly IAdornmentLayer Layer;
+        private readonly Canvas Canvas;
+        private readonly IWpfTextView View;
+        private readonly IDictionary<System.Drawing.Color, Brush> GuideBrushCache;
+        private readonly IDictionary<System.Drawing.Color, Effect> GlowEffectCache;
+        private IndentTheme Theme;
+        private bool GlobalVisible;
 
-        DocumentAnalyzer Analysis;
+        private DocumentAnalyzer Analysis;
         private readonly Dictionary<LineSpan, Line> Lines = new Dictionary<LineSpan, Line>();
+
+
+        private static bool LogMessageBoxShown = false;
+        private static void Log(Exception ex) {
+#if DEBUG
+            if (Debugger.IsAttached) {
+                Debugger.Break();
+            } else {
+                Debugger.Launch();
+            }
+#endif
+            try {
+                var detail = string.Format(
+                    "Exception raised at {0}:{1}{2}{1}{1}",
+                    DateTime.UtcNow,
+                    Environment.NewLine,
+                    ex.ToString()
+                );
+                var path = IOPath.Combine(IOPath.GetTempPath(), "IndentGuide.log");
+                File.AppendAllText(path, detail);
+
+                if (!LogMessageBoxShown) {
+                    LogMessageBoxShown = true;
+                    var message = string.Format(
+                        "An internal error occurred in Indent Guides.{0}{0}" +
+                        "Details have been written to the file:{0}    {1}{0}{0}" +
+                        "Please report this error at http://indentguide.codeplex.com/.",
+                        Environment.NewLine,
+                        path
+                    );
+                    MessageBox.Show(message, "Indent Guides for Visual Studio");
+                }
+            } catch {
+            }
+        }
 
         /// <summary>
         /// Instantiates a new indent guide manager for a view.
@@ -51,6 +89,7 @@ namespace IndentGuide {
         /// <param name="service">The Indent Guide service.</param>
         public IndentGuideView(IWpfTextView view, IIndentGuide service) {
             GuideBrushCache = new Dictionary<System.Drawing.Color, Brush>();
+            GlowEffectCache = new Dictionary<System.Drawing.Color, Effect>();
 
             View = view;
             View.Caret.PositionChanged += Caret_PositionChanged;
@@ -71,9 +110,12 @@ namespace IndentGuide {
             }
             service.ThemesChanged += new EventHandler(Service_ThemesChanged);
 
-            Analysis = new DocumentAnalyzer(view.TextSnapshot, Theme.Behavior,
+            Analysis = new DocumentAnalyzer(
+                view.TextSnapshot,
+                Theme.Behavior,
                 View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
-                View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
+                View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId)
+            );
 
             GlobalVisible = service.Visible;
             service.VisibleChanged += new EventHandler(Service_VisibleChanged);
@@ -82,7 +124,7 @@ namespace IndentGuide {
         /// <summary>
         /// Raised when the canvas is removed.
         /// </summary>
-        private void CanvasRemoved(object tag, System.Windows.UIElement element) {
+        private void CanvasRemoved(object tag, UIElement element) {
             Layer.AddAdornment(AdornmentPositioningBehavior.OwnerControlled, null, null, Canvas, CanvasRemoved);
         }
 
@@ -99,10 +141,14 @@ namespace IndentGuide {
         /// </summary>
         void View_OptionChanged(object sender, EditorOptionChangedEventArgs e) {
             if (e.OptionId == DefaultOptions.IndentSizeOptionId.Name) {
-                Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme.Behavior,
+                Analysis = new DocumentAnalyzer(
+                    Analysis.Snapshot,
+                    Theme.Behavior,
                     View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
-                    View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
+                    View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId)
+                );
                 GuideBrushCache.Clear();
+                GlowEffectCache.Clear();
                 //Lines.Clear();
 
                 UpdateAdornments(Analysis.Reset());
@@ -114,14 +160,18 @@ namespace IndentGuide {
         /// </summary>
         void Service_ThemesChanged(object sender, EventArgs e) {
             var service = (IIndentGuide)sender;
-            if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme))
+            if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme)) {
                 Theme = service.DefaultTheme;
+            }
 
-            Analysis = new DocumentAnalyzer(Analysis.Snapshot, Theme.Behavior,
+            Analysis = new DocumentAnalyzer(
+                Analysis.Snapshot,
+                Theme.Behavior,
                 View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
-                View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId));
+                View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId)
+            );
             GuideBrushCache.Clear();
-            //Lines.Clear();
+            GlowEffectCache.Clear();
 
             UpdateAdornments(Analysis.Reset());
         }
@@ -163,6 +213,14 @@ namespace IndentGuide {
         /// Recreates all adornments.
         /// </summary>
         void UpdateAdornments() {
+            try {
+                UpdateAdornmentsWithoutExceptionHandling();
+            } catch (Exception ex) {
+                Log(ex);
+            }
+        }
+
+        void UpdateAdornmentsWithoutExceptionHandling() {
             if (View == null || Layer == null) return;
             try {
                 if (View.TextViewLines == null) return;
@@ -252,8 +310,10 @@ namespace IndentGuide {
                         continue;
                     }
 
-                    while (!viewModel.IsPointInVisualBuffer(firstLine.Start, PositionAffinity.Successor) &&
-                        ++firstLineNumber < lastLineNumber) {
+                    while (
+                        !viewModel.IsPointInVisualBuffer(firstLine.Start, PositionAffinity.Successor) &&
+                        ++firstLineNumber < lastLineNumber
+                    ) {
                         try {
                             firstLine = snapshot.GetLineFromLineNumber(firstLineNumber);
                         } catch (Exception ex) {
@@ -263,8 +323,10 @@ namespace IndentGuide {
                         }
                     }
 
-                    while (!viewModel.IsPointInVisualBuffer(lastLine.Start, PositionAffinity.Predecessor) &&
-                        --lastLineNumber > firstLineNumber) {
+                    while (
+                        !viewModel.IsPointInVisualBuffer(lastLine.Start, PositionAffinity.Predecessor) &&
+                        --lastLineNumber > firstLineNumber
+                    ) {
                         try {
                             lastLine = snapshot.GetLineFromLineNumber(lastLineNumber);
                         } catch (Exception ex) {
@@ -290,7 +352,8 @@ namespace IndentGuide {
                     string extentText;
                     if (firstView == lastView &&
                         !string.IsNullOrWhiteSpace((extentText = firstView.Extent.GetText())) &&
-                        line.Indent > extentText.LeadingWhitespace(Analysis.TabSize)) {
+                        line.Indent > extentText.LeadingWhitespace(Analysis.TabSize)
+                    ) {
                         continue;
                     }
 
@@ -405,13 +468,20 @@ namespace IndentGuide {
             }
 
             if (lineStyle.HasFlag(LineStyle.Glow)) {
-                adornment.Effect = new DropShadowEffect {
-                    Color = (highlight ? format.HighlightColor : format.LineColor).ToSWMC(),
-                    BlurRadius = LineStyle.Thick.GetStrokeThickness(),
-                    Opacity = 1.0,
-                    ShadowDepth = 0.0,
-                    RenderingBias = RenderingBias.Performance
-                };
+                Effect effect;
+                var glowColor = highlight ? format.HighlightColor : format.LineColor;
+                if (!GlowEffectCache.TryGetValue(glowColor, out effect)) {
+                    effect = new DropShadowEffect {
+                        Color = glowColor.ToSWMC(),
+                        BlurRadius = LineStyle.Thick.GetStrokeThickness(),
+                        Opacity = 1.0,
+                        ShadowDepth = 0.0,
+                        RenderingBias = RenderingBias.Performance
+                    };
+                    if (effect.CanFreeze) effect.Freeze();
+                    GlowEffectCache[glowColor] = effect;
+                }
+                adornment.Effect = effect;
             } else {
                 adornment.Effect = null;
             }
@@ -421,9 +491,21 @@ namespace IndentGuide {
         /// Raised when the caret position changes.
         /// </summary>
         void Caret_PositionChanged(object sender, CaretPositionChangedEventArgs e) {
+            try {
+                UpdateCaret(e.NewPosition.VirtualBufferPosition);
+            } catch (Exception ex) {
+                Log(ex);
+            }
+        }
+
+        void UpdateCaret(VirtualSnapshotPoint caretPosition) {
             var analysisLines = Analysis.Lines;
             if (analysisLines == null) return;
-            var caret = CaretHandlerBase.FromName(Theme.CaretHandler, e.NewPosition.VirtualBufferPosition, Analysis.TabSize);
+            var caret = CaretHandlerBase.FromName(Theme.CaretHandler, caretPosition, Analysis.TabSize);
+
+            if (DateTime.Now.Ticks % 5 == 0) {
+                throw new InvalidOperationException("OH NOES!");
+            }
 
             foreach (var line in analysisLines) {
                 int linePos = line.Indent;
