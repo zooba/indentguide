@@ -25,8 +25,10 @@ namespace IndentGuide {
     public partial class PageWidthOptionsControl : UserControl, IThemeAwareDialog {
         public PageWidthOptionsControl() {
             InitializeComponent();
-            btnAddLocation.Text = "\uE109";
-            btnRemoveLocation.Text = "\uE10A";
+            if (Environment.OSVersion.Version >= new Version(6, 2)) {
+                btnAddLocation.Text = "\uE109";
+                btnRemoveLocation.Text = "\uE10A";
+            }
         }
 
         #region IThemeAwareDialog Members
