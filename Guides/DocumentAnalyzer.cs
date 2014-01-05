@@ -234,7 +234,7 @@ namespace IndentGuide {
 
                     if (Behavior.VisibleAligned) {
                         var guides = lineInfo[lineNumber].GuidesAt;
-                        for (int i = IndentSize; i < spaces; i += IndentSize) {
+                        for (int i = 0; i < spaces; i += IndentSize) {
                             guides.Add(i);
                         }
                     }

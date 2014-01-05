@@ -54,26 +54,6 @@ namespace IndentGuide {
             get { return Wrapper; }
         }
 
-        public override void LoadSettingsFromStorage() {
-            //ProfileManager.LoadSettingsFromStorage();
-        }
-
-        public override void LoadSettingsFromXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsReader reader) {
-            //ProfileManager.LoadSettingsFromXml(reader);
-        }
-
-        public override void SaveSettingsToStorage() {
-            //ProfileManager.SaveSettingsToStorage();
-        }
-
-        public override void SaveSettingsToXml(Microsoft.VisualStudio.Shell.Interop.IVsSettingsWriter writer) {
-            //ProfileManager.SaveSettingsToXml(writer);
-        }
-
-        public override void ResetSettings() {
-            //ProfileManager.ResetSettings();
-        }
-
         protected override void OnActivate(CancelEventArgs e) {
             if (IsActivated == false) {
                 ProfileManager.PreserveSettings();

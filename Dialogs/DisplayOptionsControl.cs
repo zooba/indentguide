@@ -42,7 +42,7 @@ namespace IndentGuide {
                 Index = LineFormat.UnalignedFormatIndex,
                 Text = ResourceLoader.LoadString("UnalignedFormatName")
             });
-            for (int key = 1; key <= 30; ++key) {
+            for (int key = 0; key <= 30; ++key) {
                 var name = string.Format(CultureInfo.CurrentCulture, "#{0}", key);
                 lstOverrides.Items.Add(new OverrideInfo {
                     Index = key,

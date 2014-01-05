@@ -149,7 +149,6 @@ namespace IndentGuide {
                 );
                 GuideBrushCache.Clear();
                 GlowEffectCache.Clear();
-                //Lines.Clear();
 
                 UpdateAdornments(Analysis.Reset());
             }

@@ -170,11 +170,19 @@ namespace IndentGuide {
         public bool Visible { get; set; }
 
         bool ShouldSerializeVisible() {
-            return Visible != BaseFormat.Visible;
+            if (FormatIndex == 0) {
+                return Visible != false;
+            } else {
+                return Visible != BaseFormat.Visible;
+            }
         }
 
         void ResetVisible() {
-            Visible = BaseFormat.Visible;
+            if (FormatIndex == 0) {
+                Visible = false;
+            } else {
+                Visible = BaseFormat.Visible;
+            }
         }
 
         class LineStyleConverter : EnumResourceTypeConverter<LineStyle> { }
@@ -507,6 +515,12 @@ namespace IndentGuide {
             DefaultLineFormat = new LineFormat(this);
             Behavior = new LineBehavior();
             CaretHandler = DefaultCaretHandler;
+
+            // Ensure format for indent 0 is hidden by default
+            var format = new LineFormat(this);
+            format.FormatIndex = 0;
+            format.Reset();
+            LineFormats[0] = format;
         }
 
         public IndentTheme Clone() {
