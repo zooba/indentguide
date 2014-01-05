@@ -258,11 +258,14 @@ namespace IndentGuide {
                 return;
             }
 
-            var unusedLines = new HashSet<LineSpan>(Lines.Keys);
+            var firstVisibleLine = View.TextViewLines.FirstOrDefault(line => line.IsFirstTextViewLineForSnapshotLine);
+            if (firstVisibleLine == null) return;
 
-            double spaceWidth = View.TextViewLines.Select(line => line.VirtualSpaceWidth).FirstOrDefault();
+            double spaceWidth = firstVisibleLine.VirtualSpaceWidth;
             if (spaceWidth <= 0.0) return;
-            double horizontalOffset = View.TextViewLines.FirstVisibleLine.TextLeft;
+            double horizontalOffset = firstVisibleLine.TextLeft;
+
+            var unusedLines = new HashSet<LineSpan>(Lines.Keys);
 
             var caret = CaretHandlerBase.FromName(Theme.CaretHandler, View.Caret.Position.VirtualBufferPosition, Analysis.TabSize);
 
