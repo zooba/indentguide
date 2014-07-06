@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using IndentGuide.Utils;
 using Microsoft.VisualStudio.Text;
 
 namespace IndentGuide {
@@ -61,6 +62,9 @@ namespace IndentGuide {
         }
 
         private static IEnumerable<LineSpan> LinkedLinesInternal(LineSpan line) {
+            object perfCookie = null;
+            PerformanceLogger.Start(ref perfCookie);
+
             var result = new HashSet<LineSpan>();
             var queue = new Queue<LineSpan>();
             queue.Enqueue(line);
@@ -74,6 +78,9 @@ namespace IndentGuide {
                     }
                 }
             }
+
+            PerformanceLogger.End(perfCookie);
+
             return result;
         }
 
@@ -146,14 +153,24 @@ namespace IndentGuide {
             TabSize = tabSize;
         }
 
-        private class LineInfo {
+        private struct LineInfo {
             public int Number;
-            public bool HasText = false;
-            public int TextAt = 0;
-            public readonly HashSet<int> GuidesAt = new HashSet<int>();
+            public bool HasText;
+            public int TextAt;
+            public HashSet<int> GuidesAt;
+
+            public bool AnyGuides {
+                get { return GuidesAt != null && GuidesAt.Count > 0; }
+            }
+
+            public bool AnyGuidesAfter(int indent) {
+                return GuidesAt != null && GuidesAt.Any(i => i > indent);
+            }
 
             public override string ToString() {
-                var gas = string.Join(", ", GuidesAt.OrderBy(k => k).Select(k => k.ToString()));
+                var gas = GuidesAt == null ?
+                    "" :
+                    string.Join(", ", GuidesAt.OrderBy(k => k).Select(k => k.ToString()));
                 if (HasText) {
                     return string.Format("{0}:{1}", TextAt, gas);
                 } else if (TextAt == int.MaxValue) {
@@ -177,9 +194,11 @@ namespace IndentGuide {
                         Lines = task.Result;
                         Snapshot = snapshot;
                     }
-                }, cts.Token,
-                TaskContinuationOptions.OnlyOnRanToCompletion,
-                context);
+                }, 
+                    cts.Token,
+                    TaskContinuationOptions.OnlyOnRanToCompletion,
+                    context
+                );
                 worker.Start();
                 return continuation;
             } catch (Exception ex) {
@@ -205,7 +224,11 @@ namespace IndentGuide {
             // Maps every line number to the amount of leading whitespace on that line.
             var lineInfo = new List<LineInfo>(snapshot.LineCount + 2);
 
-            lineInfo.Add(new LineInfo { Number = 0, TextAt = 0 });
+            lineInfo.Add(new LineInfo());
+
+            object perfCookieTotal = null, perfCookieLines = null;
+            PerformanceLogger.Start(ref perfCookieTotal);
+            PerformanceLogger.Start(ref perfCookieLines, "_Lines");
 
             foreach (var line in snapshot.Lines) {
                 int lineNumber = line.LineNumber + 1;
@@ -218,22 +241,26 @@ namespace IndentGuide {
                     continue;
                 }
 
+                var curLine = lineInfo[lineNumber];
+
                 var normalizedLength = text.ActualLength(TabSize);
                 if (normalizedLength > LongestLine) {
                     LongestLine = normalizedLength;
                 }
 
                 int spaces = text.LeadingWhitespace(TabSize);
-                lineInfo[lineNumber].HasText = true;
-                lineInfo[lineNumber].TextAt = spaces;
+                curLine.HasText = true;
+                curLine.TextAt = spaces;
 
                 if (spaces > 0) {
                     if (Behavior.VisibleUnaligned || (spaces % IndentSize) == 0) {
-                        lineInfo[lineNumber].GuidesAt.Add(spaces);
+                        curLine.GuidesAt = curLine.GuidesAt ?? new HashSet<int>();
+                        curLine.GuidesAt.Add(spaces);
                     }
 
                     if (Behavior.VisibleAligned) {
-                        var guides = lineInfo[lineNumber].GuidesAt;
+                        curLine.GuidesAt = curLine.GuidesAt ?? new HashSet<int>();
+                        var guides = curLine.GuidesAt;
                         for (int i = 0; i < spaces; i += IndentSize) {
                             guides.Add(i);
                         }
@@ -243,16 +270,23 @@ namespace IndentGuide {
                 if (isCSharp || isCPlusPlus) {
                     // Left-aligned pragmas don't reduce the indent to zero.
                     if (spaces == 0 && text.StartsWith("#")) {
-                        lineInfo[lineNumber].HasText = false;
-                        lineInfo[lineNumber].TextAt = int.MaxValue;
-                        lineInfo[lineNumber].GuidesAt.Clear();
+                        curLine.HasText = false;
+                        curLine.TextAt = int.MaxValue;
+                        curLine.GuidesAt = null;
                     }
                 }
+
+                lineInfo[lineNumber] = curLine;
             }
 
             lineInfo.Add(new LineInfo { Number = snapshot.LineCount + 1, TextAt = 0 });
 
+            PerformanceLogger.End(perfCookieLines);
+
             if (Behavior.VisibleEmpty) {
+                object perfCookieVisibleEmpty = null;
+                PerformanceLogger.Start(ref perfCookieVisibleEmpty, "_VisibleEmpty");
+
                 LineInfo preceding, following;
 
                 preceding = following = lineInfo.First();
@@ -264,13 +298,26 @@ namespace IndentGuide {
                     }
                     
                     if (curLine.HasText || curLine.TextAt == 0) {
-                        var newGuides = preceding.GuidesAt.Union(following.GuidesAt);
-                        if (curLine.HasText) {
-                            newGuides = newGuides.Where(i => i <= curLine.TextAt);
-                        } else if (Behavior.ExtendInwardsOnly) {
-                            newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
+                        IEnumerable<int> newGuides;
+                        if (preceding.AnyGuides && following.AnyGuides) {
+                            newGuides = preceding.GuidesAt.Union(following.GuidesAt);
+                        } else {
+                            newGuides = preceding.GuidesAt ?? following.GuidesAt;
                         }
-                        curLine.GuidesAt.UnionWith(newGuides);
+
+                        if (newGuides != null) {
+                            if (curLine.HasText) {
+                                newGuides = newGuides.Where(i => i <= curLine.TextAt);
+                            } else if (Behavior.ExtendInwardsOnly) {
+                                newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
+                            }
+                            if (curLine.AnyGuides) {
+                                curLine.GuidesAt.UnionWith(newGuides);
+                            } else {
+                                curLine.GuidesAt = new HashSet<int>(newGuides);
+                                lineInfo[line] = curLine;
+                            }
+                        }
                     }
 
                     if (curLine.HasText) {
@@ -287,20 +334,38 @@ namespace IndentGuide {
                     }
 
                     if (curLine.HasText || curLine.TextAt == 0) {
-                        IEnumerable<int> newGuides = preceding.GuidesAt.Union(following.GuidesAt);
-                        if (curLine.HasText) {
-                            newGuides = newGuides.Where(i => i <= curLine.TextAt);
-                        } else if (Behavior.ExtendInwardsOnly) {
-                            newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
+                        IEnumerable<int> newGuides;
+                        if (preceding.AnyGuides && following.AnyGuides) {
+                            newGuides = preceding.GuidesAt.Union(following.GuidesAt);
+                        } else {
+                            newGuides = preceding.GuidesAt ?? following.GuidesAt;
                         }
-                        curLine.GuidesAt.UnionWith(newGuides);
+
+                        if (newGuides != null) {
+                            if (curLine.HasText) {
+                                newGuides = newGuides.Where(i => i <= curLine.TextAt);
+                            } else if (Behavior.ExtendInwardsOnly) {
+                                newGuides = newGuides.Where(i => i <= preceding.TextAt && i <= following.TextAt);
+                            }
+                            if (curLine.AnyGuides) {
+                                curLine.GuidesAt.UnionWith(newGuides);
+                            } else {
+                                curLine.GuidesAt = new HashSet<int>(newGuides);
+                                lineInfo[line] = curLine;
+                            }
+                        }
                     }
 
                     if (curLine.HasText) {
                         preceding = curLine;
                     }
                 }
+
+                PerformanceLogger.End(perfCookieVisibleEmpty);
             }
+
+            object perfCookieLineSpans = null;
+            PerformanceLogger.Start(ref perfCookieLineSpans, "_LineSpans");
 
             var result = new List<LineSpan>();
             LineSpan linkToLine;
@@ -308,7 +373,7 @@ namespace IndentGuide {
 
             for (int lineNumber = 1; lineNumber < lineInfo.Count - 1; ) {
                 var curLine = lineInfo[lineNumber];
-                if (!curLine.GuidesAt.Any()) {
+                if (!curLine.AnyGuides) {
                     lineNumber += 1;
                     continue;
                 }
@@ -322,7 +387,7 @@ namespace IndentGuide {
                     linkToLine = null;
                 }
 
-                if (!curLine.GuidesAt.Any()) {
+                if (!curLine.AnyGuides) {
                     if (!Behavior.VisibleEmptyAtEnd && !curLine.HasText ||
                         !Behavior.VisibleAtTextEnd && curLine.HasText && curLine.TextAt == indent) {
                         continue;
@@ -330,14 +395,17 @@ namespace IndentGuide {
                 }
 
                 int lastLineNumber = lineNumber + 1;
-                while (lastLineNumber < lineInfo.Count && lineInfo[lastLineNumber].GuidesAt.Remove(indent)) {
+                while (lastLineNumber < lineInfo.Count &&
+                    lineInfo[lastLineNumber].AnyGuides &&
+                    lineInfo[lastLineNumber].GuidesAt.Remove(indent)
+                ) {
                     if (lineInfo[lastLineNumber].HasText) {
                         if (!Behavior.VisibleAtTextEnd && lineInfo[lastLineNumber].TextAt == indent) {
                             break;
                         }
                     } else if (lineInfo[lastLineNumber].TextAt == int.MaxValue) {
                         break;
-                    } else if (!Behavior.VisibleEmptyAtEnd && !lineInfo[lastLineNumber].GuidesAt.Any(i => i > indent)) {
+                    } else if (!Behavior.VisibleEmptyAtEnd && !lineInfo[lastLineNumber].AnyGuidesAfter(indent)) {
                         break;
                     }
                     lastLineNumber += 1;
@@ -361,6 +429,9 @@ namespace IndentGuide {
                     linkTo[indent] = ls;
                 }
             }
+
+            PerformanceLogger.End(perfCookieLineSpans);
+            PerformanceLogger.End(perfCookieTotal);
 
             if (snapshot != snapshot.TextBuffer.CurrentSnapshot) {
                 return null;

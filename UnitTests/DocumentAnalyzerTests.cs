@@ -61,6 +61,7 @@ namespace UnitTests {
             var da = MakeAnalyzer(text, VisibleAligned: true, VisibleEmpty: true, ExtendInwardsOnly: true, VisibleEmptyAtEnd: true, tabSize: tabSize);
 
             da.AssertLinesIncludeExactly(
+                new LineSpan(0, 10, 0, LineSpanType.Normal),
                 new LineSpan(2, 9, 4, LineSpanType.Normal),
                 new LineSpan(3, 6, 8, LineSpanType.Normal),
                 new LineSpan(4, 4, 12, LineSpanType.Normal),
@@ -71,6 +72,7 @@ namespace UnitTests {
             da.ResetAndWait();
 
             da.AssertLinesIncludeExactly(
+                new LineSpan(0, 10, 0, LineSpanType.Normal),
                 new LineSpan(0, 0, 4, LineSpanType.Normal),
                 new LineSpan(2, 9, 4, LineSpanType.Normal),
                 new LineSpan(3, 6, 8, LineSpanType.Normal),
@@ -83,12 +85,16 @@ namespace UnitTests {
             da.ResetAndWait();
 
             da.AssertLinesIncludeExactly(
+                new LineSpan(1, 3, 0, LineSpanType.Normal),
                 new LineSpan(2, 3, 4, LineSpanType.Normal),
-                new LineSpan(5, 5, 4, LineSpanType.Normal),
-                new LineSpan(7, 7, 4, LineSpanType.Normal),
-                new LineSpan(9, 9, 4, LineSpanType.Normal),
                 new LineSpan(3, 3, 8, LineSpanType.Normal),
-                new LineSpan(5, 5, 8, LineSpanType.Normal)
+                new LineSpan(5, 5, 0, LineSpanType.Normal),
+                new LineSpan(5, 5, 4, LineSpanType.Normal),
+                new LineSpan(5, 5, 8, LineSpanType.Normal),
+                new LineSpan(7, 7, 0, LineSpanType.Normal),
+                new LineSpan(7, 7, 4, LineSpanType.Normal),
+                new LineSpan(9, 10, 0, LineSpanType.Normal),
+                new LineSpan(9, 9, 4, LineSpanType.Normal)
             );
         }
 
@@ -157,6 +163,7 @@ namespace UnitTests {
 
             var da = MakeAnalyzer(text, indentSize: 3, tabSize: 4);
             da.AssertLinesIncludeExactly(
+                new LineSpan(1, 10, 0, LineSpanType.Normal),
                 new LineSpan(1, 9, 3, LineSpanType.Normal),
                 new LineSpan(3, 7, 6, LineSpanType.Normal),
                 new LineSpan(5, 5, 9, LineSpanType.Normal),
@@ -166,12 +173,14 @@ namespace UnitTests {
 
             da = MakeAnalyzer(text, indentSize: 3, tabSize: 2);
             da.AssertLinesIncludeExactly(
+                new LineSpan(1, 10, 0, LineSpanType.Normal),
                 new LineSpan(3, 7, 3, LineSpanType.Normal),
                 new LineSpan(5, 5, 6, LineSpanType.Normal)
             );
             
             da = MakeAnalyzer(text, indentSize: 6, tabSize: 4);
             da.AssertLinesIncludeExactly(
+                new LineSpan(1, 10, 0, LineSpanType.Normal),
                 new LineSpan(3, 7, 6, LineSpanType.Normal),
                 new LineSpan(5, 5, 12, LineSpanType.Normal)
             );
@@ -218,7 +227,10 @@ namespace UnitTests {
             da.UpdateAndWait();
             Assert.AreNotSame(prevSnapshot, da.Snapshot);
             Assert.AreNotEqual(prevSnapshot.Version.VersionNumber, da.Snapshot.Version.VersionNumber);
-            da.AssertLinesIncludeExactly(new LineSpan(2, 2, 4, LineSpanType.Normal));
+            da.AssertLinesIncludeExactly(
+                new LineSpan(1, 3, 0, LineSpanType.Normal),
+                new LineSpan(2, 2, 4, LineSpanType.Normal)
+            );
 
             prevSnapshot = da.Snapshot;
             {
@@ -230,7 +242,9 @@ namespace UnitTests {
             da.UpdateAndWait();
             Assert.AreNotSame(prevSnapshot, da.Snapshot);
             Assert.AreNotEqual(prevSnapshot.Version.VersionNumber, da.Snapshot.Version.VersionNumber);
-            da.AssertLinesIncludeExactly();
+            da.AssertLinesIncludeExactly(
+                new LineSpan(1, 2, 0, LineSpanType.Normal)
+            );
         }
 
         [TestMethod]
@@ -247,9 +261,13 @@ namespace UnitTests {
 9", contentType: "csharp");
 
             da.AssertLinesIncludeExactly(
+                new LineSpan(0, 0, 0, LineSpanType.Normal),
+                new LineSpan(2, 3, 0, LineSpanType.Normal),
                 new LineSpan(3, 3, 4, LineSpanType.Normal),
+                new LineSpan(5, 5, 0, LineSpanType.Normal),
                 new LineSpan(5, 5, 4, LineSpanType.Normal),
                 new LineSpan(5, 5, 8, LineSpanType.Normal),
+                new LineSpan(7, 8, 0, LineSpanType.Normal),
                 new LineSpan(7, 7, 4, LineSpanType.Normal)
             );
 
@@ -262,9 +280,13 @@ namespace UnitTests {
             da.ResetAndWait();
 
             da.AssertLinesIncludeExactly(
+                new LineSpan(0, 0, 0, LineSpanType.Normal),
+                new LineSpan(2, 3, 0, LineSpanType.Normal),
                 new LineSpan(3, 3, 4, LineSpanType.Normal),
+                new LineSpan(5, 5, 0, LineSpanType.Normal),
                 new LineSpan(5, 5, 4, LineSpanType.Normal),
                 new LineSpan(5, 5, 8, LineSpanType.Normal),
+                new LineSpan(7, 8, 0, LineSpanType.Normal),
                 new LineSpan(7, 7, 4, LineSpanType.Normal)
             );
 
@@ -277,7 +299,11 @@ namespace UnitTests {
             da.ResetAndWait();
 
             da.AssertLinesIncludeExactly(
+                new LineSpan(0, 0, 0, LineSpanType.Normal),
+                new LineSpan(2, 3, 0, LineSpanType.Normal),
                 new LineSpan(3, 3, 4, LineSpanType.Normal),
+                new LineSpan(5, 5, 0, LineSpanType.Normal),
+                new LineSpan(7, 8, 0, LineSpanType.Normal),
                 new LineSpan(7, 7, 4, LineSpanType.Normal)
             );
 

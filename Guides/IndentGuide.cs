@@ -26,6 +26,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
+using IndentGuide.Utils;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
@@ -269,6 +270,8 @@ namespace IndentGuide {
 
             var caret = CaretHandlerBase.FromName(Theme.CaretHandler, View.Caret.Position.VirtualBufferPosition, Analysis.TabSize);
 
+            object perfCookie = null;
+            PerformanceLogger.Start(ref perfCookie);
 #if DEBUG
             var initialCount = Lines.Count;
 #endif
@@ -373,6 +376,7 @@ namespace IndentGuide {
                 UpdateGuide(line, adornment, left, top, bottom);
             }
 
+            PerformanceLogger.End(perfCookie);
 #if DEBUG
             Debug.WriteLine("Added {0} guides", Lines.Count - initialCount);
             Debug.WriteLine("Removed {0} guides", unusedLines.Count);

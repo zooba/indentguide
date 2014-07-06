@@ -22,16 +22,24 @@ using Microsoft.VisualStudio.Text.Editor;
 namespace IndentGuide {
     internal static class ExtensionMethods {
         public static int LeadingWhitespace(this string source, int tabSize) {
-            return source.TakeWhile(c => c == ' ' || c == '\t').ActualLength(tabSize);
+            int count = 0;
+            for (int i = 0; i < source.Length; ++i) {
+                var c = source[i];
+                if (c == '\t') {
+                    count += tabSize - (count % tabSize);
+                } else if (c == ' ') {
+                    count += 1;
+                } else {
+                    break;
+                }
+            }
+            return count;
         }
 
         public static int ActualLength(this string source, int tabSize) {
-            return source.AsEnumerable().ActualLength(tabSize);
-        }
-
-        private static int ActualLength(this IEnumerable<char> source, int tabSize) {
             int count = 0;
-            foreach (var c in source) {
+            for (int i = 0; i < source.Length; ++i) {
+                var c = source[i];
                 if (c == '\t') {
                     count += tabSize - (count % tabSize);
                 } else {
