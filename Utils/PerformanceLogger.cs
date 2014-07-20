@@ -105,5 +105,13 @@ namespace IndentGuide.Utils {
                 }));
             }
         }
+
+        internal static void Mark(string message) {
+            lock (_lock) {
+                var evt = new Event(message);
+                evt.Stop();
+                _events.Add(evt);
+            }
+        }
     }
 }

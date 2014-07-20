@@ -125,6 +125,8 @@ namespace IndentGuide {
     }
 
     public class DocumentAnalyzer {
+        private CancellationTokenSource CurrentCancel;
+
         private List<LineSpan> _Lines;
         public List<LineSpan> Lines {
             get {
@@ -185,33 +187,40 @@ namespace IndentGuide {
             try {
                 var context = TaskScheduler.FromCurrentSynchronizationContext();
                 var cts = new CancellationTokenSource();
+                var token = cts.Token;
+                var cts2 = Interlocked.Exchange(ref CurrentCancel, cts);
+                if (cts2 != null) {
+                    cts2.Cancel();
+                    cts2.Dispose();
+                }
                 var snapshot = Snapshot.TextBuffer.CurrentSnapshot;
-                var worker = new Task<List<LineSpan>>(ResetImpl, snapshot, cts.Token);
+                var worker = Task.Factory.StartNew(() => ResetImpl(snapshot, token), token);
                 var continuation = worker.ContinueWith(task => {
-                    if (task.Result == null) {
-                        cts.Cancel();
-                    } else {
-                        Lines = task.Result;
-                        Snapshot = snapshot;
+                    Lines = task.Result;
+                    Snapshot = snapshot;
+                    var cts3 = Interlocked.Exchange(ref CurrentCancel, null);
+                    if (cts3 != null) {
+                        cts3.Dispose();
                     }
                 }, 
                     cts.Token,
                     TaskContinuationOptions.OnlyOnRanToCompletion,
                     context
                 );
-                worker.Start();
                 return continuation;
             } catch (Exception ex) {
                 Trace.TraceWarning("Asynchronous Reset() failed; running synchronously:\n{0}", ex);
                 var snapshot = Snapshot.TextBuffer.CurrentSnapshot;
-                Lines = ResetImpl(snapshot);
-                Snapshot = snapshot;
+                try {
+                    Lines = ResetImpl(snapshot, default(CancellationToken));
+                    Snapshot = snapshot;
+                } catch (OperationCanceledException) {
+                }
                 return null;
             }
         }
 
-        private List<LineSpan> ResetImpl(object snapshot_obj) {
-            var snapshot = snapshot_obj as ITextSnapshot;
+        private List<LineSpan> ResetImpl(ITextSnapshot snapshot, CancellationToken cancel) {
             bool isCSharp = false, isCPlusPlus = false;
             if (snapshot.ContentType != null) {
                 var contentType = snapshot.ContentType.TypeName;
@@ -220,6 +229,8 @@ namespace IndentGuide {
             }
 
             LongestLine = 0;
+
+            cancel.ThrowIfCancellationRequested();
 
             // Maps every line number to the amount of leading whitespace on that line.
             var lineInfo = new List<LineInfo>(snapshot.LineCount + 2);
@@ -231,6 +242,10 @@ namespace IndentGuide {
             PerformanceLogger.Start(ref perfCookieLines, "_Lines");
 
             foreach (var line in snapshot.Lines) {
+#if !PERFORMANCE
+                cancel.ThrowIfCancellationRequested();
+#endif
+
                 int lineNumber = line.LineNumber + 1;
                 while (lineInfo.Count <= lineNumber) {
                     lineInfo.Add(new LineInfo { Number = lineInfo.Count });
@@ -282,6 +297,15 @@ namespace IndentGuide {
             lineInfo.Add(new LineInfo { Number = snapshot.LineCount + 1, TextAt = 0 });
 
             PerformanceLogger.End(perfCookieLines);
+#if !PERFORMANCE
+            cancel.ThrowIfCancellationRequested();
+#else
+            if (cancel.IsCancellationRequested) {
+                PerformanceLogger.End(perfCookieTotal);
+                PerformanceLogger.Mark("Cancelled");
+                cancel.ThrowIfCancellationRequested();
+            }
+#endif
 
             if (Behavior.VisibleEmpty) {
                 object perfCookieVisibleEmpty = null;
@@ -291,6 +315,10 @@ namespace IndentGuide {
 
                 preceding = following = lineInfo.First();
                 for (int line = 1; line < lineInfo.Count - 1; ++line) {
+#if !PERFORMANCE
+                    cancel.ThrowIfCancellationRequested();
+#endif
+
                     var curLine = lineInfo[line];
                     if (line >= following.Number) {
                         var nextLineIndex = lineInfo.FindIndex(line + 1, (li => li.HasText));
@@ -327,6 +355,10 @@ namespace IndentGuide {
 
                 preceding = following = lineInfo.Last();
                 for (int line = lineInfo.Count - 2; line > 0; --line) {
+#if !PERFORMANCE
+                    cancel.ThrowIfCancellationRequested();
+#endif
+
                     var curLine = lineInfo[line];
                     if (line <= following.Number) {
                         var nextLineIndex = lineInfo.FindLastIndex(line - 1, (li => li.HasText));
@@ -364,6 +396,16 @@ namespace IndentGuide {
                 PerformanceLogger.End(perfCookieVisibleEmpty);
             }
 
+#if !PERFORMANCE
+            cancel.ThrowIfCancellationRequested();
+#else
+            if (cancel.IsCancellationRequested) {
+                PerformanceLogger.End(perfCookieTotal);
+                PerformanceLogger.Mark("Cancelled");
+                cancel.ThrowIfCancellationRequested();
+            }
+#endif
+
             object perfCookieLineSpans = null;
             PerformanceLogger.Start(ref perfCookieLineSpans, "_LineSpans");
 
@@ -372,6 +414,10 @@ namespace IndentGuide {
             var linkTo = new Dictionary<int, LineSpan>();
 
             for (int lineNumber = 1; lineNumber < lineInfo.Count - 1; ) {
+#if !PERFORMANCE
+                cancel.ThrowIfCancellationRequested();
+#endif
+
                 var curLine = lineInfo[lineNumber];
                 if (!curLine.AnyGuides) {
                     lineNumber += 1;
@@ -399,6 +445,10 @@ namespace IndentGuide {
                     lineInfo[lastLineNumber].AnyGuides &&
                     lineInfo[lastLineNumber].GuidesAt.Remove(indent)
                 ) {
+#if !PERFORMANCE
+                    cancel.ThrowIfCancellationRequested();
+#endif
+
                     if (lineInfo[lastLineNumber].HasText) {
                         if (!Behavior.VisibleAtTextEnd && lineInfo[lastLineNumber].TextAt == indent) {
                             break;
@@ -433,8 +483,15 @@ namespace IndentGuide {
             PerformanceLogger.End(perfCookieLineSpans);
             PerformanceLogger.End(perfCookieTotal);
 
+#if PERFORMANCE
+            if (cancel.IsCancellationRequested) {
+                PerformanceLogger.Mark("Cancelled");
+            }
+#endif
+            cancel.ThrowIfCancellationRequested();
+
             if (snapshot != snapshot.TextBuffer.CurrentSnapshot) {
-                return null;
+                throw new OperationCanceledException();
             }
             return result;
         }

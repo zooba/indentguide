@@ -1,10 +1,100 @@
 
 #ifdef PRAGMA
 
-    void a();
+            void a();
 
 #else
 
-    void b();
+            void b();
+
+#endif
+
+#ifdef PRAGMA
+
+            void a();
+
+#else
+
+            void b();
+
+#endif
+
+#ifdef PRAGMA
+
+            void a();
+
+#else
+
+            void b();
+
+#endif
+
+#ifdef PRAGMA
+
+            void a();
+
+#else
+
+            void b();
+
+#endif
+
+#ifdef PRAGMA
+
+            void a();
+
+#else
+
+            void b();
+
+#endif
+
+#ifdef PRAGMA
+
+            void a();
+
+#else
+
+            void b();
+
+#endif
+
+#ifdef PRAGMA
+
+            void a();
+
+#else
+
+            void b();
+
+#endif
+
+#ifdef PRAGMA
+
+            void a();
+
+#else
+
+            void b();
+
+#endif
+
+#ifdef PRAGMA
+
+            void a();
+
+#else
+
+            void b();
+
+#endif
+
+#ifdef PRAGMA
+
+            void a();
+
+#else
+
+            void b();
 
 #endif
