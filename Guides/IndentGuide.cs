@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -487,7 +488,19 @@ namespace IndentGuide {
                     if (effect.CanFreeze) effect.Freeze();
                     GlowEffectCache[glowColor] = effect;
                 }
-                adornment.Effect = effect;
+                try {
+                    adornment.Effect = effect;
+                } catch (COMException) {
+                    // No sensible way to deal with this exception, so we'll
+                    // fall back on changing the color.
+                    adornment.Effect = null;
+                    if (!GuideBrushCache.TryGetValue(glowColor, out brush)) {
+                        brush = new SolidColorBrush(glowColor.ToSWMC());
+                        if (brush.CanFreeze) brush.Freeze();
+                        GuideBrushCache[glowColor] = brush;
+                    }
+                    adornment.Stroke = brush;
+                }
             } else {
                 adornment.Effect = null;
             }
