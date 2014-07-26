@@ -414,11 +414,11 @@ namespace IndentGuide {
             if (bottom <= top) {
                 adornment.Visibility = Visibility.Collapsed;
             } else {
-                adornment.X1 = left;
+                adornment.X1 = left + 0.5;
 #if DEBUG
-                adornment.X2 = left + 1;
+                adornment.X2 = left + 1.5;
 #else
-                adornment.X2 = left;
+                adornment.X2 = left + 0.5;
 #endif
                 adornment.Y1 = top;
                 adornment.Y2 = bottom;
