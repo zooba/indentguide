@@ -44,6 +44,7 @@ namespace IndentGuide {
             tableContent.Controls.Add(control);
             tableContent.SetColumn(control, 0);
             tableContent.SetRow(control, 1);
+            control.Dock = DockStyle.Fill;
 
             var provider = ServiceProvider.GlobalProvider;
             Service = provider.GetService(typeof(SIndentGuide)) as IndentGuideService;
