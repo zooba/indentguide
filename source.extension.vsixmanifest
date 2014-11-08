@@ -3,7 +3,7 @@
     <Identifier Id="IndentGuide.SteveDower.0a67eb97-becd-451f-aa29-851d9fe5dd2b">
         <Name>Indent Guides</Name>
         <Author>Steve Dower</Author>
-        <Version>14.0.0.0</Version>
+        <Version>14.9.0.0</Version>
         <Description xml:space="preserve">Adds vertical lines at each indent level.</Description>
         <Locale>1033</Locale>
         <MoreInfoUrl>http://visualstudiogallery.msdn.microsoft.com/e792686d-542b-474a-8c55-630980e72c30</MoreInfoUrl>
@@ -11,12 +11,6 @@
         <Icon>Resources\embed_icon.png</Icon>
         <PreviewImage>Resources\embed_screen.png</PreviewImage>
         <SupportedProducts>
-            <VisualStudio Version="11.0">
-                <Edition>Ultimate</Edition>
-                <Edition>Premium</Edition>
-                <Edition>Pro</Edition>
-                <Edition>IntegratedShell</Edition>
-            </VisualStudio>
             <VisualStudio Version="12.0">
                 <Edition>Ultimate</Edition>
                 <Edition>Premium</Edition>
@@ -33,7 +27,7 @@
         <SupportedFrameworkRuntimeEdition MinVersion="4.5" />
     </Identifier>
     <References>
-        <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="11.0">
+        <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="12.0">
             <Name>Visual Studio MPF</Name>
         </Reference>
     </References>
