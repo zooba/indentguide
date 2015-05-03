@@ -22,7 +22,13 @@ using Microsoft.VisualStudio.Text.Editor;
 namespace IndentGuide {
     internal static class ExtensionMethods {
         public static int LeadingWhitespace(this string source, int tabSize) {
+            bool dummy;
+            return LeadingWhitespace(source, tabSize, out dummy);
+        }
+
+        public static int LeadingWhitespace(this string source, int tabSize, out bool allWhitespace) {
             int count = 0;
+            allWhitespace = true;
             for (int i = 0; i < source.Length; ++i) {
                 var c = source[i];
                 if (c == '\t') {
@@ -30,6 +36,7 @@ namespace IndentGuide {
                 } else if (c == ' ') {
                     count += 1;
                 } else {
+                    allWhitespace = false;
                     break;
                 }
             }

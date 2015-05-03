@@ -196,9 +196,10 @@ namespace IndentGuide {
                 if (Analysis == null || Analysis.Snapshot == null) {
                     return;
                 }
+                var snapshot = Analysis.Snapshot.TextBuffer.CurrentSnapshot;
 
                 using (var brush = new SolidBrush(foreColor)) {
-                    foreach (var line in Analysis.Snapshot.Lines) {
+                    foreach (var line in snapshot.Lines) {
                         var text = line.GetText();
                         if (VisibleWhitespace) {
                             text = text.Replace(' ', '·');
@@ -207,11 +208,14 @@ namespace IndentGuide {
                     }
                 }
 
-                if (Theme == null || Analysis.Lines == null) {
+
+                if (Theme == null) {
                     return;
                 }
 
-                foreach (var line in Analysis.Lines) {
+                var analysisLines = Analysis.GetLines(0, snapshot.LineCount);
+
+                foreach (var line in analysisLines) {
                     float top = line.FirstLine * Font.Height;
                     float bottom = (line.LastLine + 1) * Font.Height;
                     float left = (float)Math.Floor(line.Indent * spaceWidth + spaceLeft);

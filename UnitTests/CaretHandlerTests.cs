@@ -33,12 +33,14 @@ namespace UnitTests {
             string contentType = "plaintext"
         ) {
             var da = DocumentAnalyzerTests.MakeAnalyzer(text, contentType: contentType);
+            da.ResetAndWait();
+
             var caret = CaretHandlerBase.FromName(
                 handler.FullName,
                 new VirtualSnapshotPoint(da.Snapshot, caretPosition),
                 da.TabSize
             );
-            foreach (var line in da.Lines) {
+            foreach (var line in da.GetAllLines()) {
                 caret.AddLine(line, false);
             }
             return caret.GetModified().ToList();
@@ -60,7 +62,7 @@ namespace UnitTests {
 ";
 
             var line = GetModifiedLines(text, text.IndexOf("1"), typeof(CaretNearestLeft));
-            Assert.AreEqual(new LineSpan(0, 10, 0, LineSpanType.Normal), line.Single(), line.ToFormattedString());
+            Assert.AreEqual(new LineSpan(1, 10, 0, LineSpanType.Normal), line.Single(), line.ToFormattedString());
             line = GetModifiedLines(text, text.IndexOf("2"), typeof(CaretNearestLeft));
             Assert.AreEqual(new LineSpan(2, 9, 4, LineSpanType.Normal), line.Single(), line.ToFormattedString());
             line = GetModifiedLines(text, text.IndexOf("3"), typeof(CaretNearestLeft));
@@ -85,7 +87,7 @@ namespace UnitTests {
 ";
 
             var line = GetModifiedLines(text, text.IndexOf("1"), typeof(CaretNearestLeft2));
-            Assert.AreEqual(new LineSpan(0, 10, 0, LineSpanType.Normal), line.Single(), line.ToFormattedString());
+            Assert.AreEqual(new LineSpan(1, 10, 0, LineSpanType.Normal), line.Single(), line.ToFormattedString());
             line = GetModifiedLines(text, text.IndexOf("2"), typeof(CaretNearestLeft2));
             Assert.AreEqual(new LineSpan(2, 9, 4, LineSpanType.Normal), line.Single(), line.ToFormattedString());
             line = GetModifiedLines(text, text.IndexOf("3"), typeof(CaretNearestLeft2));
@@ -110,7 +112,7 @@ namespace UnitTests {
 ";
 
             var line = GetModifiedLines(text, 0, typeof(CaretNearestLeft), "csharp");
-            Assert.AreEqual(4, line.Count, line.ToFormattedString());
+            Assert.AreEqual(0, line.Count, line.ToFormattedString());
             line = GetModifiedLines(text, text.IndexOf("1"), typeof(CaretNearestLeft), "csharp");
             Assert.AreEqual(4, line.Count, line.ToFormattedString());
             line = GetModifiedLines(text, text.IndexOf("2"), typeof(CaretNearestLeft), "csharp");

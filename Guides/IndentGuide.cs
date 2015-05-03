@@ -100,7 +100,8 @@ namespace IndentGuide {
 
             Layer = view.GetAdornmentLayer("IndentGuide");
             Canvas = new Canvas();
-
+            Canvas.HorizontalAlignment = HorizontalAlignment.Stretch;
+            Canvas.VerticalAlignment = VerticalAlignment.Stretch;
             Layer.AddAdornment(AdornmentPositioningBehavior.OwnerControlled, null, null, Canvas, CanvasRemoved);
 
             if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme)) {
@@ -113,7 +114,7 @@ namespace IndentGuide {
             service.ThemesChanged += new EventHandler(Service_ThemesChanged);
 
             Analysis = new DocumentAnalyzer(
-                view.TextSnapshot,
+                View.TextSnapshot,
                 Theme.Behavior,
                 View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
                 View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId)
@@ -121,6 +122,23 @@ namespace IndentGuide {
 
             GlobalVisible = service.Visible;
             service.VisibleChanged += new EventHandler(Service_VisibleChanged);
+
+            var t = AnalyzeAndUpdateAdornments();
+        }
+
+        private async Task AnalyzeAndUpdateAdornments(TextViewLayoutChangedEventArgs changes = null) {
+            try {
+                if (changes != null) {
+                    await Analysis.Update(changes);
+                } else {
+                    await Analysis.Reset();
+                }
+            } catch (OperationCanceledException) {
+                return;
+            } catch (Exception ex) {
+                Log(ex);
+            }
+            UpdateAdornments();
         }
 
         /// <summary>
@@ -133,18 +151,18 @@ namespace IndentGuide {
         /// <summary>
         /// Raised when the global visibility property is updated.
         /// </summary>
-        void Service_VisibleChanged(object sender, EventArgs e) {
+        async void Service_VisibleChanged(object sender, EventArgs e) {
             GlobalVisible = ((IIndentGuide)sender).Visible;
-            UpdateAdornments(Analysis.Reset());
+            await AnalyzeAndUpdateAdornments();
         }
 
         /// <summary>
         /// Raised when a view option changes.
         /// </summary>
-        void View_OptionChanged(object sender, EditorOptionChangedEventArgs e) {
+        async void View_OptionChanged(object sender, EditorOptionChangedEventArgs e) {
             if (e.OptionId == DefaultOptions.IndentSizeOptionId.Name) {
                 Analysis = new DocumentAnalyzer(
-                    Analysis.Snapshot,
+                    View.TextSnapshot,
                     Theme.Behavior,
                     View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
                     View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId)
@@ -152,21 +170,21 @@ namespace IndentGuide {
                 GuideBrushCache.Clear();
                 GlowEffectCache.Clear();
 
-                UpdateAdornments(Analysis.Reset());
+                await AnalyzeAndUpdateAdornments();
             }
         }
 
         /// <summary>
         /// Raised when the theme is updated.
         /// </summary>
-        void Service_ThemesChanged(object sender, EventArgs e) {
+        async void Service_ThemesChanged(object sender, EventArgs e) {
             var service = (IIndentGuide)sender;
             if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme)) {
                 Theme = service.DefaultTheme;
             }
 
             Analysis = new DocumentAnalyzer(
-                Analysis.Snapshot,
+                View.TextSnapshot,
                 Theme.Behavior,
                 View.Options.GetOptionValue(DefaultOptions.IndentSizeOptionId),
                 View.Options.GetOptionValue(DefaultOptions.TabSizeOptionId)
@@ -174,35 +192,14 @@ namespace IndentGuide {
             GuideBrushCache.Clear();
             GlowEffectCache.Clear();
 
-            UpdateAdornments(Analysis.Reset());
+            await AnalyzeAndUpdateAdornments();
         }
 
         /// <summary>
         /// Raised when the display changes.
         /// </summary>
-        void View_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
-            UpdateAdornments(Analysis.Update());
-        }
-
-        /// <summary>
-        /// Schedules an update when the provided task completes.
-        /// </summary>
-        void UpdateAdornments(Task task) {
-            if (task != null) {
-#if DEBUG
-                Trace.TraceInformation("Update non-null");
-#endif
-                task.ContinueWith(UpdateAdornmentsCallback, TaskContinuationOptions.OnlyOnRanToCompletion);
-            } else {
-#if DEBUG
-                Trace.TraceInformation("Update null");
-#endif
-                UpdateAdornments();
-            }
-        }
-
-        void UpdateAdornmentsCallback(Task task) {
-            UpdateAdornments();
+        async void View_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
+            await AnalyzeAndUpdateAdornments(e);
         }
 
         private IEnumerable<LineSpan> GetPageWidthLines() {
@@ -214,14 +211,6 @@ namespace IndentGuide {
         /// Recreates all adornments.
         /// </summary>
         void UpdateAdornments() {
-            try {
-                UpdateAdornmentsWithoutExceptionHandling();
-            } catch (Exception ex) {
-                Log(ex);
-            }
-        }
-
-        void UpdateAdornmentsWithoutExceptionHandling() {
             if (View == null || Layer == null) return;
             try {
                 if (View.TextViewLines == null) return;
@@ -235,17 +224,25 @@ namespace IndentGuide {
                 return;
             }
 
-            var analysisLines = Analysis.Lines;
-            if (Analysis.Snapshot != View.TextSnapshot) {
-                var task = Analysis.Update();
-                if (task != null) {
-                    UpdateAdornments(task);
-                }
-                return;
-            } else if (analysisLines == null) {
-                UpdateAdornments(Analysis.Reset());
-                return;
+            try {
+                UpdateAdornmentsWorker();
+            } catch (Exception ex) {
+                Log(ex);
             }
+        }
+
+        void UpdateAdornmentsWorker() {
+            //var analysisLines = Analysis.Lines;
+            //if (Analysis.Snapshot != View.TextSnapshot) {
+            //    var task = Analysis.Update();
+            //    if (task != null) {
+            //        UpdateAdornments(task);
+            //    }
+            //    return;
+            //} else if (analysisLines == null) {
+            //    UpdateAdornments(Analysis.Reset());
+            //    return;
+            //}
 
             if (!GlobalVisible) {
                 Canvas.Visibility = Visibility.Collapsed;
@@ -262,7 +259,43 @@ namespace IndentGuide {
 
             var firstVisibleLine = View.TextViewLines.FirstOrDefault(line => line.IsFirstTextViewLineForSnapshotLine);
             if (firstVisibleLine == null) return;
+            var lastVisibleLine = View.TextViewLines.LastOrDefault(line => line.IsLastTextViewLineForSnapshotLine);
+            if (lastVisibleLine == null) return;
 
+            var analysisLines = Analysis.GetLines(
+                firstVisibleLine.Start.GetContainingLine().LineNumber,
+                lastVisibleLine.Start.GetContainingLine().LineNumber
+            );
+
+            if (!analysisLines.Any()) {
+                return;
+            }
+
+
+#if PERFORMANCE
+            object cookie = null;
+            try {
+                PerformanceLogger.Start(ref cookie);
+                UpdateAdornments_Performance(
+                    snapshot,
+                    viewModel,
+                    firstVisibleLine,
+                    analysisLines
+                );
+            } catch (OperationCanceledException) {
+                PerformanceLogger.Mark("Cancel");
+                throw;
+            } finally {
+                PerformanceLogger.End(cookie);
+            }
+        }
+        void UpdateAdornments_Performance(
+            ITextSnapshot snapshot,
+            ITextViewModel viewModel,
+            ITextViewLine firstVisibleLine,
+            IEnumerable<LineSpan> analysisLines
+        ) {
+#endif
             double spaceWidth = firstVisibleLine.VirtualSpaceWidth;
             if (spaceWidth <= 0.0) return;
             double horizontalOffset = firstVisibleLine.TextLeft;
@@ -356,8 +389,7 @@ namespace IndentGuide {
                     }
 
                     string extentText;
-                    if (firstView == lastView &&
-                        !string.IsNullOrWhiteSpace((extentText = firstView.Extent.GetText())) &&
+                    if (!string.IsNullOrWhiteSpace((extentText = firstView.Extent.GetText())) &&
                         line.Indent > extentText.LeadingWhitespace(Analysis.TabSize)
                     ) {
                         continue;
@@ -518,8 +550,12 @@ namespace IndentGuide {
         }
 
         void UpdateCaret(VirtualSnapshotPoint caretPosition) {
-            var analysisLines = Analysis.Lines;
-            if (analysisLines == null) return;
+            int lineNumber = caretPosition.Position.GetContainingLine().LineNumber;
+            var analysisLines = Analysis.GetLines(lineNumber, lineNumber);
+            if (!analysisLines.Any()) {
+                return;
+            }
+
             var caret = CaretHandlerBase.FromName(Theme.CaretHandler, caretPosition, Analysis.TabSize);
 
             foreach (var line in analysisLines) {

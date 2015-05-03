@@ -9,6 +9,12 @@ using System.Threading.Tasks;
 
 namespace IndentGuide.Utils {
     public static class PerformanceLogger {
+        public struct EventTime {
+            public string Name;
+            public long Start;
+            public long Duration;
+        }
+        
         private class Event {
             public string Name { get; private set; }
             public DateTime Start { get; private set; }
@@ -42,6 +48,8 @@ namespace IndentGuide.Utils {
         private static readonly object _lock = new object();
         private static List<Event> _events;
         private static DateTime _first = DateTime.MaxValue;
+
+        public static event EventHandler DumpEvents;
         
         [Conditional("PERFORMANCE")]
         private static void EnsureInitialised() {
@@ -66,6 +74,10 @@ namespace IndentGuide.Utils {
 
         [Conditional("PERFORMANCE")]
         public static void End(object cookie) {
+            if (cookie == null) {
+                return;
+            }
+
             lock (_lock) {
                 ((Event)cookie).Stop();
 
@@ -75,8 +87,13 @@ namespace IndentGuide.Utils {
                             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                             "IndentGuide.csv"
                         );
-                        using (var f = new StreamWriter(log, true, Encoding.UTF8)) {
-                            Dump(f, true);
+                        var evt = DumpEvents;
+                        if (evt == null) {
+                            using (var f = new StreamWriter(log, true, Encoding.UTF8)) {
+                                Dump(f, true);
+                            }
+                        } else {
+                            evt(null, EventArgs.Empty);
                         }
                     });
                 }
@@ -103,6 +120,25 @@ namespace IndentGuide.Utils {
                     e.Duration.TotalMilliseconds,
                     e.Start.ToString("o"),
                 }));
+            }
+        }
+
+        public static IEnumerable<EventTime> Take() {
+            List<Event> evts;
+            lock (_lock) {
+                evts = _events.Where(e => !e.IsRunning).ToList();
+                _events.RemoveAll(e => !e.IsRunning);
+            }
+
+            foreach (var e in evts) {
+                if (e.Start < _first) {
+                    _first = e.Start;
+                }
+                yield return new EventTime {
+                    Name = e.Name,
+                    Start = (int)(e.Start - _first).Ticks,
+                    Duration = (int)e.Duration.Ticks
+                };
             }
         }
 

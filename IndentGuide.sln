@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.22823.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndentGuide", "IndentGuide.csproj", "{0C1DCD55-FE11-4064-8A78-DD095B655C35}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{97F28F89-E5E0-4816-B3DC-252DDAC5750F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerformanceTests", "PerformanceTests\PerformanceTests.csproj", "{4984C8EA-B766-4650-B7B5-0471E542B63B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +28,12 @@ Global
 		{97F28F89-E5E0-4816-B3DC-252DDAC5750F}.Performance|Any CPU.Build.0 = Release|Any CPU
 		{97F28F89-E5E0-4816-B3DC-252DDAC5750F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97F28F89-E5E0-4816-B3DC-252DDAC5750F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4984C8EA-B766-4650-B7B5-0471E542B63B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4984C8EA-B766-4650-B7B5-0471E542B63B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4984C8EA-B766-4650-B7B5-0471E542B63B}.Performance|Any CPU.ActiveCfg = Release|Any CPU
+		{4984C8EA-B766-4650-B7B5-0471E542B63B}.Performance|Any CPU.Build.0 = Release|Any CPU
+		{4984C8EA-B766-4650-B7B5-0471E542B63B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4984C8EA-B766-4650-B7B5-0471E542B63B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
