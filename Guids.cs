@@ -20,6 +20,8 @@ namespace IndentGuide {
         public const string IIndentGuide2Guid = "5D1E63D1-BFB2-457C-AA9F-8141E1D87DEA";
         public const string SIndentGuideGuid = "46A005F6-0E33-47A8-9791-190D4121678E";
 
+        public const string ICaretHandlerInfoGuid = "C043B4FF-7028-490B-90D8-2C16C4C87D88";
+
         public const string IndentGuidePackageGuid = "959BEB25-6C38-440A-A37F-5D6717E9A41B";
 
         public const string IndentGuideCmdSetGuid = "1AE9DCDB-7723-4651-ABDC-3D4BBAA0731F";

@@ -18,134 +18,67 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.InteropServices;
+using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.Win32;
 
 namespace IndentGuide {
-    /// <summary>
-    /// Provides settings storage and update notifications.
-    /// </summary>
-    [Guid(Guids.IIndentGuideGuid)]
-    [ComVisible(true)]
-    public interface IIndentGuide {
-        /// <summary>
-        /// The version identifier for the service.
-        /// </summary>
-        int Version { get; }
-
-        /// <summary>
-        /// The package that owns this service.
-        /// </summary>
-        IndentGuidePackage Package { get; }
-
-        /// <summary>
-        /// Save the current settings to the registry.
-        /// </summary>
-        void Save();
-
-        /// <summary>
-        /// Save the current settings to <paramref name="writer"/>.
-        /// </summary>
-        void Save(IVsSettingsWriter writer);
-
-        /// <summary>
-        /// Load settings from the registry.
-        /// </summary>
-        void Load();
-
-        /// <summary>
-        /// Load settings from <paramref name="reader"/>.
-        /// </summary>
-        void Load(IVsSettingsReader reader);
-
-        /// <summary>
-        /// Reset the settings to their default.
-        /// </summary>
-        void Reset();
-
-        /// <summary>
-        /// Whether guides are shown or not.
-        /// </summary>
-        bool Visible { get; set; }
-        /// <summary>
-        /// The name of the caret handler to use.
-        /// </summary>
-        [Obsolete("CaretHandler has been moved to IndentTheme")]
-        string CaretHandler { get; set; }
-        /// <summary>
-        /// The loaded themes.
-        /// </summary>
-        IDictionary<string, IndentTheme> Themes { get; }
-        /// <summary>
-        /// The default theme.
-        /// </summary>
-        IndentTheme DefaultTheme { get; set; }
-
-        /// <summary>
-        /// Raised when the collection of themes changes.
-        /// </summary>
-        event EventHandler ThemesChanged;
-        /// <summary>
-        /// Raised when the global visibility changes.
-        /// </summary>
-        event EventHandler VisibleChanged;
-        /// <summary>
-        /// Raised when the caret handler changes.
-        /// </summary>
-        [Obsolete("CaretHandler has been moved to IndentTheme")]
-        event EventHandler CaretHandlerChanged;
-    }
-
-    class CaretHandlerInfo {
+    sealed class CaretHandlerInfo : ICaretHandlerInfo {
         public string DisplayName;
         public string Documentation;
         public string TypeName;
-    }
+        public int SortOrder;
 
-    /// <summary>
-    /// Provides a list of registered caret handlers.
-    /// </summary>
-    [Guid(Guids.IIndentGuide2Guid)]
-    [ComVisible(true)]
-    interface IIndentGuide2 : IIndentGuide {
-        IEnumerable<CaretHandlerInfo> CaretHandlerNames { get; }
+        string ICaretHandlerInfo.DisplayName { get { return DisplayName; } }
+        string ICaretHandlerInfo.Documentation { get { return Documentation; } }
+        string ICaretHandlerInfo.TypeName { get { return TypeName; } }
     }
-
-    /// <summary>
-    /// The service interface.
-    /// </summary>
-    [Guid(Guids.SIndentGuideGuid)]
-    public interface SIndentGuide { }
 
     /// <summary>
     /// Implementation of the service supporting Indent Guides.
     /// </summary>
-    class IndentGuideService : SIndentGuide, IIndentGuide2 {
-        public IndentGuideService(IndentGuidePackage package) {
-            _Themes = new Dictionary<string, IndentTheme>();
-            _Package = package;
-            Profile = new ProfileManager();
+    class IndentGuideService : SIndentGuide, IIndentGuide2, IDisposable {
+        private bool IsDisposed;
+        private readonly IndentGuidePackage _Package;
+        private bool _Visible;
+        private readonly Stack<TemporarySettingStore> Preserved = new Stack<TemporarySettingStore>();
+        
+        private const string SUBKEY_NAME = "IndentGuide";
+        private const string CARETHANDLERS_SUBKEY_NAME = "Caret Handlers";
 
-            try {
-                Profile.Upgrade(this);
-            } catch (Exception ex) {
-                Debug.Assert(false, "Error upgrading previous settings", ex.ToString());
-                Trace.TraceError("Error upgrading previous settings: {0}", ex);
-                Reset();
+        private const string DefaultCollection = "IndentGuide";
+        private const string CaretHandlersCollection = DefaultCollection + "\\Caret Handlers";
+
+        private readonly Dictionary<string, IndentTheme> _Themes = new Dictionary<string, IndentTheme>();
+
+        public IndentGuideService(IndentGuidePackage package) {
+            _Package = package;
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~IndentGuideService() {
+            Dispose(false);
+        }
+
+        protected void Dispose(bool isDisposing) {
+            if (!IsDisposed && isDisposing) {
+                IsDisposed = true;
             }
-            Load();
         }
 
         public int Version {
             get { return IndentGuidePackage.Version; }
         }
 
-        private readonly IndentGuidePackage _Package;
         public IndentGuidePackage Package {
             get { return _Package; }
         }
 
-        private bool _Visible;
         public bool Visible {
             get { return _Visible; }
             set {
@@ -153,7 +86,7 @@ namespace IndentGuide {
                     _Visible = value;
 
                     // Save the setting immediately.
-                    Profile.SaveVisibleSettingToStorage(this);
+                    SaveVisibleSettingToStorage();
 
                     var evt = VisibleChanged;
                     if (evt != null) evt(this, EventArgs.Empty);
@@ -161,18 +94,65 @@ namespace IndentGuide {
             }
         }
 
+        public bool PreserveSettings() {
+            lock (Preserved) {
+                var preserved = new TemporarySettingStore();
+                Save(preserved);
+                Preserved.Push(preserved);
+            }
+            return true;
+        }
+
+        public bool AcceptSettings() {
+            bool result = false;
+            lock (Preserved) {
+                Preserved.Pop();
+                result = Preserved.Count == 0;
+            }
+            if (result) {
+                OnThemesChanged();
+            }
+            return result;
+        }
+
+        public bool RollbackSettings() {
+            bool result = false;
+            lock (Preserved) {
+                if (Preserved.Count > 0) {
+                    Load(Preserved.Pop());
+                    result = true;
+                }
+            }
+            if (result) {
+                OnThemesChanged();
+            }
+            return result;
+        }
+
+        private void SaveVisibleSettingToStorage() {
+            using (var reg = Package.UserRegistryRoot.OpenSubKey(SUBKEY_NAME, true)) {
+                if (reg != null) {
+                    // Key already exists, so just update this setting.
+                    reg.SetValue("Visible", Visible ? 1 : 0);
+                    return;
+                }
+            }
+
+            // Key doesn't exist, so save all settings.
+            Save();
+        }
+
         public event EventHandler VisibleChanged;
 
+        [Obsolete("CaretHandler has been moved to IndentTheme")]
         public string CaretHandler {
             get { return null; }
             set { }
         }
 
+        [Obsolete("CaretHandlerChanged has been moved to IndentTheme")]
         public event EventHandler CaretHandlerChanged { add { } remove { } }
 
-        private readonly ProfileManager Profile;
-
-        private Dictionary<string, IndentTheme> _Themes;
         public IDictionary<string, IndentTheme> Themes { get { return _Themes; } }
         public IndentTheme DefaultTheme { get; set; }
 
@@ -185,49 +165,199 @@ namespace IndentGuide {
         public event EventHandler ThemesChanged;
 
         public void Save() {
-            Profile.SaveSettingsToStorage(this);
+            lock (Preserved) {
+                if (Preserved.Count > 0) {
+                    return;
+                }
+            }
+
+            using (var root = Package.UserRegistryRoot)
+            using (var reg = root != null ? root.CreateSubKey(SUBKEY_NAME) : null) {
+                if (reg != null) {
+                    try {
+                        SaveToRegistry(reg);
+                    } catch (Exception ex) {
+                        Trace.WriteLine(string.Format("IndentGuideService::Save: {0}", ex));
+                    }
+                }
+            }
+        }
+
+        private void SaveToRegistry(RegistryKey reg) {
+            Debug.Assert(reg != null, "reg cannot be null");
+
+            lock (_Themes) {
+                reg.SetValue("Version", Version);
+                reg.SetValue("Visible", Visible ? 1 : 0);
+
+                foreach (var key in reg.GetSubKeyNames()) {
+                    if (CARETHANDLERS_SUBKEY_NAME.Equals(key, StringComparison.InvariantCulture)) {
+                        continue;
+                    }
+                    reg.DeleteSubKeyTree(key);
+                }
+
+                if (DefaultTheme != null) {
+                    DefaultTheme.Save(reg);
+                }
+
+                foreach (var theme in _Themes.Values) {
+                    theme.Save(reg);
+                }
+            }
         }
 
         public void Save(IVsSettingsWriter writer) {
-            Profile.SaveSettingsToXml(writer);
+            lock (_Themes) {
+                var sb = new StringBuilder();
+                if (DefaultTheme != null) {
+                    sb.Append(DefaultTheme.Save(writer));
+                    sb.Append(";");
+                }
+
+                foreach (var theme in _Themes.Values) {
+                    sb.Append(theme.Save(writer));
+                    sb.Append(";");
+                }
+
+                writer.WriteSettingLong("Version", Version);
+                writer.WriteSettingString("Themes", sb.ToString());
+                writer.WriteSettingLong("Visible", Visible ? 1 : 0);
+            }
         }
 
         public void Load() {
-            Profile.LoadSettingsFromStorage(this);
+            lock (Preserved) {
+                if (Preserved.Count > 0) {
+                    return;
+                }
+            }
+
+            using (var root = Package.UserRegistryRoot)
+            using (var reg = root != null ? root.OpenSubKey(SUBKEY_NAME) : null) {
+                if (reg != null) {
+                    try {
+                        LoadFromRegistry(reg);
+                    } catch (Exception ex) {
+                        Trace.WriteLine(string.Format("IndentGuideService::Load: {0}", ex));
+                    }
+                } else {
+                    // No settings, so just ensure we're visible
+                    Visible = true;
+                }
+            }
+        }
+
+        private void LoadFromRegistry(RegistryKey reg) {
+            Debug.Assert(reg != null, "reg cannot be null");
+
+            lock (_Themes) {
+                _Themes.Clear();
+                DefaultTheme = new IndentTheme();
+                foreach (var themeName in reg.GetSubKeyNames()) {
+                    if (CARETHANDLERS_SUBKEY_NAME.Equals(themeName, StringComparison.InvariantCulture)) {
+                        continue;
+                    }
+                    var theme = IndentTheme.Load(reg, themeName);
+                    if (theme.IsDefault) {
+                        DefaultTheme = theme;
+                    } else {
+                        _Themes[theme.ContentType] = theme;
+                    }
+                }
+
+                Visible = (int)reg.GetValue("Visible", 1) != 0;
+            }
 
             OnThemesChanged();
         }
 
         public void Load(IVsSettingsReader reader) {
-            Profile.LoadSettingsFromXml(reader);
+            lock (_Themes) {
+                _Themes.Clear();
+                DefaultTheme = new IndentTheme();
+
+                string themeKeysString;
+                reader.ReadSettingString("Themes", out themeKeysString);
+
+                foreach (var key in themeKeysString.Split(';')) {
+                    if (string.IsNullOrWhiteSpace(key)) continue;
+
+                    try {
+                        var theme = IndentTheme.Load(reader, key);
+                        if (theme.IsDefault) {
+                            DefaultTheme = theme;
+                        } else {
+                            _Themes[theme.ContentType] = theme;
+                        }
+                    } catch (Exception ex) {
+                        Trace.WriteLine(string.Format("IndentGuide::LoadSettingsFromXML: {0}", ex));
+                    }
+                }
+
+                int tempInt;
+                reader.ReadSettingLong("Visible", out tempInt);
+                Visible = (tempInt != 0);
+            }
 
             OnThemesChanged();
         }
 
         public void Reset() {
-            var profile = new ProfileManager();
-            profile.ResetSettings();
+            Package.UserRegistryRoot.DeleteSubKeyTree(SUBKEY_NAME, false);
             Load();
         }
 
-        private SortedList<int, CaretHandlerInfo> _CaretHandlerNames;
-        public IEnumerable<CaretHandlerInfo> CaretHandlerNames {
-            get {
-                if (_CaretHandlerNames == null) {
-                    _CaretHandlerNames = new SortedList<int, CaretHandlerInfo>();
-                    foreach (var name in Profile.LoadRegisteredCaretHandlers(this)) {
-                        var obj = CaretHandlerBase.MetadataFromName(name);
-                        if (obj != null) {
-                            _CaretHandlerNames.Add(obj.GetSortOrder(CultureInfo.CurrentUICulture),
-                                new CaretHandlerInfo {
-                                    DisplayName = obj.GetDisplayName(CultureInfo.CurrentUICulture),
-                                    Documentation = obj.GetDocumentation(CultureInfo.CurrentUICulture),
-                                    TypeName = name
-                                });
+        internal bool Upgrade() {
+            var upgrade = new UpgradeManager();
+            using (var root = Package.UserRegistryRoot) {
+                return upgrade.Upgrade(this, root, SUBKEY_NAME);
+            }
+        }
+
+
+        private List<string> LoadRegisteredCaretHandlers() {
+            var result = new List<string>();
+            result.Add(typeof(CaretNone).FullName);
+            result.Add(typeof(CaretNearestLeft).FullName);
+            result.Add(typeof(CaretNearestLeft2).FullName);
+            result.Add(typeof(CaretAdjacent).FullName);
+            result.Add(typeof(CaretAboveBelowEnds).FullName);
+
+            using (var reg = Package.UserRegistryRoot.OpenSubKey(SUBKEY_NAME)) {
+                if (reg != null) {
+                    using (var subreg = reg.OpenSubKey(CARETHANDLERS_SUBKEY_NAME)) {
+                        if (subreg != null) {
+                            foreach (var name in subreg.GetValueNames()) {
+                                result.Add((subreg.GetValue(name) as string) ?? name);
+                            }
                         }
                     }
                 }
-                return _CaretHandlerNames.Values;
+            }
+            return result;
+        }
+
+        private List<CaretHandlerInfo> _CaretHandlerNames;
+        public IEnumerable<ICaretHandlerInfo> CaretHandlerNames {
+            get {
+                if (_CaretHandlerNames == null) {
+                    _CaretHandlerNames = LoadRegisteredCaretHandlers()
+                        .Select(n => {
+                            var md = CaretHandlerBase.MetadataFromName(n);
+                            return md == null ? null : new CaretHandlerInfo {
+                                DisplayName = md.GetDisplayName(CultureInfo.CurrentUICulture),
+                                Documentation = md.GetDocumentation(CultureInfo.CurrentUICulture),
+                                TypeName = n,
+                                SortOrder = md.GetSortOrder(CultureInfo.CurrentUICulture)
+                            };
+                        })
+                        .Where(h => h != null)
+                        .OrderBy(h => h.SortOrder)
+                        .ThenBy(h => h.TypeName)
+                        .ToList();
+                }
+                return _CaretHandlerNames;
             }
         }
     }

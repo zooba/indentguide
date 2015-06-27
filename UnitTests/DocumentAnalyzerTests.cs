@@ -169,6 +169,58 @@ namespace UnitTests {
 ", 2);
         }
 
+        private void DeepIndentTest(string text, int tabSize = 4) {
+            var da = MakeAnalyzer(
+                text,
+                VisibleAligned: true,
+                VisibleEmpty: true,
+                ExtendInwardsOnly: true,
+                VisibleEmptyAtEnd: false,
+                tabSize: tabSize
+            );
+
+            da.ResetAndWait();
+
+            da.AssertLinesIncludeExactly(
+                Enumerable.Range(0, 20).Select(i => new LineSpan(1, 1, i * 4, LineSpanType.Normal)).ToArray()
+            );
+
+            da.Behavior.ExtendInwardsOnly = false;
+            da.ResetAndWait();
+
+            da.AssertLinesIncludeExactly(
+                Enumerable.Range(0, 20).Select(i => new LineSpan(0, 1, i * 4, LineSpanType.Normal)).ToArray()
+            );
+
+            da.Behavior.VisibleEmpty = false;
+            da.ResetAndWait();
+
+            da.AssertLinesIncludeExactly(
+                Enumerable.Range(0, 20).Select(i => new LineSpan(1, 1, i * 4, LineSpanType.Normal)).ToArray()
+            );
+        }
+
+        [TestMethod]
+        public void DeepIndent_SpacesOnly() {
+            DeepIndentTest(string.Format(@"
+{0}text
+", new string(' ', 20 * 4)));
+        }
+
+        [TestMethod]
+        public void DeepIndent_TabsOnly() {
+            DeepIndentTest(string.Format(@"
+{0}text
+", new string('\t', 20)));
+        }
+
+        [TestMethod]
+        public void DeepIndent_MixedSpacesTabs() {
+            DeepIndentTest(string.Format(@"
+{0}text
+", string.Join("", Enumerable.Repeat("    \t", 10))));
+        }
+
         [TestMethod]
         public void MismatchedTabIndentSize() {
             var text = @"0

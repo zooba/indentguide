@@ -19,38 +19,38 @@ using System.Globalization;
 using Microsoft.Win32;
 
 namespace IndentGuide {
-    partial class ProfileManager {
-        public void Upgrade(IIndentGuide service) {
-            using (var root = service.Package.UserRegistryRoot) {
-                int version;
-                using (var reg = root.OpenSubKey(SUBKEY_NAME, false)) {
-                    version = (reg == null) ? 0 : (int)reg.GetValue("Version", IndentGuidePackage.DEFAULT_VERSION);
-                }
-
-                if (version == 0 || version == IndentGuidePackage.Version) {
-                    return;
-                }
-
-                using (var reg = root.CreateSubKey(SUBKEY_NAME)) {
-                    if (version >= 0x000C0903) {
-                        // Nothing to upgrade
-                    } else if (version == 0x000C0902) {
-                        UpgradeFrom_12_9_2(reg);
-                    } else if (version >= 0x000C0000) {
-                        // Nothing to upgrade
-                    } else if (version >= 0x000B0901) {
-                        UpgradeFrom_11_9_0(reg);
-                    } else if (version >= 0x000A0901) {
-                        UpgradeFrom_10_9_1(reg);
-                    } else {
-                        UpgradeFrom_Earlier(reg);
-                    }
-
-                    // Upgrading will make guides visible regardless of the
-                    // previous setting.
-                    reg.SetValue("Visible", 1);
-                }
+    class UpgradeManager {
+        public bool Upgrade(IIndentGuide service, RegistryKey root, string subkeyName) {
+            int version;
+            using (var reg = root.OpenSubKey(subkeyName, false)) {
+                version = (reg == null) ? 0 : (int)reg.GetValue("Version", IndentGuidePackage.DEFAULT_VERSION);
             }
+
+            if (version == 0 || version == IndentGuidePackage.Version) {
+                return false;
+            }
+
+            using (var reg = root.CreateSubKey(subkeyName)) {
+                if (version >= 0x000C0903) {
+                    // Nothing to upgrade
+                } else if (version == 0x000C0902) {
+                    UpgradeFrom_12_9_2(reg);
+                } else if (version >= 0x000C0000) {
+                    // Nothing to upgrade
+                } else if (version >= 0x000B0901) {
+                    UpgradeFrom_11_9_0(reg);
+                } else if (version >= 0x000A0901) {
+                    UpgradeFrom_10_9_1(reg);
+                } else {
+                    UpgradeFrom_Earlier(reg);
+                }
+
+                // Upgrading will make guides visible regardless of the
+                // previous setting.
+                reg.SetValue("Visible", 1);
+            }
+
+            return true;
         }
 
         /// <summary>

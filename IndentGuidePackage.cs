@@ -15,11 +15,13 @@
  * ***************************************************************************/
 
 using System;
+using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace IndentGuide {
     [PackageRegistration(UseManagedResourcesOnly = true)]
@@ -35,24 +37,11 @@ namespace IndentGuide {
     [ResourceDescription("IndentGuidePackage")]
     [Guid(Guids.IndentGuidePackageGuid)]
     public sealed class IndentGuidePackage : Package {
-        public IndentGuidePackage() {
-            var container = (IServiceContainer)this;
-            var callback = new ServiceCreatorCallback(CreateService);
-            container.AddService(typeof(SIndentGuide), callback, true);
-        }
-
-        private object CreateService(IServiceContainer container, Type serviceType) {
-            if (typeof(SIndentGuide) == serviceType)
-                return new IndentGuideService(this);
-            else
-                return null;
-        }
-
         private static readonly Guid guidIndentGuideCmdSet = Guid.Parse(Guids.IndentGuideCmdSetGuid);
         private const int cmdidViewIndentGuides = 0x0103;
 
         private EnvDTE.WindowEvents WindowEvents;
-        private IIndentGuide Service;
+        private IndentGuideService Service;
         private bool CommandVisible;
 
         protected override void Initialize() {
@@ -78,16 +67,26 @@ namespace IndentGuide {
                 mcs.AddCommand(menuCmd);
             }
 
-            // Assume the service exists, otherwise, crash the extension.
-            Service = (IIndentGuide)GetService(typeof(SIndentGuide));
+            Service = new IndentGuideService(this);
+            ((IServiceContainer)this).AddService(typeof(SIndentGuide), Service, true);
+            Service.Upgrade();
+            Service.Load();
+        }
+
+        protected override void Dispose(bool disposing) {
+            if (disposing) {
+                Service.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         /// <summary>
         /// Saves the current settings.
         /// </summary>
         void DTEEvents_OnBeginShutdown() {
-            if (Service != null)
+            if (Service != null) {
                 Service.Save();
+            }
         }
 
         void WindowEvents_WindowActivated(EnvDTE.Window GotFocus, EnvDTE.Window LostFocus) {

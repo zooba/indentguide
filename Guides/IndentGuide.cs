@@ -49,41 +49,6 @@ namespace IndentGuide {
         private DocumentAnalyzer Analysis;
         private readonly Dictionary<LineSpan, Line> Lines = new Dictionary<LineSpan, Line>();
 
-
-        private static bool LogMessageBoxShown = false;
-        private static void Log(Exception ex) {
-#if DEBUG
-            if (Debugger.IsAttached) {
-                Debugger.Break();
-            } else {
-                Debugger.Launch();
-            }
-#endif
-            try {
-                var detail = string.Format(
-                    "Exception raised at {0}:{1}{2}{1}{1}",
-                    DateTime.UtcNow,
-                    Environment.NewLine,
-                    ex.ToString()
-                );
-                var path = IOPath.Combine(IOPath.GetTempPath(), "IndentGuide.log");
-                File.AppendAllText(path, detail);
-
-                if (!LogMessageBoxShown) {
-                    LogMessageBoxShown = true;
-                    var message = string.Format(
-                        "An internal error occurred in Indent Guides.{0}{0}" +
-                        "Details have been written to the file:{0}    {1}{0}{0}" +
-                        "Please report this error at http://indentguide.codeplex.com/.",
-                        Environment.NewLine,
-                        path
-                    );
-                    MessageBox.Show(message, "Indent Guides for Visual Studio");
-                }
-            } catch {
-            }
-        }
-
         /// <summary>
         /// Instantiates a new indent guide manager for a view.
         /// </summary>
@@ -136,7 +101,7 @@ namespace IndentGuide {
             } catch (OperationCanceledException) {
                 return;
             } catch (Exception ex) {
-                Log(ex);
+                Errors.Log(ex);
             }
             UpdateAdornments();
         }
@@ -227,7 +192,7 @@ namespace IndentGuide {
             try {
                 UpdateAdornmentsWorker();
             } catch (Exception ex) {
-                Log(ex);
+                Errors.Log(ex);
             }
         }
 
@@ -545,7 +510,7 @@ namespace IndentGuide {
             try {
                 UpdateCaret(e.NewPosition.VirtualBufferPosition);
             } catch (Exception ex) {
-                Log(ex);
+                Errors.Log(ex);
             }
         }
 

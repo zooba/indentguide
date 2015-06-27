@@ -21,12 +21,10 @@ using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide {
     public class GenericOptions<T> : DialogPage where T : Control, IThemeAwareDialog, new() {
-        private readonly ProfileManager ProfileManager;
         private bool IsActivated;
         private bool ShouldSave;
 
         public GenericOptions() {
-            ProfileManager = new ProfileManager();
             IsActivated = false;
         }
 
@@ -50,13 +48,16 @@ namespace IndentGuide {
             }
         }
 
-        protected override System.Windows.Forms.IWin32Window Window {
+        protected override IWin32Window Window {
             get { return Wrapper; }
         }
 
         protected override void OnActivate(CancelEventArgs e) {
             if (IsActivated == false) {
-                ProfileManager.PreserveSettings();
+                var service = Site != null ? Site.GetService(typeof(SIndentGuide)) as IndentGuideService : null;
+                if (service != null) {
+                    service.PreserveSettings();
+                }
                 IsActivated = true;
                 ShouldSave = false;
             }
@@ -73,10 +74,15 @@ namespace IndentGuide {
         protected override void OnClosed(EventArgs e) {
             if (!IsActivated) {
                 // Do nothing
-            } else if (ShouldSave) {
-                ProfileManager.AcceptSettings();
             } else {
-                ProfileManager.RollbackSettings();
+                var service = Site != null ? Site.GetService(typeof(SIndentGuide)) as IndentGuideService : null;
+                if (service != null) {
+                    if (ShouldSave) {
+                        service.AcceptSettings();
+                    } else {
+                        service.RollbackSettings();
+                    }
+                }
             }
             // Settings are saved automatically by the final accept/rollback.
             IsActivated = false;

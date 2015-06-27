@@ -285,7 +285,7 @@ namespace IndentGuide {
         }
 
         public async Task Update(TextViewLayoutChangedEventArgs changes) {
-            if (OriginalSnapshot != OriginalSnapshot.TextBuffer.CurrentSnapshot) {
+            if (Snapshot != OriginalSnapshot.TextBuffer.CurrentSnapshot) {
                 await Reset();
             }
         }
@@ -847,7 +847,7 @@ namespace IndentGuide {
 
         #region IndentSet class
 
-        struct IndentSet {
+        internal struct IndentSet {
             public static readonly IndentSet Empty = new IndentSet();
 
             private static readonly ulong[] Masks =
@@ -898,9 +898,10 @@ namespace IndentGuide {
 
             public IEnumerable<int> GetAll() {
                 var v = _value1;
-                var m = Q1;
+                ulong m;
                 if (v != 0) {
                     if ((v & H1) != 0) {
+                        m = Q1;
                         for (int i = Q1Start; (v & m) != 0 && i < Q1Stop; ++i, m <<= 1) {
                             if ((v & Masks[i]) != 0) {
                                 yield return i;
@@ -931,6 +932,7 @@ namespace IndentGuide {
                 v = _value2;
                 if (v != 0) {
                     if ((v & H1) != 0) {
+                        m = Q1;
                         for (int i = Q1Start; (v & m) != 0 && i < Q1Stop; ++i, m <<= 1) {
                             if ((v & Masks[i]) != 0) {
                                 yield return i + Count;
@@ -958,6 +960,10 @@ namespace IndentGuide {
                         }
                     }
                 }
+            }
+
+            internal string Dump() {
+                return string.Format("{0:X016} {1:X016}", _value2, _value1);
             }
         }
 
