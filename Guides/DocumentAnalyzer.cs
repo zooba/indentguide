@@ -247,6 +247,13 @@ namespace IndentGuide {
             try {
                 // We need to collect infomation about lines on the UI thread.
                 var snapshot = OriginalSnapshot.TextBuffer.CurrentSnapshot;
+
+                if (Snapshot == null || snapshot.Length < Snapshot.Length) {
+                    // Snapshot is shorter than last time, so let's figure out
+                    // the real longest line.
+                    FindLongestLine(snapshot, cancel);
+                }
+
                 var chunkInfo = new List<LineInfo[]>(snapshot.LineCount / ChunkSize + 1);
 
                 int lineCount = snapshot.LineCount;
@@ -290,6 +297,36 @@ namespace IndentGuide {
             }
         }
 
+
+        private void FindLongestLine(
+            ITextSnapshot snapshot,
+            CancellationToken cancel
+        ) {
+#if PERFORMANCE
+            object cookie = null;
+            try {
+                PerformanceLogger.Start(ref cookie);
+                FindLongestLine_Performance(snapshot, cancel);
+            } catch (OperationCanceledException) {
+                PerformanceLogger.Mark("Cancel");
+                throw;
+            } finally {
+                PerformanceLogger.End(cookie);
+            }
+        }
+
+        private void FindLongestLine_Performance(
+            ITextSnapshot snapshot,
+            CancellationToken cancel
+        ) {
+#endif
+            int longest = 0;
+            foreach (var line in snapshot.Lines) {
+                cancel.ThrowIfCancellationRequested();
+                longest = Math.Max(longest, line.GetText().ActualLength(TabSize));
+            }
+            LongestLine = longest;
+        }
 
         private void SetLineInfo(
             LineInfo[] lineInfo,
