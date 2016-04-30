@@ -515,12 +515,7 @@ namespace IndentGuide {
         }
 
         void UpdateCaret(VirtualSnapshotPoint caretPosition) {
-            int lineNumber = caretPosition.Position.GetContainingLine().LineNumber;
-            var analysisLines = Analysis.GetLines(lineNumber, lineNumber);
-            if (!analysisLines.Any()) {
-                return;
-            }
-
+            var analysisLines = Analysis.GetAllLines();
             var caret = CaretHandlerBase.FromName(Theme.CaretHandler, caretPosition, Analysis.TabSize);
 
             foreach (var line in analysisLines) {
