@@ -31,7 +31,7 @@ namespace IndentGuide {
         Normal = 0,
         PageWidthMarker = 1,
         
-        NeedsTextAtEnd = 2
+        NeedsTextAtLast = 2
     }
 
     [DebuggerDisplay("Indent {Indent} lines {FirstLine}-{LastLine}, {Type}")]
@@ -579,7 +579,7 @@ namespace IndentGuide {
                 res.Capacity += _activeSpans.Count;
                 for (int i = 0; i < _activeSpans.Count; ++i) {
                     var span = _activeSpans[i];
-                    if (span != null) {
+                    if (span != null && span.LastLine >= span.FirstLine) {
                         span.Type = LineSpanType.Normal;
                         span.FormatIndex = GetFormatIndex(span.Indent);
                         res.Add(span);
@@ -620,12 +620,16 @@ namespace IndentGuide {
 
             public void NoMoreLines() {
                 if (!_options.ExtendInwardsOnly) {
-                    foreach (var span in _activeSpans) {
+                    for (int i = 0; i < _activeSpans.Count; ++i) {
+                        var span = _activeSpans[i];
                         if (span == null) {
                             continue;
                         }
 
                         span.LastLine = _previousLine.Number;
+                        if (span.FirstLine > span.LastLine) {
+                            _activeSpans[i] = null;
+                        }
                     }
                 }
             }
@@ -641,7 +645,9 @@ namespace IndentGuide {
                 if (set.Any()) {
                     return set;
                 }
-                
+
+                set.Set(0);
+
                 if (_options.VisibleAligned) {
                     for (int i = 0; i < textAt; i += _indentSize) {
                         set.Set(i);
@@ -661,6 +667,9 @@ namespace IndentGuide {
                     if (_activeSpans[i] == null) {
                         _activeSpans[i] = span;
                         return span;
+                    } else if (_activeSpans[i].Indent == indent) {
+                        _activeSpans[i].LastLine = line;
+                        return _activeSpans[i];
                     }
                 }
                 _activeSpans.Add(span);
@@ -673,31 +682,26 @@ namespace IndentGuide {
                 int textAt,
                 LineSpanType lineType = LineSpanType.Normal
             ) {
+                bool extendToTop = _options.VisibleEmpty &&
+                    !_options.ExtendInwardsOnly &&
+                    _lastEmptyToTextLine == 0 &&
+                    line > 0;
                 foreach (var indent in indents.GetAll()) {
-                    var firstLine = line;
-                    bool extendToTop = _options.VisibleEmpty &&
-                        !_options.ExtendInwardsOnly &&
-                        _lastEmptyToTextLine == 0 &&
-                        line > 0;
-                    if (extendToTop) {
-                        firstLine = 0;
+                    if (indent > textAt) {
+                        continue;
                     }
 
-                    if (indent == textAt) {
-                        if (_options.VisibleAtTextEnd) {
-                            var span = StartSpan(firstLine, indent, lineType);
-                            span.LastLine = line;
-                        }
-                    } else if (indent < textAt) {
-                        var span = StartSpan(firstLine, indent, lineType);
-                        span.LastLine = line;
+                    if (indent == textAt && !_options.VisibleAtTextEnd) {
+                        continue;
                     }
+
+                    StartSpan(extendToTop ? 0 : line, indent, lineType);
                 }
             }
 
             private void FromEmptyToText(int line, int textAt) {
                 var indents = GetIndents(textAt);
-                
+
                 if (!_options.VisibleEmpty) {
                     Debug.Assert(!_activeSpans.Any());
                     StartSpans(indents, line, textAt);
@@ -710,32 +714,34 @@ namespace IndentGuide {
                         continue;
                     }
 
-                    if (indents.Remove(span.Indent)) {
-                        if (span.Indent == textAt) {
-                            span.LastLine = line - 1;
-                            _activeSpans[i] = null;
-                            _completedSpans.Add(span);
-                        } else {
+                    bool finish = true;
+                    if (indents.Remove(span.Indent) || span.Indent < textAt) {
+                        if (span.Indent != textAt || _options.VisibleAtTextEnd) {
                             span.LastLine = line;
+                            finish = false;
                         }
-                    } else if (span.Indent == textAt) {
-                        span.LastLine = line - 1;
+                    }
+
+                    if (finish) {
                         _activeSpans[i] = null;
-                        _completedSpans.Add(span);
-                    } else if (span.Type.HasFlag(LineSpanType.NeedsTextAtEnd)) {
-                        _activeSpans[i] = null;
-                    } else {
-                        if (!_options.ExtendInwardsOnly) {
-                            span.LastLine = line - 1;
+
+                        if (span.Indent == textAt || !span.Type.HasFlag(LineSpanType.NeedsTextAtLast)) {
+                            if (!_options.ExtendInwardsOnly || span.Indent == textAt) {
+                                span.LastLine = line - 1;
+                            }
+                            if (span.LastLine >= span.FirstLine) {
+                                _completedSpans.Add(span);
+                            }
                         }
-                        _activeSpans[i] = null;
-                        _completedSpans.Add(span);
                     }
                 }
 
                 StartSpans(indents, line, textAt);
 
                 if (_lastEmptyToTextLine == 0 && !_options.ExtendInwardsOnly && _options.VisibleEmpty) {
+                    if (_options.VisibleEmptyAtEnd && !_options.VisibleAtTextEnd) {
+                        indents.Set(textAt);
+                    }
                     foreach (var span in _activeSpans) {
                         if (span == null) {
                             continue;
@@ -768,14 +774,16 @@ namespace IndentGuide {
                     return;
                 }
 
-                var indents = GetIndents(_previousLine.TextAt);
+                var textAt = _previousLine.TextAt;
+                var indents = GetIndents(textAt);
+
                 for (int i = 0; i < _activeSpans.Count; ++i) {
                     var span = _activeSpans[i];
                     if (span == null) {
                         continue;
                     }
 
-                    if (indents.Remove(span.Indent)) {
+                    if (indents.Remove(span.Indent) || span.Indent < textAt) {
                         if (!_options.ExtendInwardsOnly) {
                             span.LastLine = line;
                         }
@@ -786,7 +794,7 @@ namespace IndentGuide {
                     indents,
                     line,
                     int.MaxValue,
-                    _options.ExtendInwardsOnly ? LineSpanType.NeedsTextAtEnd : LineSpanType.Normal
+                    _options.ExtendInwardsOnly ? LineSpanType.NeedsTextAtLast : LineSpanType.Normal
                 );
 
                 _lastTextToEmptyLine = line;
@@ -794,6 +802,14 @@ namespace IndentGuide {
 
             private void FromTextToText(int line, int textAt) {
                 var indents = GetIndents(textAt);
+                var prevTextAt = _previousLine.TextAt;
+
+                if (prevTextAt < textAt && !indents.Contains(prevTextAt) &&
+                    ((prevTextAt % _indentSize) == 0 || _options.VisibleUnaligned)) {
+                    indents.Set(prevTextAt);
+                } else {
+                    prevTextAt = -1;
+                }
 
                 for (int i = 0; i < _activeSpans.Count; ++i) {
                     var span = _activeSpans[i];
@@ -801,21 +817,30 @@ namespace IndentGuide {
                         continue;
                     }
 
-                    if (indents.Remove(span.Indent)) {
-                        if (span.Indent == textAt) {
-                            _activeSpans[i] = null;
-                            _completedSpans.Add(span);
-                        } else {
-                            span.LastLine = line;
+                    bool finish = true;
+                    if (indents.Remove(span.Indent) || span.Indent < textAt) {
+                        span.LastLine = line;
+                        if (span.Indent != textAt || _options.VisibleAtTextEnd) {
+                            finish = false;
                         }
-                    } else {
+                    }
+
+                    if (finish) {
                         _activeSpans[i] = null;
+                        span.LastLine = line - 1;
                         if (span.LastLine >= span.FirstLine) {
                             _completedSpans.Add(span);
                         }
                     }
                 }
 
+                if (prevTextAt >= 0 && indents.Remove(prevTextAt)) {
+                    StartSpan(
+                        line,
+                        prevTextAt,
+                        _options.ExtendInwardsOnly ? LineSpanType.NeedsTextAtLast : LineSpanType.Normal
+                    );
+                }
                 StartSpans(indents, line, textAt);
             }
 
@@ -889,6 +914,7 @@ namespace IndentGuide {
 
             private static readonly ulong[] Masks =
                 Enumerable.Range(0, 64).Select(i => 1ul << i).ToArray();
+            private const ulong M = 0xFFFFFFFFFFFFFFFFul;
             private const ulong H1 = 0x00000000FFFFFFFFul;
             private const ulong H2 = 0xFFFFFFFF00000000ul;
 
@@ -917,6 +943,28 @@ namespace IndentGuide {
                 } else if (indent < Count * 2) {
                     _value2 |= Masks[indent - Count];
                 }
+            }
+
+            public void ClearAbove(int indent) {
+                if (indent < Count) {
+                    var m = Masks[indent];
+                    _value1 &= M >> indent;
+                    _value2 = 0;
+                } else if (indent < Count * 2) {
+                    _value2 &= M >> (indent - Count);
+                }
+            }
+
+            public bool Contains(int indent) {
+                bool res = false;
+                if (indent < Count) {
+                    var m = Masks[indent];
+                    res = (_value1 & m) != 0;
+                } else if (indent < Count * 2) {
+                    var m = Masks[indent - Count];
+                    res = (_value2 & m) != 0;
+                }
+                return res;
             }
 
             public bool Remove(int indent) {

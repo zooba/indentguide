@@ -169,6 +169,60 @@ namespace UnitTests {
 ", 2);
         }
 
+        [TestMethod]
+        public void Basic_Unaligned() {
+            var da = MakeAnalyzer(
+                @"
+  1
+     2
+       3
+
+      5
+
+     7
+
+   9
+ 10
+",
+                VisibleAligned: false,
+                VisibleEmpty: true,
+                ExtendInwardsOnly: true,
+                VisibleEmptyAtEnd: true,
+                VisibleUnaligned: false,
+                indentSize: 4,
+                tabSize: 4
+            );
+
+            da.ResetAndWait();
+
+            da.AssertLinesIncludeExactly(
+                new LineSpan(1, 10, 0, LineSpanType.Normal)
+            );
+
+            da.Behavior.VisibleUnaligned = true;
+            da.ResetAndWait();
+
+            da.AssertLinesIncludeExactly(
+                new LineSpan(1, 10, 0, LineSpanType.Normal),
+                new LineSpan(2, 9, 2, LineSpanType.Normal),
+                new LineSpan(3, 6, 5, LineSpanType.Normal),
+                new LineSpan(4, 4, 7, LineSpanType.Normal)
+            );
+
+            da.Behavior.ExtendInwardsOnly = false;
+            da.ResetAndWait();
+
+            da.AssertLinesIncludeExactly(
+                new LineSpan(0, 10, 0, LineSpanType.Normal),
+                new LineSpan(0, 0, 2, LineSpanType.Normal),
+                new LineSpan(2, 9, 2, LineSpanType.Normal),
+                new LineSpan(3, 6, 5, LineSpanType.Normal),
+                new LineSpan(4, 4, 7, LineSpanType.Normal),
+                new LineSpan(6, 6, 6, LineSpanType.Normal),
+                new LineSpan(8, 8, 5, LineSpanType.Normal)
+            );
+        }
+
         private void DeepIndentTest(string text, int tabSize = 4) {
             var da = MakeAnalyzer(
                 text,
