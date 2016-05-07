@@ -25,7 +25,11 @@ namespace IndentGuide {
         internal readonly int _Line, _Start;
         public FakeLine(ITextSnapshot snapshot, string text, int line, int start) {
             Snapshot = snapshot;
-            _Text = text;
+            if (text.EndsWith("\r")) {
+                _Text = text.Substring(0, text.Length - 1);
+            } else {
+                _Text = text;
+            }
             _Line = line;
             _Start = start;
         }
@@ -90,8 +94,8 @@ namespace IndentGuide {
         private List<FakeLine> _Lines;
 
         public FakeSnapshot(string source) {
-            _Source = source.Replace("\\t", "    ").Replace("\\n", "\n").Replace("\r\n", "\n");
-            if (!_Source.EndsWith("\n")) _Source += "\n";
+            _Source = source.Replace("\\t", "    ").Replace("\\n", "\n");
+            if (!_Source.EndsWith("\r\n")) _Source += "\r\n";
 
             _Lines = new List<FakeLine>();
             for (int line = 0, start = 0, end = _Source.IndexOf('\n');

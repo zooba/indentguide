@@ -557,6 +557,9 @@ namespace IndentGuide {
 
                 _activeSpans = new List<LineSpan>();
                 _completedSpans = new List<LineSpan>();
+
+                _lastEmptyToTextLine = -1;
+                _lastTextToEmptyLine = -1;
             }
 
             private int GetFormatIndex(int indent) {
@@ -684,7 +687,7 @@ namespace IndentGuide {
             ) {
                 bool extendToTop = _options.VisibleEmpty &&
                     !_options.ExtendInwardsOnly &&
-                    _lastEmptyToTextLine == 0 &&
+                    _lastEmptyToTextLine < 0 &&
                     line > 0;
                 foreach (var indent in indents.GetAll()) {
                     if (indent > textAt) {
@@ -738,7 +741,7 @@ namespace IndentGuide {
 
                 StartSpans(indents, line, textAt);
 
-                if (_lastEmptyToTextLine == 0 && !_options.ExtendInwardsOnly && _options.VisibleEmpty) {
+                if (_lastEmptyToTextLine < 0 && !_options.ExtendInwardsOnly && _options.VisibleEmpty) {
                     if (_options.VisibleEmptyAtEnd && !_options.VisibleAtTextEnd) {
                         indents.Set(textAt);
                     }
@@ -842,6 +845,10 @@ namespace IndentGuide {
                     );
                 }
                 StartSpans(indents, line, textAt);
+
+                if (_lastEmptyToTextLine < 0) {
+                    _lastEmptyToTextLine = line;
+                }
             }
 
 

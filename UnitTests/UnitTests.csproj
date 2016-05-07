@@ -85,6 +85,7 @@
     <Compile Include="AssertUtil.cs" />
     <Compile Include="CaretHandlerTests.cs" />
     <Compile Include="DocumentAnalyzerTests.cs" />
+    <Compile Include="FakeSnapshotTests.cs" />
     <Compile Include="IndentSetTests.cs" />
     <Compile Include="Mocks\MockBufferGraph.cs" />
     <Compile Include="Mocks\MockClassificationType.cs" />

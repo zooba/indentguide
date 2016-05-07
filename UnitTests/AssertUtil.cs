@@ -14,7 +14,7 @@ namespace UnitTests {
                 .OrderBy(line => line.FirstLine)
                 .ThenBy(line => line.Indent)
                 .Select(line =>
-                string.Format("new LineSpan({0}, {1}, {2}, ({3}))", line.FirstLine, line.LastLine, line.Indent, line.Type)
+                string.Format("new LineSpan({0}, {1}, {2}, LineSpanType.{3})", line.FirstLine, line.LastLine, line.Indent, line.Type)
             ));
         }
 
