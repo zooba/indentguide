@@ -42,11 +42,12 @@ namespace UnitTests {
             }
 
             var doc = XDocument.Load(files[0].FullName);
-            var xmlns = "http://schemas.microsoft.com/developer/vsx-schema/2010";
+            var xmlns = "http://schemas.microsoft.com/developer/vsx-schema/2011";
             var xmlVerStr = doc
-                .Element(XName.Get("Vsix", xmlns))
-                .Element(XName.Get("Identifier", xmlns))
-                .Element(XName.Get("Version", xmlns))
+                .Element(XName.Get("PackageManifest", xmlns))
+                .Element(XName.Get("Metadata", xmlns))
+                .Element(XName.Get("Identity", xmlns))
+                .Attribute("Version")
                 .Value;
 
             var xmlVer = Version.Parse(xmlVerStr);
