@@ -1,4 +1,8 @@
-*Latest version*: [Indent Guidse v15](https://indentguide.codeplex.com/releases/view/624767) for VS 2015 and VS 2013
+## Install
+
+The latest release [in the gallery](http://visualstudiogallery.msdn.microsoft.com/e792686d-542b-474a-8c55-630980e72c30) supports Visual Studio 2017, Visual Studio 2015 and Visual Studio 2013.
+
+Note that the Extension dialog within Visual Studio 2017 will not find it, and you will need to go to the gallery page directly. (This is because it's way too hard to build an extension that works with previous versions of Visual Studio and also fully conforms to the arbitrary rules needed to be installable via the IDE. When I decide to drop support for VS 2015 and earlier then it will appear in search results in the IDE.)
 
 ## Still using Visual Studio 2010-2012?
 
