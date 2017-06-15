@@ -1,0 +1,11 @@
+*.suo
+*.user
+*.sdf
+*.docstates
+bin/
+obj/
+Debug/
+Release/
+ipch/
+Releases/
+TestResults/
