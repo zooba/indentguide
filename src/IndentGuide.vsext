@@ -1,0 +1,12 @@
+{
+  "id": "b5e21e1b-4a8f-4cf1-9a27-b54e5105d795",
+  "name": "My Visual Studio extensions",
+  "description": "A collection of my Visual Studio extensions",
+  "version": "1.0",
+  "extensions": [
+    {
+      "name": "ResXManager",
+      "vsixId": "43b35fe0-1f30-48de-887a-68256474202a"
+    }
+  ]
+}

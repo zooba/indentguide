@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.572
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndentGuide", "IndentGuide.csproj", "{0C1DCD55-FE11-4064-8A78-DD095B655C35}"
 EndProject
@@ -12,6 +12,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{80959C5D-8385-47A8-B8EF-E9963D52FD8E}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		IndentGuide.vsext = IndentGuide.vsext
 	EndProjectSection
 EndProject
 Global

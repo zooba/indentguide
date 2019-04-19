@@ -258,7 +258,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Strings.en-AU.resx" />
     <EmbeddedResource Include="Resources\Strings.en-GB.resx" />
-    <EmbeddedResource Include="Resources\Strings.en.resx" />
     <EmbeddedResource Include="Resources\Strings.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
