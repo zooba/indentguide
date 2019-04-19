@@ -1,12 +1,12 @@
 ﻿/* ****************************************************************************
  * Copyright 2015 Steve Dower
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy 
+ * use this file except in compliance with the License. You may obtain a copy
  * of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -26,7 +26,7 @@ namespace IndentGuide {
         class OverrideInfo {
             public string Text;
             public int Index;
-            public string Pattern;
+            // TODO: Pattern based formatting => add a Pattern string field
         }
 
         public DisplayOptionsControl() {
@@ -114,15 +114,12 @@ namespace IndentGuide {
             if (oi == null) return;
 
             LineFormat format;
-            if (oi.Pattern == null) {
-                if (!ActiveTheme.LineFormats.TryGetValue(oi.Index, out format)) {
-                    ActiveTheme.LineFormats[oi.Index] = format = ActiveTheme.DefaultLineFormat.Clone(ActiveTheme);
-                    format.FormatIndex = oi.Index;
-                }
-            } else {
-                // TODO: Pattern based formatting
-                format = ActiveTheme.DefaultLineFormat.Clone(ActiveTheme);
+            // TODO: Pattern based formatting => conditional format assignation
+            if (!ActiveTheme.LineFormats.TryGetValue(oi.Index, out format)) {
+                ActiveTheme.LineFormats[oi.Index] = format = ActiveTheme.DefaultLineFormat.Clone(ActiveTheme);
+                format.FormatIndex = oi.Index;
             }
+
 
             gridLineStyle.SelectedObject = format;
             linePreview.ForeColor = format.LineColor;
