@@ -7,12 +7,17 @@ using System.Text;
 using System.Threading.Tasks;
 using IndentGuide;
 using IndentGuide.Utils;
+using Microsoft.VisualStudio.Threading;
 using TestUtilities.Mocks;
 
 namespace PerformanceTests {
     class Program {
         static void Main(string[] args) {
-            new Program(args.Where(a => File.Exists(a)).ToList()).Run();
+            using (var jtc = new JoinableTaskContext())
+            {
+                IndentGuidePackage.JoinableTaskFactory = jtc.Factory;
+                new Program(args.Where(a => File.Exists(a)).ToList()).Run();
+            }
         }
 
         private readonly List<string> _testFiles;
@@ -70,7 +75,10 @@ namespace PerformanceTests {
                         var da = new DocumentAnalyzer(snapshot, behaviour, 4, 4, chunkSize);
                         var sw = Stopwatch.StartNew();
                         for (int repeats = 1000; repeats > 0; --repeats) {
-                            da.ResetAsync().GetAwaiter().GetResult();
+                            IndentGuidePackage.JoinableTaskFactory.Run(async delegate
+                            {
+                                await da.ResetAsync().ConfigureAwait(true);
+                            });
                         }
 
                         for (int line = 0; line < da.Snapshot.LineCount; line += 30) {

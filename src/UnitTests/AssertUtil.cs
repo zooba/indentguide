@@ -44,11 +44,17 @@ namespace UnitTests {
         }
 
         public static void ResetAndWait(this DocumentAnalyzer analyzer) {
-            analyzer.ResetAsync().GetAwaiter().GetResult();
+            IndentGuidePackage.JoinableTaskFactory.Run(async delegate
+            {
+               await analyzer.ResetAsync().ConfigureAwait(true);
+            });
         }
 
         public static void UpdateAndWait(this DocumentAnalyzer analyzer, TextViewLayoutChangedEventArgs changes) {
-            analyzer.UpdateAsync(changes).GetAwaiter().GetResult();
+            IndentGuidePackage.JoinableTaskFactory.Run(async delegate
+            {
+                await analyzer.UpdateAsync(changes).ConfigureAwait(true);
+            });
         }
     }
 }
