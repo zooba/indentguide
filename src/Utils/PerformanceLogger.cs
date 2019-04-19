@@ -14,7 +14,7 @@ namespace IndentGuide.Utils {
             public long Start;
             public long Duration;
         }
-        
+
         private class Event {
             public string Name { get; private set; }
             public DateTime Start { get; private set; }
@@ -50,7 +50,7 @@ namespace IndentGuide.Utils {
         private static DateTime _first = DateTime.MaxValue;
 
         public static event EventHandler DumpEvents;
-        
+
         [Conditional("PERFORMANCE")]
         private static void EnsureInitialised() {
             if (_events == null) {

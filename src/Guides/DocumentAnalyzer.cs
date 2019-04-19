@@ -1,12 +1,12 @@
 ﻿/* ****************************************************************************
  * Copyright 2015 Steve Dower
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy 
+ * use this file except in compliance with the License. You may obtain a copy
  * of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -30,7 +30,7 @@ namespace IndentGuide {
     public enum LineSpanType {
         Normal = 0,
         PageWidthMarker = 1,
-        
+
         NeedsTextAtLast = 2
     }
 
@@ -44,7 +44,7 @@ namespace IndentGuide {
         public int FormatIndex;
         public bool Highlight;
         private HashSet<LineSpan> _LinkedLines;
-        
+
         public LineSpan(int first, int last, int indent, LineSpanType type) {
             FirstLine = first;
             LastLine = last;
@@ -233,7 +233,7 @@ namespace IndentGuide {
             return chunks.SelectMany(c => c.Lines).Where(ls => ls.Type == LineSpanType.Normal).Distinct();
         }
 
-        public async Task Reset() {
+        public async Task ResetAsync() {
             var cts = new CancellationTokenSource();
             var cancel = cts.Token;
             var cts2 = Interlocked.Exchange(ref CurrentCancel, cts);
@@ -245,7 +245,7 @@ namespace IndentGuide {
             await ResetMutex.WaitAsync();
 
             try {
-                // We need to collect infomation about lines on the UI thread.
+                // We need to collect information about lines on the UI thread.
                 var snapshot = OriginalSnapshot.TextBuffer.CurrentSnapshot;
 
                 if (Snapshot == null || snapshot.Length < Snapshot.Length) {
@@ -291,9 +291,9 @@ namespace IndentGuide {
             }
         }
 
-        public async Task Update(TextViewLayoutChangedEventArgs changes) {
+        public async Task UpdateAsync(TextViewLayoutChangedEventArgs changes) {
             if (Snapshot != OriginalSnapshot.TextBuffer.CurrentSnapshot) {
-                await Reset();
+                await ResetAsync();
             }
         }
 
@@ -550,7 +550,7 @@ namespace IndentGuide {
 
             private List<LineSpan> _completedSpans;
             private readonly List<LineSpan> _activeSpans;
-            
+
             public LineSpanBuilder(int indentSize, LineBehavior options) {
                 _indentSize = indentSize;
                 _options = options;

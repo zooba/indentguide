@@ -44,11 +44,11 @@ namespace UnitTests {
         }
 
         public static void ResetAndWait(this DocumentAnalyzer analyzer) {
-            analyzer.Reset().GetAwaiter().GetResult();
+            analyzer.ResetAsync().GetAwaiter().GetResult();
         }
 
         public static void UpdateAndWait(this DocumentAnalyzer analyzer, TextViewLayoutChangedEventArgs changes) {
-            analyzer.Update(changes).GetAwaiter().GetResult();
+            analyzer.UpdateAsync(changes).GetAwaiter().GetResult();
         }
     }
 }

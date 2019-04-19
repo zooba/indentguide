@@ -70,7 +70,7 @@ namespace PerformanceTests {
                         var da = new DocumentAnalyzer(snapshot, behaviour, 4, 4, chunkSize);
                         var sw = Stopwatch.StartNew();
                         for (int repeats = 1000; repeats > 0; --repeats) {
-                            da.Reset().GetAwaiter().GetResult();
+                            da.ResetAsync().GetAwaiter().GetResult();
                         }
 
                         for (int line = 0; line < da.Snapshot.LineCount; line += 30) {

@@ -138,7 +138,7 @@ namespace IndentGuide {
             if (Theme != null && Theme.Behavior != null && IsHandleCreated) {
                 var snapshot = new FakeSnapshot(Text);
                 Analysis = new DocumentAnalyzer(snapshot, Theme.Behavior, IndentSize, IndentSize);
-                Analysis.Reset().ContinueWith(t => { BeginInvoke((Action)Invalidate); });
+                Analysis.ResetAsync().ContinueWith(t => { BeginInvoke((Action)Invalidate); });
             }
         }
 
