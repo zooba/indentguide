@@ -21,6 +21,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Threading;
 
 namespace IndentGuide {
     public partial class LineTextPreview : UserControl {
@@ -139,7 +141,9 @@ namespace IndentGuide {
             if (Theme != null && Theme.Behavior != null && IsHandleCreated) {
                 var snapshot = new FakeSnapshot(Text);
                 Analysis = new DocumentAnalyzer(snapshot, Theme.Behavior, IndentSize, IndentSize);
-                Analysis.ResetAsync().ContinueWith(t => { BeginInvoke((Action)Invalidate); }, TaskScheduler.Default);
+                ThreadHelper.JoinableTaskFactory.Run( async delegate {
+                    await Analysis.ResetAsync().ContinueWith(_ => BeginInvoke((Action)Invalidate), TaskScheduler.Default).ConfigureAwait(true);
+                });
             }
         }
 

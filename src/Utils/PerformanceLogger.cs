@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide.Utils {
     public static class PerformanceLogger {
@@ -82,19 +83,26 @@ namespace IndentGuide.Utils {
                 ((Event)cookie).Stop();
 
                 if (_events.Count > 100) {
-                    Task.Run(() => {
-                        var log = Path.Combine(
-                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                            "IndentGuide.csv"
-                        );
-                        var evt = DumpEvents;
-                        if (evt == null) {
-                            using (var f = new StreamWriter(log, true, Encoding.UTF8)) {
-                                Dump(f, true);
+                    ThreadHelper.JoinableTaskFactory.Run(async delegate
+                    {
+                        await System.Threading.Tasks.Task.Run(() =>
+                        {
+                            var log = Path.Combine(
+                                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                                "IndentGuide.csv"
+                            );
+                            var evt = DumpEvents;
+                            if (evt == null)
+                            {
+                                using (var f = new StreamWriter(log, true, Encoding.UTF8))
+                                {
+                                    Dump(f, true);
+                                }
+                            } else
+                            {
+                                evt(null, EventArgs.Empty);
                             }
-                        } else {
-                            evt(null, EventArgs.Empty);
-                        }
+                        }).ConfigureAwait(true);
                     });
                 }
             }
