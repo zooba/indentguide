@@ -28,6 +28,7 @@ using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
 using IndentGuide.Utils;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
@@ -91,7 +92,7 @@ namespace IndentGuide {
             var t = AnalyzeAndUpdateAdornmentsAsync();
         }
 
-        private async Task AnalyzeAndUpdateAdornmentsAsync(TextViewLayoutChangedEventArgs changes = null) {
+        private async System.Threading.Tasks.Task AnalyzeAndUpdateAdornmentsAsync(TextViewLayoutChangedEventArgs changes = null) {
             try {
                 if (changes != null) {
                     await Analysis.UpdateAsync(changes);
@@ -185,7 +186,10 @@ namespace IndentGuide {
             if (Analysis == null) return;
 
             if (!View.VisualElement.Dispatcher.CheckAccess()) {
-                View.VisualElement.Dispatcher.InvokeAsync(UpdateAdornments);
+                ThreadHelper.JoinableTaskFactory.Run(async delegate {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    UpdateAdornments();
+                });
                 return;
             }
 
@@ -404,7 +408,10 @@ namespace IndentGuide {
                 return adornment;
             } else {
                 Debug.Fail("Do not call CreateGuide from a non-UI thread");
-                return (Line)canvas.Dispatcher.Invoke((Func<Canvas, Line>)CreateGuide, canvas);
+                return IndentGuidePackage.JoinableTaskFactory.Run(async delegate {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    return CreateGuide(canvas);
+                });
             }
         }
 
