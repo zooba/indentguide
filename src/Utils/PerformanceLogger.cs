@@ -83,7 +83,7 @@ namespace IndentGuide.Utils {
                 ((Event)cookie).Stop();
 
                 if (_events.Count > 100) {
-                    ThreadHelper.JoinableTaskFactory.Run(async delegate
+                    IndentGuidePackage.JoinableTaskFactory.Run(async delegate
                     {
                         await System.Threading.Tasks.Task.Run(() =>
                         {

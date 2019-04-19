@@ -141,7 +141,7 @@ namespace IndentGuide {
             if (Theme != null && Theme.Behavior != null && IsHandleCreated) {
                 var snapshot = new FakeSnapshot(Text);
                 Analysis = new DocumentAnalyzer(snapshot, Theme.Behavior, IndentSize, IndentSize);
-                ThreadHelper.JoinableTaskFactory.Run( async delegate {
+                IndentGuidePackage.JoinableTaskFactory.Run( async delegate {
                     await Analysis.ResetAsync().ContinueWith(_ => BeginInvoke((Action)Invalidate), TaskScheduler.Default).ConfigureAwait(true);
                 });
             }

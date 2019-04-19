@@ -202,6 +202,7 @@
     <Compile Include="Mocks\MockTextView.cs" />
     <Compile Include="Mocks\MockTrackingSpan.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestsAssemblyInitialize.cs" />
     <Compile Include="VersionTests.cs" />
   </ItemGroup>
   <ItemGroup>
