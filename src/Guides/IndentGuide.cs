@@ -1,12 +1,12 @@
 /* ****************************************************************************
  * Copyright 2015 Steve Dower
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy 
+ * use this file except in compliance with the License. You may obtain a copy
  * of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -28,6 +28,7 @@ using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
 using IndentGuide.Utils;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
@@ -88,15 +89,15 @@ namespace IndentGuide {
             GlobalVisible = service.Visible;
             service.VisibleChanged += new EventHandler(Service_VisibleChanged);
 
-            var t = AnalyzeAndUpdateAdornments();
+            var t = AnalyzeAndUpdateAdornmentsAsync();
         }
 
-        private async Task AnalyzeAndUpdateAdornments(TextViewLayoutChangedEventArgs changes = null) {
+        private async System.Threading.Tasks.Task AnalyzeAndUpdateAdornmentsAsync(TextViewLayoutChangedEventArgs changes = null) {
             try {
                 if (changes != null) {
-                    await Analysis.Update(changes);
+                    await Analysis.UpdateAsync(changes);
                 } else {
-                    await Analysis.Reset();
+                    await Analysis.ResetAsync();
                 }
             } catch (OperationCanceledException) {
                 return;
@@ -118,7 +119,7 @@ namespace IndentGuide {
         /// </summary>
         async void Service_VisibleChanged(object sender, EventArgs e) {
             GlobalVisible = ((IIndentGuide)sender).Visible;
-            await AnalyzeAndUpdateAdornments();
+            await AnalyzeAndUpdateAdornmentsAsync();
         }
 
         /// <summary>
@@ -135,7 +136,7 @@ namespace IndentGuide {
                 GuideBrushCache.Clear();
                 GlowEffectCache.Clear();
 
-                await AnalyzeAndUpdateAdornments();
+                await AnalyzeAndUpdateAdornmentsAsync();
             }
         }
 
@@ -157,14 +158,14 @@ namespace IndentGuide {
             GuideBrushCache.Clear();
             GlowEffectCache.Clear();
 
-            await AnalyzeAndUpdateAdornments();
+            await AnalyzeAndUpdateAdornmentsAsync();
         }
 
         /// <summary>
         /// Raised when the display changes.
         /// </summary>
         async void View_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
-            await AnalyzeAndUpdateAdornments(e);
+            await AnalyzeAndUpdateAdornmentsAsync(e);
         }
 
         private IEnumerable<LineSpan> GetPageWidthLines() {
@@ -185,7 +186,10 @@ namespace IndentGuide {
             if (Analysis == null) return;
 
             if (!View.VisualElement.Dispatcher.CheckAccess()) {
-                View.VisualElement.Dispatcher.InvokeAsync(UpdateAdornments);
+                ThreadHelper.JoinableTaskFactory.Run(async delegate {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    UpdateAdornments();
+                });
                 return;
             }
 
@@ -404,7 +408,10 @@ namespace IndentGuide {
                 return adornment;
             } else {
                 Debug.Fail("Do not call CreateGuide from a non-UI thread");
-                return (Line)canvas.Dispatcher.Invoke((Func<Canvas, Line>)CreateGuide, canvas);
+                return IndentGuidePackage.JoinableTaskFactory.Run(async delegate {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    return CreateGuide(canvas);
+                });
             }
         }
 
