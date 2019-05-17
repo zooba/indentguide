@@ -80,7 +80,7 @@ namespace IndentGuide {
 
             Service = new IndentGuideService(this);
             // Adds a service on the background thread
-            AddService(typeof(SIndentGuide), async (container, ct, type) => Service, true);
+            AddService(typeof(SIndentGuide), async (container, ct, type) => await System.Threading.Tasks.Task.FromResult(Service), true);
 
             Service.Upgrade();
             Service.Load();
