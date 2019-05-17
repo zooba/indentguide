@@ -36,14 +36,9 @@ namespace IndentGuide {
     [ProvideOptionPage(typeof(CaretOptions), "IndentGuide", "Highlighting", 110, 150, false)]
     [ProvideOptionPage(typeof(PageWidthOptions), "IndentGuide", "PageWidth", 110, 160, false)]
     [ProvideProfile(typeof(ProfileManager), "IndentGuide", "Styles", 110, 220, false, DescriptionResourceID = 230)]
-    [ProvideService(typeof(SIndentGuide), IsAsyncQueryable = true)]
+    [ProvideService(typeof(SIndentGuide))]
     [ResourceDescription("IndentGuidePackage")]
     [Guid(Guids.IndentGuidePackageGuid)]
-    // auto-load the extension instead on on-demand: http://www.mztools.com/articles/2013/MZ2013027.aspx
-    [ProvideAutoLoad(VSConstants.UICONTEXT.NoSolution_string, PackageAutoLoadFlags.BackgroundLoad)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string, PackageAutoLoadFlags.BackgroundLoad)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasMultipleProjects_string, PackageAutoLoadFlags.BackgroundLoad)]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasSingleProject_string, PackageAutoLoadFlags.BackgroundLoad)]
     public sealed class IndentGuidePackage : AsyncPackage {
         private static readonly Guid guidIndentGuideCmdSet = Guid.Parse(Guids.IndentGuideCmdSetGuid);
         private const int cmdidViewIndentGuides = 0x0103;
@@ -83,19 +78,13 @@ namespace IndentGuide {
                 mcs.AddCommand(menuCmd);
             }
 
-            // Adds a service on the background thread
-            AddService(typeof(IndentGuideService), CreateIndentGuideServiceAsync);
-        }
-
-        private async System.Threading.Tasks.Task<object> CreateIndentGuideServiceAsync(IAsyncServiceContainer container, CancellationToken cancellationToken, Type serviceType)
-        {
             Service = new IndentGuideService(this);
-            await System.Threading.Tasks.Task.Run(() =>
-           {
-               Service.Upgrade();
-               Service.Load();
-           });
-            return Service;
+            // Adds a service on the background thread
+            AddService(typeof(SIndentGuide), async (container, ct, type) => Service, true);
+
+            Service.Upgrade();
+            Service.Load();
+
         }
 
         protected override void Dispose(bool disposing) {
