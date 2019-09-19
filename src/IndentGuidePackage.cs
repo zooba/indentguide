@@ -20,12 +20,14 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 
 namespace IndentGuide {
-    [PackageRegistration(UseManagedResourcesOnly = true)]
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "16", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideOptionPage(typeof(DisplayOptions), "IndentGuide", "Display", 110, 120, false)]
@@ -37,7 +39,7 @@ namespace IndentGuide {
     [ProvideService(typeof(SIndentGuide))]
     [ResourceDescription("IndentGuidePackage")]
     [Guid(Guids.IndentGuidePackageGuid)]
-    public sealed class IndentGuidePackage : Package {
+    public sealed class IndentGuidePackage : AsyncPackage {
         private static readonly Guid guidIndentGuideCmdSet = Guid.Parse(Guids.IndentGuideCmdSetGuid);
         private const int cmdidViewIndentGuides = 0x0103;
 
@@ -45,14 +47,19 @@ namespace IndentGuide {
         private IndentGuideService Service;
         private bool CommandVisible;
 
-        protected override void Initialize() {
-            base.Initialize();
+        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        {
+            await base.InitializeAsync(cancellationToken, progress);
 
             JoinableTaskFactory = ThreadHelper.JoinableTaskFactory;
 
+            // Switches to the UI thread in order to consume some services used in command initialization
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
             // Prepare event
-            var dte = GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
-            if (dte != null) {
+            var dte = await GetServiceAsync(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+            if (dte != null)
+            {
                 CommandVisible = false;
                 WindowEvents = dte.Events.WindowEvents;
                 WindowEvents.WindowActivated += WindowEvents_WindowActivated;
@@ -60,8 +67,9 @@ namespace IndentGuide {
             }
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
-            var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (mcs != null) {
+            var mcs = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
+            if (mcs != null)
+            {
                 // Create the command for the tool window
                 CommandID viewIndentCommandID = new CommandID(guidIndentGuideCmdSet, cmdidViewIndentGuides);
                 var menuCmd = new OleMenuCommand(ToggleVisibility, viewIndentCommandID);
@@ -71,9 +79,12 @@ namespace IndentGuide {
             }
 
             Service = new IndentGuideService(this);
-            ((IServiceContainer)this).AddService(typeof(SIndentGuide), Service, true);
+            // Adds a service on the background thread
+            AddService(typeof(SIndentGuide), async (container, ct, type) => await System.Threading.Tasks.Task.FromResult(Service), true);
+
             Service.Upgrade();
             Service.Load();
+
         }
 
         protected override void Dispose(bool disposing) {
@@ -122,7 +133,7 @@ namespace IndentGuide {
 
         public static int Version { get { return CURRENT_VERSION; } }
 
-        public static JoinableTaskFactory JoinableTaskFactory { get; set; }
+        public new static JoinableTaskFactory JoinableTaskFactory { get; set; }
 
         private static int GetCurrentVersion() {
             var assembly = typeof(IndentGuideService).Assembly;
