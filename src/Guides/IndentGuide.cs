@@ -408,7 +408,7 @@ namespace IndentGuide {
                 return adornment;
             } else {
                 Debug.Fail("Do not call CreateGuide from a non-UI thread");
-                return IndentGuidePackage.JoinableTaskFactory.Run(async delegate {
+                return ThreadHelper.JoinableTaskFactory.Run(async delegate {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                     return CreateGuide(canvas);
                 });

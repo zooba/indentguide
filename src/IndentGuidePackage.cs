@@ -15,18 +15,16 @@
  * ***************************************************************************/
 
 using System;
-using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 
-namespace IndentGuide {
+namespace IndentGuide
+{
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", "16", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
@@ -55,7 +53,6 @@ namespace IndentGuide {
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             await base.InitializeAsync(cancellationToken, progress);
-            JoinableTaskFactory = ((AsyncPackage)this).JoinableTaskFactory;
 
             // Switches to the UI thread in order to consume some services used in command initialization
             await ((AsyncPackage)this).JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
@@ -137,8 +134,6 @@ namespace IndentGuide {
         private static readonly int CURRENT_VERSION = GetCurrentVersion();
 
         public static int Version { get { return CURRENT_VERSION; } }
-
-        public new static JoinableTaskFactory JoinableTaskFactory { get; set; }
 
         private static int GetCurrentVersion() {
             var assembly = typeof(IndentGuideService).Assembly;

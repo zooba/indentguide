@@ -83,9 +83,9 @@ namespace IndentGuide.Utils {
                 ((Event)cookie).Stop();
 
                 if (_events.Count > 100) {
-                    IndentGuidePackage.JoinableTaskFactory.Run(async delegate
+                    ThreadHelper.JoinableTaskFactory.Run(async delegate
                     {
-                        await System.Threading.Tasks.Task.Run(() =>
+                        await Task.Run(() =>
                         {
                             var log = Path.Combine(
                                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
