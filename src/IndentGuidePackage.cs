@@ -47,14 +47,18 @@ namespace IndentGuide {
         private IndentGuideService Service;
         private bool CommandVisible;
 
+        public IndentGuidePackage() : base()
+        {
+            Service = new IndentGuideService(this);
+        }
+
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             await base.InitializeAsync(cancellationToken, progress);
-
-            JoinableTaskFactory = ThreadHelper.JoinableTaskFactory;
+            JoinableTaskFactory = ((AsyncPackage)this).JoinableTaskFactory;
 
             // Switches to the UI thread in order to consume some services used in command initialization
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            await ((AsyncPackage)this).JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             // Prepare event
             var dte = await GetServiceAsync(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
@@ -78,7 +82,6 @@ namespace IndentGuide {
                 mcs.AddCommand(menuCmd);
             }
 
-            Service = new IndentGuideService(this);
             // Adds a service on the background thread
             AddService(typeof(SIndentGuide), async (container, ct, type) => await System.Threading.Tasks.Task.FromResult(Service), true);
 
@@ -104,10 +107,12 @@ namespace IndentGuide {
         }
 
         void WindowEvents_WindowActivated(EnvDTE.Window GotFocus, EnvDTE.Window LostFocus) {
+            ThreadHelper.ThrowIfNotOnUIThread();
             CommandVisible = (GotFocus != null && GotFocus.Kind == "Document");
         }
 
         void WindowEvents_WindowClosing(EnvDTE.Window Window) {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (Window.DTE.ActiveWindow == Window) {
                 CommandVisible = false;
             }

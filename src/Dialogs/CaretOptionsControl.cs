@@ -28,6 +28,7 @@ namespace IndentGuide {
         public CaretOptionsControl() {
             InitializeComponent();
 
+            ThreadHelper.ThrowIfNotOnUIThread();
             var service = ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide)) as IIndentGuide2;
             if (service != null) {
                 try {

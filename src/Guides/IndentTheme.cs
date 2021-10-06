@@ -23,6 +23,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
@@ -460,6 +461,7 @@ namespace IndentGuide {
         }
 
         internal void Load(IVsSettingsReader reader, string key) {
+            ThreadHelper.ThrowIfNotOnUIThread();
             string temp;
             reader.ReadSettingAttribute(key, "ExtendInwardsOnly", out temp);
             ExtendInwardsOnly = bool.Parse(temp);
@@ -485,6 +487,7 @@ namespace IndentGuide {
         }
 
         internal void Save(IVsSettingsWriter writer, string key) {
+            ThreadHelper.ThrowIfNotOnUIThread();
             writer.WriteSettingAttribute(key, "ExtendInwardsOnly", ExtendInwardsOnly.ToString());
             writer.WriteSettingAttribute(key, "VisibleAligned", VisibleAligned.ToString());
             writer.WriteSettingAttribute(key, "VisibleUnaligned", VisibleUnaligned.ToString());
@@ -593,6 +596,7 @@ namespace IndentGuide {
         }
 
         public static IndentTheme Load(IVsSettingsReader reader, string themeKey) {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var theme = new IndentTheme();
 
             theme.ContentType = (themeKey == DefaultThemeName) ? null : themeKey;
@@ -658,6 +662,8 @@ namespace IndentGuide {
         }
 
         public string Save(IVsSettingsWriter writer) {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             var key = ContentType ?? DefaultThemeName;
             var subkeys = string.Join(";", LineFormats.Values
                 .Where(item => item.ShouldSerialize())

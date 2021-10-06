@@ -34,6 +34,7 @@ namespace IndentGuide {
         private readonly IThemeAwareDialog Child;
 
         public ThemeOptionsControl(IThemeAwareDialog child) {
+            ThreadHelper.ThrowIfNotOnUIThread();
             InitializeComponent();
 
             Child = child;

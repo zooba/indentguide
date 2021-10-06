@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
@@ -208,7 +209,9 @@ namespace IndentGuide {
         }
 
         public void Save(IVsSettingsWriter writer) {
-            lock (_Themes) {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            lock (_Themes)
+            {
                 var sb = new StringBuilder();
                 if (DefaultTheme != null) {
                     sb.Append(DefaultTheme.Save(writer));
@@ -273,6 +276,7 @@ namespace IndentGuide {
         }
 
         public void Load(IVsSettingsReader reader) {
+            ThreadHelper.ThrowIfNotOnUIThread();
             lock (_Themes) {
                 _Themes.Clear();
                 DefaultTheme = new IndentTheme();

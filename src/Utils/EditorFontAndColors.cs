@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide {
     public class EditorFontAndColors {
@@ -30,6 +31,8 @@ namespace IndentGuide {
         public Color HighlightBackColor { get; private set; }
 
         public EditorFontAndColors() {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             FontFamily = "Consolas";
             FontSize = 10.0f;
             FontBold = false;
