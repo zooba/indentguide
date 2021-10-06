@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -28,12 +29,9 @@ using Microsoft.VisualStudio.TextManager.Interop;
 namespace IndentGuide {
     public partial class ThemeOptionsControl : UserControl {
         private readonly IndentGuideService Service;
-        private readonly IVsTextManager TextManagerService;
-        private readonly IVsEditorAdaptersFactoryService EditorAdapters;
-
         private readonly IThemeAwareDialog Child;
 
-        public ThemeOptionsControl(IThemeAwareDialog child) {
+        public ThemeOptionsControl(IIndentGuide service, IThemeAwareDialog child) {
             ThreadHelper.ThrowIfNotOnUIThread();
             InitializeComponent();
 
@@ -47,28 +45,23 @@ namespace IndentGuide {
             tableContent.SetRow(control, 1);
             control.Dock = DockStyle.Fill;
 
-            var provider = ServiceProvider.GlobalProvider;
-            Service = provider.GetService(typeof(SIndentGuide)) as IndentGuideService;
-            Child.Service = (IIndentGuide)Service;
-
-            TextManagerService = (IVsTextManager)provider.GetService(typeof(SVsTextManager));
-
-            var componentModel = (IComponentModel)provider.GetService(typeof(SComponentModel));
-            EditorAdapters = (IVsEditorAdaptersFactoryService)componentModel
-                .GetService<IVsEditorAdaptersFactoryService>();
+            Child.Service = Service = (IndentGuideService)service;
 
             ActiveThemeChanged += ActiveTheme_Changed;
         }
 
-        internal void Activate() {
+        internal async Task ActivateAsync() {
             try {
                 IVsTextView view = null;
                 IWpfTextView wpfView = null;
-                TextManagerService.GetActiveView(0, null, out view);
+                var tms = await ServiceProvider.GetGlobalServiceAsync<SVsTextManager, IVsTextManager>();
+                tms?.GetActiveView(0, null, out view);
                 if (view == null) {
                     CurrentContentType = null;
                 } else {
-                    wpfView = EditorAdapters.GetWpfTextView(view);
+                    var componentModel = await ServiceProvider.GetGlobalServiceAsync<SComponentModel, IComponentModel>();
+                    var adapters = componentModel.GetService<IVsEditorAdaptersFactoryService>();
+                    wpfView = adapters.GetWpfTextView(view);
                     CurrentContentType = wpfView.TextDataModel.ContentType.DisplayName;
                 }
             } catch {

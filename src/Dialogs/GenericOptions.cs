@@ -16,57 +16,55 @@
 
 using System;
 using System.ComponentModel;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.Shell;
 
 namespace IndentGuide {
     public class GenericOptions<T> : DialogPage where T : Control, IThemeAwareDialog, new() {
+        private IndentGuideService _service;
+        private readonly Lazy<ThemeOptionsControl> Wrapper;
         private bool IsActivated;
         private bool ShouldSave;
 
         public GenericOptions() {
             IsActivated = false;
+            Wrapper = new Lazy<ThemeOptionsControl>(() =>
+            {
+                return new ThemeOptionsControl(Service, new T());
+            });
         }
 
-        private T _Control = null;
-        private T Control {
-            get {
-                if (_Control == null)
-                    System.Threading.Interlocked.CompareExchange(ref _Control, new T(), null);
-
-                return _Control;
+        internal IndentGuideService Service
+        {
+            get
+            {
+                var s = _service;
+                if (s != null)
+                    return s;
+                s = ThreadHelper.JoinableTaskFactory.Run(ServiceProvider.GetGlobalServiceAsync<SIndentGuide, IndentGuideService>);
+                s = Interlocked.CompareExchange(ref _service, s, null) ?? s;
+                return s;
             }
         }
 
-        private ThemeOptionsControl _Wrapper = null;
-        private ThemeOptionsControl Wrapper {
-            get {
-                if (_Wrapper == null)
-                    System.Threading.Interlocked.CompareExchange(ref _Wrapper, new ThemeOptionsControl(Control), null);
-
-                return _Wrapper;
-            }
-        }
 
         protected override IWin32Window Window {
-            get { return Wrapper; }
+            get { return Wrapper.Value; }
         }
 
         protected override void OnActivate(CancelEventArgs e) {
             if (IsActivated == false) {
-                var service = Site != null ? Site.GetService(typeof(SIndentGuide)) as IndentGuideService : null;
-                if (service != null) {
-                    service.PreserveSettings();
-                }
+                ((IndentGuideService)Service).PreserveSettings();
                 IsActivated = true;
                 ShouldSave = false;
             }
             base.OnActivate(e);
-            Wrapper.Activate();
+            Wrapper.Value.ActivateAsync().FileAndForget("stevedower/indentguide/WrapperActivateAsync");
         }
 
         protected override void OnApply(DialogPage.PageApplyEventArgs e) {
-            Wrapper.Apply();
+            Wrapper.Value.Apply();
             base.OnApply(e);
             ShouldSave = true;
         }
@@ -75,8 +73,7 @@ namespace IndentGuide {
             if (!IsActivated) {
                 // Do nothing
             } else {
-                var service = Site != null ? Site.GetService(typeof(SIndentGuide)) as IndentGuideService : null;
-                if (service != null) {
+                if (Service is IndentGuideService service) {
                     if (ShouldSave) {
                         service.AcceptSettings();
                     } else {
@@ -87,7 +84,7 @@ namespace IndentGuide {
             // Settings are saved automatically by the final accept/rollback.
             IsActivated = false;
 
-            Wrapper.Close();
+            Wrapper.Value.Close();
             base.OnClosed(e);
         }
     }
