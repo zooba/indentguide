@@ -54,6 +54,10 @@
       <Project>{0c1dcd55-fe11-4064-8a78-dd095b655c35}</Project>
       <Name>IndentGuide</Name>
     </ProjectReference>
+    <ProjectReference Include="..\UnitTests\UnitTests.csproj">
+      <Project>{ddb66887-59cf-4d1b-9c69-c0c2c8648bbd}</Project>
+      <Name>UnitTests</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
