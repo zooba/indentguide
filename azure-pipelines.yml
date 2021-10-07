@@ -27,11 +27,16 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
+- task: VisualStudioTestPlatformInstaller@1
+  inputs:
+    packageFeedSelector: 'nugetOrg'
+    versionSelector: 'latestPreRelease'
+
 - task: VSTest@2
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
-    vsTestVersion: '17.0'
+    vsTestVersion: 'toolsInstaller'
 
 - task: PublishPipelineArtifact@0
   inputs:
