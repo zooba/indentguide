@@ -31,6 +31,7 @@ steps:
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+    vsTestVersion: '17.0'
 
 - task: PublishPipelineArtifact@0
   inputs:
