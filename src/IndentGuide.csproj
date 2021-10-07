@@ -251,6 +251,9 @@
     <PackageReference Include="Microsoft.VisualStudio.Editor">
       <Version>17.0.391-preview-g5e248c9073</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime">
+      <Version>17.0.0-previews-5-31722-452</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Interop">
       <Version>17.0.0-previews-5-31722-452</Version>
     </PackageReference>
@@ -262,6 +265,9 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="StreamJsonRpc">
+      <Version>2.8.28</Version>
     </PackageReference>
   </ItemGroup>
   <PropertyGroup>

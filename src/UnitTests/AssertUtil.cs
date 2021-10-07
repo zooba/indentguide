@@ -41,19 +41,5 @@ namespace UnitTests
                 Assert.Fail(string.Join("\r\n\r\n", message));
             }
         }
-
-        public static void ResetAndWait(this DocumentAnalyzer analyzer) {
-            ThreadHelper.JoinableTaskFactory.Run(async delegate
-            {
-               await analyzer.ResetAsync().ConfigureAwait(true);
-            });
-        }
-
-        public static void UpdateAndWait(this DocumentAnalyzer analyzer, TextViewLayoutChangedEventArgs changes) {
-            ThreadHelper.JoinableTaskFactory.Run(async delegate
-            {
-                await analyzer.UpdateAsync(changes).ConfigureAwait(true);
-            });
-        }
     }
 }

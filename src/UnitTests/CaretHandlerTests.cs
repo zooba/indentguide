@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using IndentGuide;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -25,14 +26,14 @@ namespace UnitTests
 {
     [TestClass]
     public class CaretHandlerTests {
-        static List<LineSpan> GetModifiedLines(
+        static async Task<List<LineSpan>> GetModifiedLinesAsync(
             string text,
             int caretPosition,
             Type handler,
             string contentType = "plaintext"
         ) {
             var da = DocumentAnalyzerTests.MakeAnalyzer(text, contentType: contentType);
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             var caret = CaretHandlerBase.FromName(
                 handler.FullName,
@@ -46,7 +47,7 @@ namespace UnitTests
         }
 
         [TestMethod]
-        public void CaretNearestBlock() {
+        public async Task CaretNearestBlock() {
             var text = @"
     1
         2
@@ -60,18 +61,18 @@ namespace UnitTests
     10
 ";
 
-            var line = GetModifiedLines(text, text.IndexOf("1"), typeof(CaretNearestLeft));
+            var line = await GetModifiedLinesAsync(text, text.IndexOf("1"), typeof(CaretNearestLeft));
             Assert.AreEqual(new LineSpan(1, 10, 0, LineSpanType.Normal), line.Single(), line.ToFormattedString());
-            line = GetModifiedLines(text, text.IndexOf("2"), typeof(CaretNearestLeft));
+            line = await GetModifiedLinesAsync(text, text.IndexOf("2"), typeof(CaretNearestLeft));
             Assert.AreEqual(new LineSpan(2, 9, 4, LineSpanType.Normal), line.Single(), line.ToFormattedString());
-            line = GetModifiedLines(text, text.IndexOf("3"), typeof(CaretNearestLeft));
+            line = await GetModifiedLinesAsync(text, text.IndexOf("3"), typeof(CaretNearestLeft));
             Assert.AreEqual(new LineSpan(3, 6, 8, LineSpanType.Normal), line.Single(), line.ToFormattedString());
-            line = GetModifiedLines(text, text.IndexOf("4"), typeof(CaretNearestLeft));
+            line = await GetModifiedLinesAsync(text, text.IndexOf("4"), typeof(CaretNearestLeft));
             Assert.AreEqual(new LineSpan(3, 6, 8, LineSpanType.Normal), line.Single(), line.ToFormattedString());
         }
 
         [TestMethod]
-        public void CaretNearestLine() {
+        public async Task CaretNearestLine() {
             var text = @"
     1
         2
@@ -85,18 +86,18 @@ namespace UnitTests
     10
 ";
 
-            var line = GetModifiedLines(text, text.IndexOf("1"), typeof(CaretNearestLeft2));
+            var line = await GetModifiedLinesAsync(text, text.IndexOf("1"), typeof(CaretNearestLeft2));
             Assert.AreEqual(new LineSpan(1, 10, 0, LineSpanType.Normal), line.Single(), line.ToFormattedString());
-            line = GetModifiedLines(text, text.IndexOf("2"), typeof(CaretNearestLeft2));
+            line = await GetModifiedLinesAsync(text, text.IndexOf("2"), typeof(CaretNearestLeft2));
             Assert.AreEqual(new LineSpan(2, 9, 4, LineSpanType.Normal), line.Single(), line.ToFormattedString());
-            line = GetModifiedLines(text, text.IndexOf("3"), typeof(CaretNearestLeft2));
+            line = await GetModifiedLinesAsync(text, text.IndexOf("3"), typeof(CaretNearestLeft2));
             Assert.AreEqual(new LineSpan(3, 6, 8, LineSpanType.Normal), line.Single(), line.ToFormattedString());
-            line = GetModifiedLines(text, text.IndexOf("4"), typeof(CaretNearestLeft2));
+            line = await GetModifiedLinesAsync(text, text.IndexOf("4"), typeof(CaretNearestLeft2));
             Assert.AreEqual(new LineSpan(4, 4, 12, LineSpanType.Normal), line.Single(), line.ToFormattedString());
         }
 
         [TestMethod]
-        public void CaretLinkedLines() {
+        public async Task CaretLinkedLines() {
             var text = @"
     1
         2
@@ -110,13 +111,13 @@ namespace UnitTests
     10
 ";
 
-            var line = GetModifiedLines(text, 0, typeof(CaretNearestLeft), "csharp");
+            var line = await GetModifiedLinesAsync(text, 0, typeof(CaretNearestLeft), "csharp");
             Assert.AreEqual(0, line.Count, line.ToFormattedString());
-            line = GetModifiedLines(text, text.IndexOf("1"), typeof(CaretNearestLeft), "csharp");
+            line = await GetModifiedLinesAsync(text, text.IndexOf("1"), typeof(CaretNearestLeft), "csharp");
             Assert.AreEqual(4, line.Count, line.ToFormattedString());
-            line = GetModifiedLines(text, text.IndexOf("2"), typeof(CaretNearestLeft), "csharp");
+            line = await GetModifiedLinesAsync(text, text.IndexOf("2"), typeof(CaretNearestLeft), "csharp");
             Assert.AreEqual(4, line.Count, line.ToFormattedString());
-            line = GetModifiedLines(text, text.IndexOf("3"), typeof(CaretNearestLeft), "csharp");
+            line = await GetModifiedLinesAsync(text, text.IndexOf("3"), typeof(CaretNearestLeft), "csharp");
             Assert.AreEqual(0, line.Count, line.ToFormattedString());
         }
     }

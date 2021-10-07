@@ -54,15 +54,14 @@
       <Project>{0c1dcd55-fe11-4064-8a78-dd095b655c35}</Project>
       <Name>IndentGuide</Name>
     </ProjectReference>
-    <ProjectReference Include="..\UnitTests\UnitTests.csproj">
-      <Project>{97f28f89-e5e0-4816-b3dc-252ddac5750f}</Project>
-      <Name>UnitTests</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.ComponentModelHost">
+      <Version>17.0.391-preview-g5e248c9073</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Sdk.TestFramework">
       <Version>16.5.22-beta</Version>
     </PackageReference>
