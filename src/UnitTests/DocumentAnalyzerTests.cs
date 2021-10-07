@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using IndentGuide;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -71,7 +72,7 @@ namespace UnitTests {
             }, indentSize, tabSize, contentType, chunkSize);
         }
 
-        private void BasicTest(string text, int tabSize = 4) {
+        private async Task BasicTest(string text, int tabSize = 4) {
             var da = MakeAnalyzer(
                 text,
                 VisibleAligned: true,
@@ -81,7 +82,7 @@ namespace UnitTests {
                 tabSize: tabSize
             );
 
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 new LineSpan(1, 10, 0, LineSpanType.Normal),
@@ -92,7 +93,7 @@ namespace UnitTests {
             );
 
             da.Behavior.ExtendInwardsOnly = false;
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 new LineSpan(0, 10, 0, LineSpanType.Normal),
@@ -105,7 +106,7 @@ namespace UnitTests {
             );
 
             da.Behavior.VisibleEmpty = false;
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 new LineSpan(1, 3, 0, LineSpanType.Normal),
@@ -122,8 +123,8 @@ namespace UnitTests {
         }
 
         [TestMethod]
-        public void Basic_SpacesOnly() {
-            BasicTest(@"
+        public async Task Basic_SpacesOnly() {
+            await BasicTest(@"
     1
         2
             3
@@ -138,8 +139,8 @@ namespace UnitTests {
         }
 
         [TestMethod]
-        public void Basic_TabsOnly() {
-            BasicTest(@"
+        public async Task Basic_TabsOnly() {
+            await BasicTest(@"
 \t1
 \t\t2
 \t\t\t3
@@ -154,8 +155,8 @@ namespace UnitTests {
         }
 
         [TestMethod]
-        public void Basic_MixedSpacesTabs() {
-            BasicTest(@"
+        public async Task Basic_MixedSpacesTabs() {
+            await BasicTest(@"
 \t  1
   \t\t  2
 \t\t\t  \t  3
@@ -170,7 +171,7 @@ namespace UnitTests {
         }
 
         [TestMethod]
-        public void Basic_Unaligned() {
+        public async Task Basic_Unaligned() {
             var da = MakeAnalyzer(
                 @"
   1
@@ -193,14 +194,14 @@ namespace UnitTests {
                 tabSize: 4
             );
 
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 new LineSpan(1, 10, 0, LineSpanType.Normal)
             );
 
             da.Behavior.VisibleUnaligned = true;
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 new LineSpan(1, 10, 0, LineSpanType.Normal),
@@ -210,7 +211,7 @@ namespace UnitTests {
             );
 
             da.Behavior.ExtendInwardsOnly = false;
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 new LineSpan(0, 10, 0, LineSpanType.Normal),
@@ -223,7 +224,7 @@ namespace UnitTests {
             );
         }
 
-        private void DeepIndentTest(string text, int tabSize = 4) {
+        private async Task DeepIndentTest(string text, int tabSize = 4) {
             var da = MakeAnalyzer(
                 text,
                 VisibleAligned: true,
@@ -233,21 +234,21 @@ namespace UnitTests {
                 tabSize: tabSize
             );
 
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 Enumerable.Range(0, 20).Select(i => new LineSpan(1, 1, i * 4, LineSpanType.Normal)).ToArray()
             );
 
             da.Behavior.ExtendInwardsOnly = false;
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 Enumerable.Range(0, 20).Select(i => new LineSpan(0, 1, i * 4, LineSpanType.Normal)).ToArray()
             );
 
             da.Behavior.VisibleEmpty = false;
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 Enumerable.Range(0, 20).Select(i => new LineSpan(1, 1, i * 4, LineSpanType.Normal)).ToArray()
@@ -255,28 +256,28 @@ namespace UnitTests {
         }
 
         [TestMethod]
-        public void DeepIndent_SpacesOnly() {
-            DeepIndentTest(string.Format(@"
+        public async Task DeepIndent_SpacesOnly() {
+            await DeepIndentTest(string.Format(@"
 {0}text
 ", new string(' ', 20 * 4)));
         }
 
         [TestMethod]
-        public void DeepIndent_TabsOnly() {
-            DeepIndentTest(string.Format(@"
+        public async Task DeepIndent_TabsOnly() {
+            await DeepIndentTest(string.Format(@"
 {0}text
 ", new string('\t', 20)));
         }
 
         [TestMethod]
-        public void DeepIndent_MixedSpacesTabs() {
-            DeepIndentTest(string.Format(@"
+        public async Task DeepIndent_MixedSpacesTabs() {
+            await DeepIndentTest(string.Format(@"
 {0}text
 ", string.Join("", Enumerable.Repeat("    \t", 10))));
         }
 
         [TestMethod]
-        public void MismatchedTabIndentSize() {
+        public async Task MismatchedTabIndentSize() {
             var text = @"0
 \t1
 
@@ -291,7 +292,7 @@ namespace UnitTests {
 11";
 
             var da = MakeAnalyzer(text, indentSize: 3, tabSize: 4);
-            da.ResetAndWait();
+            await da.ResetAsync();
             da.AssertLinesIncludeExactly(
                 new LineSpan(1, 10, 0, LineSpanType.Normal),
                 new LineSpan(1, 9, 3, LineSpanType.Normal),
@@ -302,7 +303,7 @@ namespace UnitTests {
             );
 
             da = MakeAnalyzer(text, indentSize: 3, tabSize: 2);
-            da.ResetAndWait();
+            await da.ResetAsync();
             da.AssertLinesIncludeExactly(
                 new LineSpan(1, 10, 0, LineSpanType.Normal),
                 new LineSpan(3, 7, 3, LineSpanType.Normal),
@@ -310,7 +311,7 @@ namespace UnitTests {
             );
             
             da = MakeAnalyzer(text, indentSize: 6, tabSize: 4);
-            da.ResetAndWait();
+            await da.ResetAsync();
             da.AssertLinesIncludeExactly(
                 new LineSpan(1, 10, 0, LineSpanType.Normal),
                 new LineSpan(3, 7, 6, LineSpanType.Normal),
@@ -336,12 +337,12 @@ namespace UnitTests {
         }
 
         [TestMethod]
-        public void UpdateSnapshot() {
+        public async Task UpdateSnapshot() {
             var buffer = new MockTextBuffer("");
 
             var behavior = new LineBehavior();
             var da = MakeAnalyzer(buffer.CurrentSnapshot, behavior, 4, 4, 5);
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly();
 
@@ -357,7 +358,7 @@ namespace UnitTests {
                 edit.Apply();
             }
 
-            da.UpdateAndWait(null);
+            await da.UpdateAsync(null);
             Assert.AreNotSame(prevSnapshot, da.Snapshot);
             Assert.AreNotEqual(prevSnapshot.Version.VersionNumber, da.Snapshot.Version.VersionNumber);
             da.AssertLinesIncludeExactly(
@@ -372,7 +373,7 @@ namespace UnitTests {
                 edit.Apply();
             }
 
-            da.UpdateAndWait(null);
+            await da.UpdateAsync(null);
             Assert.AreNotSame(prevSnapshot, da.Snapshot);
             Assert.AreNotEqual(prevSnapshot.Version.VersionNumber, da.Snapshot.Version.VersionNumber);
             da.AssertLinesIncludeExactly(
@@ -381,7 +382,7 @@ namespace UnitTests {
         }
 
         [TestMethod]
-        public void CSharpCppPragmaTests() {
+        public async Task CSharpCppPragmaTests() {
             var da = MakeAnalyzer(@"
 1
     2
@@ -393,7 +394,7 @@ namespace UnitTests {
     8
 9", contentType: "csharp");
             
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 new LineSpan(2, 3, 0, LineSpanType.Normal),
@@ -411,7 +412,7 @@ namespace UnitTests {
             Assert.AreEqual(2, da.GetAllLines().First(ls => ls.FirstLine == 7).LinkedLines.Count());
 
             ((MockTextSnapshot)da.Snapshot).ContentType = new MockContentType("c/c++", null);
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 new LineSpan(2, 3, 0, LineSpanType.Normal),
@@ -429,7 +430,7 @@ namespace UnitTests {
             Assert.AreEqual(2, da.GetAllLines().First(ls => ls.FirstLine == 7).LinkedLines.Count());
 
             ((MockTextSnapshot)da.Snapshot).ContentType = new MockContentType("not treating pragmas specially", null);
-            da.ResetAndWait();
+            await da.ResetAsync();
 
             da.AssertLinesIncludeExactly(
                 new LineSpan(2, 3, 0, LineSpanType.Normal),

@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using IndentGuide;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Editor;
 
-namespace UnitTests {
+namespace UnitTests
+{
     static class AssertUtil {
         public static string ToFormattedString(this IEnumerable<LineSpan> lines) {
             return string.Join(",\r\n", lines
@@ -41,20 +40,6 @@ namespace UnitTests {
                 message.Add("Actual lines:\r\n" + actual.GetAllLines().Distinct().ToFormattedString());
                 Assert.Fail(string.Join("\r\n\r\n", message));
             }
-        }
-
-        public static void ResetAndWait(this DocumentAnalyzer analyzer) {
-            IndentGuidePackage.JoinableTaskFactory.Run(async delegate
-            {
-               await analyzer.ResetAsync().ConfigureAwait(true);
-            });
-        }
-
-        public static void UpdateAndWait(this DocumentAnalyzer analyzer, TextViewLayoutChangedEventArgs changes) {
-            IndentGuidePackage.JoinableTaskFactory.Run(async delegate
-            {
-                await analyzer.UpdateAsync(changes).ConfigureAwait(true);
-            });
         }
     }
 }

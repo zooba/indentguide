@@ -45,12 +45,16 @@ namespace IndentGuide {
         /// </summary>
         /// <param name="textView">The <see cref="IWpfTextView"/> upon which the adornment should be placed</param>
         public void TextViewCreated(IWpfTextView textView) {
-            var service = ServiceProvider.GlobalProvider.GetService(typeof(SIndentGuide)) as IIndentGuide;
-            Debug.Assert(textView != null, "No IWpfTextView instance provided");
-            Debug.Assert(service != null, "IndentGuide service is not running");
-            if (textView != null && service != null) {
-                new IndentGuideView(textView, service);
-            }
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
+            {
+                var service = await ServiceProvider.GetGlobalServiceAsync<SIndentGuide, IIndentGuide>();
+                Debug.Assert(textView != null, "No IWpfTextView instance provided");
+                Debug.Assert(service != null, "IndentGuide service is not running");
+                if (textView != null && service != null) {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    textView.Properties.GetOrCreateSingletonProperty(() => new IndentGuideView(textView, service));
+                }
+            });
         }
     }
     #endregion //Adornment Factory

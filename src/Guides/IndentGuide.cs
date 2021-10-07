@@ -117,15 +117,15 @@ namespace IndentGuide {
         /// <summary>
         /// Raised when the global visibility property is updated.
         /// </summary>
-        async void Service_VisibleChanged(object sender, EventArgs e) {
+        void Service_VisibleChanged(object sender, EventArgs e) {
             GlobalVisible = ((IIndentGuide)sender).Visible;
-            await AnalyzeAndUpdateAdornmentsAsync();
+            AnalyzeAndUpdateAdornmentsAsync().FileAndForget("stevedower/indentguide/ServiceVisibleChanged");
         }
 
         /// <summary>
         /// Raised when a view option changes.
         /// </summary>
-        async void View_OptionChanged(object sender, EditorOptionChangedEventArgs e) {
+        void View_OptionChanged(object sender, EditorOptionChangedEventArgs e) {
             if (e.OptionId == DefaultOptions.IndentSizeOptionId.Name) {
                 Analysis = new DocumentAnalyzer(
                     View.TextSnapshot,
@@ -136,14 +136,14 @@ namespace IndentGuide {
                 GuideBrushCache.Clear();
                 GlowEffectCache.Clear();
 
-                await AnalyzeAndUpdateAdornmentsAsync();
+                AnalyzeAndUpdateAdornmentsAsync().FileAndForget("stevedower/indentguide/ViewOptionChanged");
             }
         }
 
         /// <summary>
         /// Raised when the theme is updated.
         /// </summary>
-        async void Service_ThemesChanged(object sender, EventArgs e) {
+        void Service_ThemesChanged(object sender, EventArgs e) {
             var service = (IIndentGuide)sender;
             if (!service.Themes.TryGetValue(View.TextDataModel.ContentType.DisplayName, out Theme)) {
                 Theme = service.DefaultTheme;
@@ -158,14 +158,14 @@ namespace IndentGuide {
             GuideBrushCache.Clear();
             GlowEffectCache.Clear();
 
-            await AnalyzeAndUpdateAdornmentsAsync();
+            AnalyzeAndUpdateAdornmentsAsync().FileAndForget("stevedower/indentguide/ServiceThemesChanged");
         }
 
         /// <summary>
         /// Raised when the display changes.
         /// </summary>
-        async void View_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
-            await AnalyzeAndUpdateAdornmentsAsync(e);
+        void View_LayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
+            AnalyzeAndUpdateAdornmentsAsync(e).FileAndForget("stevedower/indentguide/ViewLayoutChanged");
         }
 
         private IEnumerable<LineSpan> GetPageWidthLines() {
@@ -408,7 +408,7 @@ namespace IndentGuide {
                 return adornment;
             } else {
                 Debug.Fail("Do not call CreateGuide from a non-UI thread");
-                return IndentGuidePackage.JoinableTaskFactory.Run(async delegate {
+                return ThreadHelper.JoinableTaskFactory.Run(async delegate {
                     await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                     return CreateGuide(canvas);
                 });

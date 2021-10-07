@@ -3,21 +3,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using IndentGuide;
 using IndentGuide.Utils;
-using Microsoft.VisualStudio.Threading;
+using Microsoft.VisualStudio.Shell;
 using TestUtilities.Mocks;
 
-namespace PerformanceTests {
+namespace PerformanceTests
+{
     class Program {
         static void Main(string[] args) {
-            using (var jtc = new JoinableTaskContext())
-            {
-                IndentGuidePackage.JoinableTaskFactory = jtc.Factory;
-                new Program(args.Where(a => File.Exists(a)).ToList()).Run();
-            }
+            new Program(args.Where(a => File.Exists(a)).ToList()).Run();
         }
 
         private readonly List<string> _testFiles;
@@ -75,7 +70,7 @@ namespace PerformanceTests {
                         var da = new DocumentAnalyzer(snapshot, behaviour, 4, 4, chunkSize);
                         var sw = Stopwatch.StartNew();
                         for (int repeats = 1000; repeats > 0; --repeats) {
-                            IndentGuidePackage.JoinableTaskFactory.Run(async delegate
+                            ThreadHelper.JoinableTaskFactory.Run(async delegate
                             {
                                 await da.ResetAsync().ConfigureAwait(true);
                             });

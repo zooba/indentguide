@@ -26,25 +26,34 @@ namespace TestUtilities.Mocks {
         public MockClassificationTypeRegistryService() {
             foreach (FieldInfo fi in typeof(PredefinedClassificationTypeNames).GetFields()) {
                 string name = (string)fi.GetValue(null);
-                _types[name] = new MockClassificationType(name, new IClassificationType[0]);
+                _types[name] = new MockClassificationType(ClassificationLayer.Default, name, new IClassificationType[0]);
             }
         }
 
         public IClassificationType CreateClassificationType(string type, IEnumerable<IClassificationType> baseTypes) {
-            return _types[type] = new MockClassificationType(type, baseTypes.ToArray());
+            return _types[type] = new MockClassificationType(ClassificationLayer.Default, type, baseTypes.ToArray());
+        }
+
+        public ILayeredClassificationType CreateClassificationType(ClassificationLayer layer, string type, IEnumerable<IClassificationType> baseTypes)
+        {
+            return _types[type] = new MockClassificationType(layer, type, baseTypes.ToArray());
         }
 
         public IClassificationType CreateTransientClassificationType(params IClassificationType[] baseTypes) {
-            return new MockClassificationType(String.Empty, baseTypes);
+            return new MockClassificationType(ClassificationLayer.Default, String.Empty, baseTypes);
         }
 
         public IClassificationType CreateTransientClassificationType(IEnumerable<IClassificationType> baseTypes) {
-            return new MockClassificationType(String.Empty, baseTypes.ToArray());
+            return new MockClassificationType(ClassificationLayer.Default, String.Empty, baseTypes.ToArray());
         }
 
         public IClassificationType GetClassificationType(string type) {
-            MockClassificationType result;
-            return _types.TryGetValue(type, out result) ? result : null;
+            return _types.TryGetValue(type, out var result) ? result : null;
+        }
+
+        public ILayeredClassificationType GetClassificationType(ClassificationLayer layer, string type)
+        {
+            return _types.TryGetValue(type, out var result) ? result : null;
         }
     }
 }
