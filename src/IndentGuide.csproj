@@ -243,31 +243,31 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="envdte">
-      <Version>17.0.0-previews-4-31709-430</Version>
+      <Version>17.5.33428.366</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.ComponentModelHost">
-      <Version>17.0.391-preview-g5e248c9073</Version>
+      <Version>17.5.279</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Editor">
-      <Version>17.0.391-preview-g5e248c9073</Version>
+      <Version>17.5.279</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime">
-      <Version>17.0.0-previews-5-31722-452</Version>
+      <Version>17.5.33428.366</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Interop">
-      <Version>17.0.0-previews-5-31722-452</Version>
+      <Version>17.5.33428.366</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0">
-      <Version>17.0.0-previews-4-31709-430</Version>
+      <Version>17.5.33428.388</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Threading">
-      <Version>17.0.63</Version>
+      <Version>17.5.22</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>13.0.1</Version>
+      <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="StreamJsonRpc">
-      <Version>2.8.28</Version>
+      <Version>2.14.24</Version>
     </PackageReference>
   </ItemGroup>
   <PropertyGroup>
