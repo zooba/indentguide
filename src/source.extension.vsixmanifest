@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Publisher="Steve Dower [MSFT]" Version="17.0.0.0" Id="IndentGuide2022.SteveDower.0a67eb97-becd-451f-aa29-851d9fe5dd2b" Language="en-US" />
+        <Identity Publisher="Steve Dower [MSFT]" Version="17.1.0.0" Id="IndentGuide2022.SteveDower.0a67eb97-becd-451f-aa29-851d9fe5dd2b" Language="en-US" />
         <DisplayName>Indent Guides for VS 2022</DisplayName>
         <Description xml:space="preserve">Adds vertical lines at each indent level.</Description>
         <MoreInfo>http://visualstudiogallery.msdn.microsoft.com/e792686d-542b-474a-8c55-630980e72c30</MoreInfo>
