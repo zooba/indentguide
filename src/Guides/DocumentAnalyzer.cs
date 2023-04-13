@@ -84,7 +84,7 @@ namespace IndentGuide {
             var result = new HashSet<LineSpan>();
             var queue = new Queue<LineSpan>();
             queue.Enqueue(line);
-            while (queue.Any()) {
+            while (queue.Count > 0) {
                 var ls = queue.Dequeue();
                 if (result.Add(ls) && ls._LinkedLines != null) {
                     foreach (var ls2 in ls._LinkedLines) {
