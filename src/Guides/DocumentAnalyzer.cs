@@ -175,7 +175,7 @@ namespace IndentGuide {
         }
 
         public override int GetHashCode() {
-            return new { FirstLine, LastLine, Indent, Type }.GetHashCode();
+            return new { FirstLine, LastLine, Indent, Type = (int)Type }.GetHashCode();
         }
     }
 
